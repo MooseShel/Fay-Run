@@ -1,5 +1,8 @@
+import 'package:flutter/foundation.dart'; // Add for kDebugMode
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/constants.dart';
+import '../../services/supabase_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -9,14 +12,52 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  // Pre-fill for easier testing in Debug mode
+  final _emailController = TextEditingController(
+    text: kDebugMode ? 'Hussein.Shel@outlook.com' : '',
+  );
+  final _passwordController = TextEditingController(
+    text: kDebugMode ? '!EmmaNasma1981' : '',
+  );
   final _formKey = GlobalKey<FormState>();
 
-  void _login() {
+  final _supabaseService = SupabaseService();
+  bool _isLoading = false;
+
+  Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
-      // Mock Login Success
-      Navigator.pushReplacementNamed(context, '/setup');
+      setState(() => _isLoading = true);
+      try {
+        await _supabaseService.signIn(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/select_student');
+        }
+      } on AuthException catch (e) {
+        if (mounted) {
+          String message = 'Login Failed';
+          if (e.message.contains('Email not confirmed')) {
+            message = 'Please check your email to confirm your account.';
+          } else if (e.message.contains('Invalid login credentials')) {
+            message = 'Invalid email or password.';
+          } else {
+            message = e.message;
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(message), backgroundColor: Colors.red),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+        }
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -40,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      FayStrings.schoolName,
+                      AppStrings.schoolName,
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(
                             color: FayColors.navy,
@@ -76,7 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextFormField(
                       controller: _passwordController,
                       obscureText: true,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Password',
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.lock),
@@ -93,10 +134,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           backgroundColor: FayColors.gold,
                           foregroundColor: FayColors.navy,
                         ),
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12.0),
-                          child: Text('Login'),
-                        ),
+                        child: _isLoading
+                            ? const CircularProgressIndicator(
+                                color: FayColors.navy,
+                              )
+                            : const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 12.0),
+                                child: Text('Login'),
+                              ),
                       ),
                     ),
                   ],

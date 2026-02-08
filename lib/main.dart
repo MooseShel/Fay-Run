@@ -1,67 +1,54 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/theme.dart';
 import 'core/constants.dart';
 import 'providers/game_state.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/sign_up_screen.dart';
 import 'screens/onboarding/student_setup_screen.dart';
+import 'screens/auth/student_select_screen.dart'; // Import
 import 'screens/dashboard/main_menu_screen.dart';
 import 'screens/game/game_loop_screen.dart';
 
-void main() {
-  runApp(const FayGatorRunApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: AppStrings.supabaseUrl,
+    anonKey: AppStrings.supabaseAnonKey,
+  );
+
+  final session = Supabase.instance.client.auth.currentSession;
+  final initialRoute = session != null ? '/select_student' : '/';
+
+  runApp(
+    MultiProvider(
+      providers: [ChangeNotifierProvider(create: (_) => GameState())],
+      child: FayGatorRunApp(initialRoute: initialRoute),
+    ),
+  );
 }
 
 class FayGatorRunApp extends StatelessWidget {
-  const FayGatorRunApp({super.key});
+  final String initialRoute;
+  const FayGatorRunApp({super.key, required this.initialRoute});
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => GameState())],
-      child: MaterialApp(
-        title: FayStrings.appTitle,
-        debugShowCheckedModeBanner: false,
-        theme: FayTheme.themeData,
-        initialRoute: '/',
-        routes: {
-          '/': (context) => const LoginScreen(),
-          '/signup': (context) => const SignUpScreen(),
-          '/setup': (context) => const StudentSetupScreen(),
-          '/menu': (context) => const MainMenuScreen(),
-          '/game': (context) => const GameLoopScreen(),
-        },
-      ),
-    );
-  }
-}
-
-class PlaceholderHome extends StatelessWidget {
-  const PlaceholderHome({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text(FayStrings.appTitle)),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.school, size: 80, color: FayColors.navy),
-            const SizedBox(height: 20),
-            Text(
-              'Welcome to ${FayStrings.appTitle}',
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'Initializing Project Structure...',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-          ],
-        ),
-      ),
+    return MaterialApp(
+      title: AppStrings.appTitle,
+      debugShowCheckedModeBanner: false,
+      theme: FayTheme.themeData,
+      initialRoute: initialRoute,
+      routes: {
+        '/': (context) => const LoginScreen(),
+        '/signup': (context) => const SignUpScreen(),
+        '/setup': (context) => const StudentSetupScreen(),
+        '/select_student': (context) => const StudentSelectScreen(),
+        '/menu': (context) => const MainMenuScreen(),
+        '/game': (context) => const GameLoopScreen(),
+      },
     );
   }
 }

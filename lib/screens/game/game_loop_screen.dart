@@ -8,7 +8,9 @@ import '../../services/mock_sql_service.dart';
 import '../../widgets/parallax_background.dart';
 import '../../widgets/player_character.dart';
 import '../../widgets/game/ambient_effects.dart';
+import '../../widgets/game/quiz_overlay.dart';
 import '../../game/obstacle_manager.dart';
+import '../../services/audio_service.dart';
 
 class GameLoopScreen extends StatefulWidget {
   const GameLoopScreen({super.key});
@@ -25,11 +27,14 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   // Game Physics State
   double _playerY = 0; // 0 = ground, positive = up
   double _verticalVelocity = 0;
-  final double _gravity = -0.8;
-  final double _jumpForce = 15.0;
-  final double _groundHeight = 100.0;
+  final double _gravity = -0.5; // Floatier
+  final double _jumpForce = 13.0; // Balanced
+  final double _groundHeight =
+      50.0; // Adjusted from 40.0 for better visual alignment on ground
 
   bool _isJumping = false;
+  int _jumpCount = 0;
+  final int _maxJumps = 2;
 
   // Progression & Chaos
   double _distanceRun = 0;
@@ -46,6 +51,22 @@ class _GameLoopScreenState extends State<GameLoopScreen>
           )
           ..addListener(_gameLoop)
           ..repeat();
+
+    // Load challenge from Supabase
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final state = context.read<GameState>();
+      state.loadChallenge();
+
+      // Start BGM
+      AudioService().playBGM(state.currentLevel);
+    });
+  }
+
+  @override
+  void dispose() {
+    _gameLoopController.dispose();
+    AudioService().stopBGM(); // Stop music on exit
+    super.dispose();
   }
 
   void _gameLoop() {
@@ -56,12 +77,25 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     // 0. Timers & Progression
     const double dt = 0.016;
     _distanceRun += gameState.runSpeed * dt * 10; // Scale up
+
+    // Score based on distance (approx 1 point per unit run)
+    // RunSpeed 3.0 * 0.016 * 10 = 0.48 units per frame.
+    // Let's add 1 point every few frames? Or just use a timer accumulator?
+    // Let's just add 1 point every frame the user is moving?
+    // Simple: gameState.addScore(1); runs 60 times a second -> 60 points/sec.
+    // Maybe too fast? Let's add (runSpeed / 10).round()
+    if (gameState.status == GameStatus.playing) {
+      gameState.addScore(1);
+    }
+
     _chaosTimer += dt;
 
     // Level Completion (e.g., every 1000 meters)
     if (_distanceRun > 1000) {
       _distanceRun = 0;
       gameState.completeLevel();
+      // Stop music when level completes
+      AudioService().stopBGM();
       // Show Level Up toast or overlay?
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -71,12 +105,17 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       );
     }
 
-    // Random Chaos (Every 30-45s)
-    if (_chaosTimer > 30 + _random.nextInt(15)) {
+    // Random Staff Appearances (Every 5-10s for fun sounds/visuals only)
+    if (_chaosTimer > 5 + _random.nextInt(5)) {
       _chaosTimer = 0;
       final eventType =
           StaffEventType.values[_random.nextInt(StaffEventType.values.length)];
+
+      // Show staff event notification (visual only, no gameplay effects)
       gameState.triggerStaffEvent(eventType);
+
+      // Play Staff Sound
+      AudioService().playStaffSound(eventType.toString());
     }
 
     // 1. Physics Update
@@ -89,12 +128,15 @@ class _GameLoopScreenState extends State<GameLoopScreen>
           _playerY = 0;
           _verticalVelocity = 0;
           _isJumping = false;
+          _jumpCount = 0; // Reset jumps
         }
       });
     }
 
     // 2. Obstacle Update
     // dt = 0.016s roughly
+    final screenSize = MediaQuery.of(context).size;
+
     setState(() {
       _obstacleManager.update(
         0.016,
@@ -105,25 +147,49 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         },
       );
 
-      // Check Collisions
-      // Player rect (simplified relative coords):
-      // X: 50px / screenWidth (approx 0.12)
-      // Y: _playerY
-      // Obstacle rect: obs.x, obs.y
-
-      final playerXRatio = 50.0 / MediaQuery.of(context).size.width;
-      final playerWidthRatio = 60.0 / MediaQuery.of(context).size.width;
-
       for (var obs in _obstacleManager.obstacles) {
-        // AABB Collision
+        // Special collision handling for Golden Books (collectibles)
+        // Use tighter padding for better collection detection
+        bool isGoldenBook = obs.type == ObstacleType.goldenBook;
+
+        // AABB Collision with tightened hitbox for more precise detection
+        // Golden Books: 15% padding (easier to collect)
+        // Obstacles: 35% padding (more forgiving)
+        double obsPaddingX = isGoldenBook ? obs.width * 0.15 : obs.width * 0.35;
+        double obsPaddingY = isGoldenBook
+            ? obs.height * 0.15
+            : obs.height * 0.35;
+
+        double obsLeft = obs.x + obsPaddingX;
+        double obsRight = obs.x + obs.width - obsPaddingX;
+        double obsBottom = obs.y + obsPaddingY;
+        double obsTop = obs.y + obs.height - obsPaddingY;
+
+        // Player Hitbox (Relative)
+        // Player Width ~50px. Visual is wider.
+        // Make the hurtbox very central for fair gameplay.
+        double playerVisualWidth = 50.0 / screenSize.width;
+        double playerPadding =
+            playerVisualWidth * 0.4; // 40% padding (increased from 30%)
+
+        double playerLeft = (50.0 / screenSize.width) + playerPadding;
+        double playerRight = ((50.0 + 40.0) / screenSize.width) - playerPadding;
+
+        // Player Height
+        double playerVisualHeight = 100.0 / screenSize.height;
+        double playerHeightPadding =
+            playerVisualHeight * 0.3; // 30% padding (increased from 20%)
+
+        double playerBottom =
+            (_playerY / screenSize.height) + playerHeightPadding;
+        double playerTop =
+            ((_playerY + 100.0) / screenSize.height) - playerHeightPadding;
+
         // X overlap
-        bool xOverlap =
-            (obs.x < playerXRatio + playerWidthRatio) &&
-            (obs.x + obs.width > playerXRatio);
-        // Y overlap (Obstacles are on ground y=0, Player y=0 is ground)
-        // If jumping high enough, safe.
-        double jumpClearance = obs.height * 500; // Arbitrary pixel height
-        bool yOverlap = _playerY < jumpClearance;
+        bool xOverlap = (obsLeft < playerRight) && (obsRight > playerLeft);
+
+        // Y overlap
+        bool yOverlap = (playerBottom < obsTop) && (playerTop > obsBottom);
 
         if (xOverlap && yOverlap && !obs.isCollected) {
           _handleCollision(obs, gameState);
@@ -140,78 +206,59 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       _showQuiz(gameState);
     } else {
       if (!gameState.isInvincible) {
+        AudioService().playBonk();
         gameState.takeDamage();
-        gameState.triggerStaffEvent(
-          StaffEventType.shoeTie,
-        ); // Random or specific?
-        // User said: "Wrong Answer -> Staff Chaos".
-        // Hitting obstacle -> Just damage? Or staff event too?
-        // Let's stick to damage for obstacle, Staff Event for Quiz Fail.
-        // But users request: "Trigger a random event ... on a 'Wrong Answer'."
-        // Also "Staff Chaos (Whoopsie) System... Trigger a random event every 30-45 seconds".
-        // Let's implement timer in GameState for that separately.
+        gameState.triggerStaffEvent(StaffEventType.shoeTie);
       }
     }
   }
 
   void _showQuiz(GameState gameState) {
-    final challenge = MockSQLService.getWeeklyChallenge();
-    final question = challenge.questions.first; // Pick first for now
+    // Use loaded challenge or fallback to mock
+    final challenge =
+        gameState.currentChallenge ?? MockSQLService.getWeeklyChallenge();
+
+    // Get Unique Question
+    final question = gameState.getNextQuestion();
 
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text('Weekly Challenge: ${challenge.topic}'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(question.questionText),
-            const SizedBox(height: 20),
-            ...question.options.asMap().entries.map(
-              (e) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4.0),
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    bool correct = e.key == question.correctOptionIndex;
-                    if (correct) {
-                      gameState.addScore(100);
-                      gameState.setInvincible(true);
-                    } else {
-                      gameState.takeDamage();
-                      gameState.triggerStaffEvent(
-                        StaffEventType.scienceSplat,
-                      ); // Randomize later
-                    }
-                    gameState.resumeGame();
-                  },
-                  child: Text(e.value),
-                ),
-              ),
-            ),
-          ],
-        ),
+      barrierColor: Colors.black.withValues(alpha: 0.7), // Darker overlay
+      builder: (context) => QuizOverlay(
+        challenge: challenge,
+        question: question,
+        onAnswered: (isCorrect) {
+          Navigator.pop(context); // Close dialog
+          if (isCorrect) {
+            AudioService().playPowerup();
+            gameState.addScore(100);
+            gameState.setInvincible(true);
+          } else {
+            AudioService().playBonk();
+            gameState.takeDamage();
+            gameState.triggerStaffEvent(StaffEventType.scienceSplat);
+          }
+          gameState.resumeGame();
+        },
       ),
     );
   }
 
   void _jump() {
     final gameState = context.read<GameState>();
-    if (gameState.activeStaffEvent?.type == StaffEventType.shoeTie) return;
 
-    if (!_isJumping) {
+    if (_jumpCount < _maxJumps) {
+      if (gameState.status == GameStatus.playing) {
+        AudioService().playJump();
+      }
       setState(() {
+        // Normal jump power (no staff modifications)
         _verticalVelocity = _jumpForce;
         _isJumping = true;
+        _jumpCount++;
       });
     }
-  }
-
-  @override
-  void dispose() {
-    _gameLoopController.dispose();
-    super.dispose();
   }
 
   @override
@@ -230,15 +277,17 @@ class _GameLoopScreenState extends State<GameLoopScreen>
               level: gameState.currentLevel,
             ),
 
-            const AmbientEffects(),
+            // 4. Ambient Effects (Level-specific particles)
+            AmbientEffects(level: gameState.currentLevel),
 
             // Obstacles
             ..._obstacleManager.obstacles.map(
               (obs) => Positioned(
                 left: obs.x * screenSize.width,
-                bottom: _groundHeight, // They are on ground
+                bottom:
+                    _groundHeight + (obs.y * screenSize.height), // Use obs.y
                 width: obs.width * screenSize.width,
-                height: obs.height * screenSize.height, // Scale height
+                height: obs.height * screenSize.height,
                 child: _buildObstacleWidget(obs),
               ),
             ),
@@ -252,19 +301,13 @@ class _GameLoopScreenState extends State<GameLoopScreen>
               ),
             ),
 
-            // Fog Overlay (Level 3)
-            if (gameState.currentLevel == 3)
-              Positioned.fill(
-                child: Container(color: Colors.white.withOpacity(0.4)),
-              ),
-
             // Ink Splat Overlay (Science Event)
             if (gameState.activeStaffEvent?.type == StaffEventType.scienceSplat)
               Center(
                 child: Icon(
                   Icons.blur_on,
                   size: 300,
-                  color: Colors.black.withOpacity(0.8),
+                  color: Colors.black.withValues(alpha: 0.8),
                 ),
               ), // Placeholder for Splat visual
 
@@ -305,7 +348,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
             // 7. Level Complete Overlay
             if (gameState.status == GameStatus.levelComplete)
               Container(
-                color: FayColors.navy.withOpacity(0.9),
+                color: FayColors.navy.withValues(alpha: 0.9),
                 child: Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -326,7 +369,14 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                       ),
                       const SizedBox(height: 40),
                       ElevatedButton.icon(
-                        onPressed: () => context.read<GameState>().resumeGame(),
+                        onPressed: () {
+                          _obstacleManager.clear();
+                          final nextLevel =
+                              context.read<GameState>().currentLevel + 1;
+                          context.read<GameState>().startNextLevel();
+                          // Start music for next level
+                          AudioService().playBGM(nextLevel);
+                        },
                         icon: const Icon(Icons.arrow_forward),
                         label: const Text('GO TO NEXT CLASS'),
                         style: ElevatedButton.styleFrom(
@@ -362,6 +412,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                       const SizedBox(height: 20),
                       ElevatedButton(
                         onPressed: () {
+                          // Stop music when returning to menu
+                          AudioService().stopBGM();
                           Navigator.pop(context); // Go back to menu
                         },
                         child: const Text('RETURN TO MENU'),
@@ -377,39 +429,58 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   }
 
   Widget _buildObstacleWidget(Obstacle obs) {
-    IconData icon = Icons.warning;
-    Color color = Colors.red;
+    String assetName = '';
 
     switch (obs.type) {
+      case ObstacleType.log:
+        assetName = 'assets/images/obstacle_log.png';
+        break;
+      case ObstacleType.puddle:
+        assetName = 'assets/images/obstacle_puddle.png';
+        break;
+      case ObstacleType.rock:
+        assetName = 'assets/images/obstacle_rock.png';
+        break;
       case ObstacleType.janitorBucket:
-        icon = Icons.cleaning_services;
-        color = Colors.blueGrey;
+        assetName = 'assets/images/obstacle_bucket.png';
+        break;
+      case ObstacleType.books:
+        assetName = 'assets/images/obstacle_books.png';
         break;
       case ObstacleType.beaker:
-        icon = Icons.science;
-        color = Colors.purple;
+        assetName = 'assets/images/obstacle_bucket.png';
         break;
       case ObstacleType.flyingPizza:
-        icon = Icons.local_pizza;
-        color = Colors.orange;
+        assetName = 'assets/images/obstacle_food.png';
+        break;
+      case ObstacleType.food:
+        assetName = 'assets/images/obstacle_food.png';
         break;
       case ObstacleType.car:
-        icon = Icons.directions_car;
-        color = Colors.redAccent;
+        assetName = 'assets/images/obstacle_suv.png';
+        break;
+      case ObstacleType.cone:
+        assetName = 'assets/images/obstacle_cone.png';
         break;
       case ObstacleType.goldenBook:
-        icon = Icons.menu_book;
-        color = FayColors.gold;
+        assetName = 'assets/images/item_golden_book.png';
         break;
     }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
-        border: Border.all(color: color),
-        shape: BoxShape.circle,
-      ),
-      child: Icon(icon, color: color, size: 30),
+    if (assetName.isEmpty) return const SizedBox();
+
+    return Image.asset(
+      assetName,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.red),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.error, color: Colors.red),
+        );
+      },
     );
   }
 
@@ -423,21 +494,42 @@ class _GameLoopScreenState extends State<GameLoopScreen>
             const SizedBox(width: 8),
             Text(
               'x ${state.lives}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: FayColors.navy,
+                shadows: const [
+                  Shadow(
+                    offset: Offset(1, 1),
+                    blurRadius: 2,
+                    color: Colors.white,
+                  ),
+                ],
               ),
             ),
           ],
         ),
         Text(
           'Score: ${state.score}',
-          style: const TextStyle(fontSize: 20, color: Colors.white),
+          style: TextStyle(
+            fontSize: 20,
+            color: FayColors.navy,
+            fontWeight: FontWeight.bold,
+            shadows: const [
+              Shadow(offset: Offset(1, 1), blurRadius: 2, color: Colors.white),
+            ],
+          ),
         ),
         Text(
           'Level: ${state.currentLevel}',
-          style: const TextStyle(fontSize: 16, color: Colors.white),
+          style: TextStyle(
+            fontSize: 16,
+            color: FayColors.navy,
+            fontWeight: FontWeight.bold,
+            shadows: const [
+              Shadow(offset: Offset(1, 1), blurRadius: 2, color: Colors.white),
+            ],
+          ),
         ),
       ],
     );
@@ -450,20 +542,64 @@ class _StaffEventCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String imagePath = '';
+    switch (event.type) {
+      case StaffEventType.shoeTie:
+        imagePath = 'assets/images/staff_head_school.jpg';
+        break;
+      case StaffEventType.coachWhistle:
+        imagePath = 'assets/images/staff_coach.jpg';
+        break;
+      case StaffEventType.librarianShush:
+        imagePath = 'assets/images/staff_librarian.jpg';
+        break;
+      case StaffEventType.scienceSplat:
+        imagePath = 'assets/images/staff_science.jpg';
+        break;
+      case StaffEventType.deanGlare:
+        imagePath = 'assets/images/staff_dean.jpg';
+        break;
+      case StaffEventType.peDrill:
+        imagePath = 'assets/images/staff_pe.png';
+        break;
+    }
+
     return Card(
       color: FayColors.navy,
       child: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Column(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              event.title,
-              style: TextStyle(
-                color: FayColors.gold,
-                fontWeight: FontWeight.bold,
+            if (imagePath.isNotEmpty)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(50),
+                child: Image.asset(
+                  imagePath,
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.cover,
+                  errorBuilder: (c, e, s) =>
+                      const Icon(Icons.person, size: 60, color: Colors.white),
+                ),
               ),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  event.title,
+                  style: TextStyle(
+                    color: FayColors.gold,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  event.message,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ],
             ),
-            Text(event.message, style: const TextStyle(color: Colors.white)),
           ],
         ),
       ),

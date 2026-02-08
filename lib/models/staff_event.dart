@@ -3,6 +3,8 @@ enum StaffEventType {
   coachWhistle, // Coach: Double Speed
   librarianShush, // Librarian: Mute/Dim
   scienceSplat, // Science Teacher: Ink Splat
+  deanGlare, // Dean: Slow Motion
+  peDrill, // PE Staff: Super Jump
 }
 
 class StaffEvent {
@@ -47,6 +49,20 @@ class StaffEvent {
           title: 'Science Teacher',
           message: 'Whoopsie!',
           duration: const Duration(seconds: 3),
+        );
+      case StaffEventType.deanGlare:
+        return StaffEvent(
+          type: type,
+          title: 'Dean of Students',
+          message: 'Detention!',
+          duration: const Duration(seconds: 5),
+        );
+      case StaffEventType.peDrill:
+        return StaffEvent(
+          type: type,
+          title: 'PE Staff',
+          message: 'Drill Time!',
+          duration: const Duration(seconds: 5),
         );
     }
   }

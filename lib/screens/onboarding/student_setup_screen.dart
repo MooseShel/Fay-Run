@@ -14,6 +14,10 @@ class StudentSetupScreen extends StatefulWidget {
 class _StudentSetupScreenState extends State<StudentSetupScreen> {
   final _nameController = TextEditingController();
   String _nickname = '';
+  bool _isSaving = false;
+
+  String _selectedGrade = '1st';
+  final List<String> _grades = ['K', '1st', '2nd', '3rd', '4th', '5th'];
 
   final List<String> _adjectives = [
     "Swampy",
@@ -36,25 +40,49 @@ class _StudentSetupScreenState extends State<StudentSetupScreen> {
     });
   }
 
-  void _start() {
-    if (_nameController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your name first!')),
+  Future<void> _saveStudent({bool addAnother = false}) async {
+    if (_nameController.text.isEmpty || _nickname.isEmpty) return;
+
+    setState(() => _isSaving = true);
+    try {
+      // Register Student via GameState
+      await context.read<GameState>().registerStudent(
+        _nameController.text,
+        _nickname,
+        _selectedGrade,
       );
-      return;
+
+      if (!mounted) return;
+
+      if (addAnother) {
+        // Reset form for next student
+        _nameController.clear();
+        setState(() {
+          _nickname = '';
+          _selectedGrade = '1st';
+          _isSaving = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Student added! Add another or finish.'),
+          ),
+        );
+      } else {
+        // Finish and go back to selection
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+        } else {
+          Navigator.pushReplacementNamed(context, '/select_student');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving student: $e')));
+        setState(() => _isSaving = false);
+      }
     }
-
-    if (_nickname.isEmpty) {
-      _generateNickname();
-    }
-
-    // Save to GameState
-    context.read<GameState>().setStudentIdentity(
-      _nameController.text,
-      _nickname,
-    );
-
-    Navigator.pushReplacementNamed(context, '/menu');
   }
 
   @override
@@ -73,6 +101,23 @@ class _StudentSetupScreenState extends State<StudentSetupScreen> {
                 labelText: 'What is your First Name?',
                 border: OutlineInputBorder(),
               ),
+            ),
+            const SizedBox(height: 20),
+            DropdownButtonFormField<String>(
+              initialValue: _selectedGrade,
+              decoration: const InputDecoration(
+                labelText: 'Grade Level',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.school),
+              ),
+              items: _grades.map((grade) {
+                return DropdownMenuItem(value: grade, child: Text(grade));
+              }).toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() => _selectedGrade = value);
+                }
+              },
             ),
             const SizedBox(height: 20),
             if (_nickname.isNotEmpty)
@@ -101,13 +146,43 @@ class _StudentSetupScreenState extends State<StudentSetupScreen> {
             const Spacer(),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _start,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: FayColors.navy,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: const Text('Enter the School'),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: (_nickname.isNotEmpty && !_isSaving)
+                          ? () => _saveStudent(addAnother: true)
+                          : null,
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        side: const BorderSide(color: FayColors.navy, width: 2),
+                      ),
+                      child: const Text('Save & Add Another'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: (_nickname.isNotEmpty && !_isSaving)
+                          ? () => _saveStudent(addAnother: false)
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: FayColors.navy,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: _isSaving
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text('Finish & Play'),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

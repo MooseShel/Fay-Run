@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 
 class FayColors {
-  static final Color navy = Colors.blue[900]!;
-  static final Color gold = Colors.amber[700]!;
+  static const Color navy = Color(0xFF1565C0); // Brighter Navy (Blue 800)
+  static const Color navyDark = Color(0xFF0D47A1); // Deep Navy background
+  static const Color gold = Color(0xFFFFC107); // Amber 500 (Vibrant Gold)
   static const Color white = Colors.white;
-  static const Color bayouGreen = Color(0xFF2E7D32); // A dark, swampy green
-  static const Color brickRed = Color(0xFFB71C1C); // For the brick buildings
+  static const Color bayouGreen = Color(0xFF43A047); // Green 600 (Lush)
+  static const Color brickRed = Color(0xFFE53935); // Red 600 (Vibrant)
+  static const Color text = Color(0xFF263238); // Blue Grey 900
 }
 
-class FayStrings {
+class AppStrings {
   static const String appTitle = 'Fay Gator Run';
+  static const String supabaseUrl = 'https://jywaeueuzislxcyrossu.supabase.co';
+  static const String supabaseAnonKey =
+      'sb_publishable_9bLhuthhrhqQBuRL_5kziQ_fKz1lcbG'; // Provided by user
   static const String schoolName = 'The Fay School';
 }

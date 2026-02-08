@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/constants.dart';
 
 class ParallaxBackground extends StatefulWidget {
   final double runSpeed;
@@ -49,163 +48,130 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: ParallaxPainter(
-        scrollOffset: _scrollOffset,
-        level: widget.level,
-      ),
-      size: Size.infinite,
+    String assetPath;
+    switch (widget.level) {
+      case 2:
+        assetPath = 'assets/images/bg_layer_lockers.png';
+        break;
+      case 3:
+        assetPath = 'assets/images/bg_science_lab.png';
+        break;
+      case 4:
+        assetPath = 'assets/images/bg_cafeteria.png';
+        break;
+      case 5:
+        assetPath = 'assets/images/bg_carpool.png';
+        break;
+      default:
+        assetPath = 'assets/images/bg_layer_trees.png';
+    }
+
+    return Stack(
+      children: [
+        // 1. Sky / Gradient Base (Using CustomPainter for complex gradients)
+        Positioned.fill(
+          child: CustomPaint(painter: _SkyPainter(level: widget.level)),
+        ),
+
+        // 2. Far Layer (Images for all levels)
+        Positioned.fill(child: _buildScrollingImage(assetPath, 0.2)),
+
+        // 3. Near Layer / Ground (Image-based)
+        _buildScrollingGround(),
+      ],
+    );
+  }
+
+  Widget _buildScrollingImage(String assetPath, double speedMultiplier) {
+    // Basic infinite scroll using two images
+    // We assume the image width is roughly screen width or we tile it.
+    // For simplicity, we'll use a LayoutBuilder and tile 3 times to be safe.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
+        // Calculate offset based on scroll
+        final totalScroll = _scrollOffset * speedMultiplier;
+        final imageWidth =
+            screenWidth; // Assuming image fits width, or we scale it
+        // We want: position = -(totalScroll % imageWidth)
+        final double xPos = -(totalScroll % imageWidth);
+
+        return Stack(
+          children: [
+            Positioned(
+              left: xPos,
+              top: 0,
+              bottom: 0, // Cover height
+              width: imageWidth + 2, // Slight overlap
+              child: Image.asset(
+                assetPath,
+                fit: BoxFit.fitHeight, // Prevents zooming/cropping
+                alignment: Alignment.bottomCenter, // Align to ground
+              ),
+            ),
+            Positioned(
+              left: xPos + imageWidth, // Next tile
+              top: 0,
+              bottom: 0,
+              width: imageWidth + 2,
+              child: Image.asset(
+                assetPath,
+                fit: BoxFit.fitHeight,
+                alignment: Alignment.bottomCenter,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildScrollingGround() {
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: 0,
+      height: 100, // Ground height
+      child: Container(color: Colors.white),
     );
   }
 }
 
-class ParallaxPainter extends CustomPainter {
-  final double scrollOffset;
+class _SkyPainter extends CustomPainter {
   final int level;
-
-  ParallaxPainter({required this.scrollOffset, required this.level});
+  _SkyPainter({required this.level});
 
   @override
   void paint(Canvas canvas, Size size) {
-    // 1. Sky / Background Base
-    _drawSky(canvas, size, level);
-
-    // 2. Far Layer (Slow)
-    _drawFarLayer(canvas, size, scrollOffset * 0.2, level);
-
-    // 3. Near Layer (Fast)
-    _drawNearLayer(canvas, size, scrollOffset, level);
-  }
-
-  void _drawSky(Canvas canvas, Size size, int level) {
-    Color color;
+    List<Color> colors;
     switch (level) {
-      case 1:
-        color = Colors.lightBlueAccent;
-        break; // Bayou Sky
-      case 2:
-        color = const Color(0xFFE0E0E0);
-        break; // Hallway Wall (Grey)
-      case 3:
-        color = const Color(0xFFF0F0F0);
-        break; // Lab Wall (White)
-      case 4:
-        color = const Color(0xFFFFE0B2);
-        break; // Cafeteria Wall (Orange tint)
-      case 5:
-        color = Colors.blueGrey;
-        break; // Outside Sky
+      case 1: // Bayou
+        colors = [Colors.lightBlue[300]!, Colors.lightBlue[50]!];
+        break;
+      case 2: // Hallway
+        colors = [const Color(0xFFE0E0E0), const Color(0xFFFAFAFA)];
+        break;
+      case 3: // Lab
+        colors = [const Color(0xFFF5F5F5), Colors.white];
+        break;
+      case 4: // Cafeteria
+        colors = [const Color(0xFFFFE0B2), const Color(0xFFFFF3E0)];
+        break;
+      case 5: // Carpool
+        colors = [const Color(0xFF455A64), const Color(0xFFFFCC80)];
+        break;
       default:
-        color = Colors.lightBlueAccent;
+        colors = [Colors.lightBlue, Colors.white];
     }
-
-    final paint = Paint()..color = color;
+    final paint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: colors,
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
   }
 
-  void _drawFarLayer(Canvas canvas, Size size, double offset, int level) {
-    final paint = Paint();
-    double width = 100.0; // Pattern width
-
-    // Draw repeating pattern
-    double startX = -(offset % width);
-
-    for (double x = startX; x < size.width; x += width) {
-      if (level == 1) {
-        // Trees
-        paint.color = Colors.green[800]!;
-        canvas.drawRect(
-          Rect.fromLTWH(x + 20, size.height * 0.4, 40, size.height * 0.6),
-          paint,
-        );
-        canvas.drawCircle(Offset(x + 40, size.height * 0.4), 30, paint);
-      } else if (level == 2) {
-        // Lockers
-        paint.color = FayColors.navy;
-        canvas.drawRect(
-          Rect.fromLTWH(x + 10, size.height * 0.3, 80, size.height * 0.7),
-          paint,
-        );
-        // Vents
-        paint.color = Colors.grey;
-        canvas.drawRect(
-          Rect.fromLTWH(x + 20, size.height * 0.35, 60, 10),
-          paint,
-        );
-      } else if (level == 3) {
-        // Lab Shelves
-        paint.color = Colors.brown;
-        canvas.drawRect(Rect.fromLTWH(x, size.height * 0.4, 90, 10), paint);
-        // Beakers on shelf
-        paint.color = Colors.purple.withOpacity(0.5);
-        canvas.drawRect(
-          Rect.fromLTWH(x + 20, size.height * 0.35, 10, 15),
-          paint,
-        );
-      } else if (level == 4) {
-        // Posters / Windows
-        paint.color = Colors.blue.withOpacity(0.3);
-        canvas.drawRect(
-          Rect.fromLTWH(x + 10, size.height * 0.2, 50, 50),
-          paint,
-        );
-      } else if (level == 5) {
-        // Buildings / Fence
-        paint.color = FayColors.brickRed;
-        canvas.drawRect(
-          Rect.fromLTWH(x, size.height * 0.5, 90, size.height * 0.5),
-          paint,
-        );
-      }
-    }
-  }
-
-  void _drawNearLayer(Canvas canvas, Size size, double offset, int level) {
-    final paint = Paint();
-
-    // Ground / Floor
-    switch (level) {
-      case 1:
-        paint.color = const Color(0xFF5D4037);
-        break; // Mud
-      case 2:
-        paint.color = const Color(0xFFBCAAA4);
-        break; // Tile
-      case 3:
-        paint.color = const Color(0xFFEEEEEE);
-        break; // Clean Tile
-      case 4:
-        paint.color = const Color(0xFFFFCC80);
-        break; // Wood/Linoleum
-      case 5:
-        paint.color = const Color(0xFF424242);
-        break; // Asphalt
-      default:
-        paint.color = const Color(0xFF5D4037);
-    }
-
-    canvas.drawRect(
-      Rect.fromLTWH(0, size.height - 100, size.width, 100),
-      paint,
-    );
-
-    // Road strips for Carpool
-    if (level == 5) {
-      paint.color = Colors.yellow;
-      double dashWidth = 40;
-      double startX = -(offset % (dashWidth * 2));
-      for (double x = startX; x < size.width; x += dashWidth * 2) {
-        canvas.drawRect(
-          Rect.fromLTWH(x, size.height - 50, dashWidth, 5),
-          paint,
-        );
-      }
-    }
-  }
-
   @override
-  bool shouldRepaint(covariant ParallaxPainter oldDelegate) {
-    return oldDelegate.scrollOffset != scrollOffset ||
-        oldDelegate.level != level;
-  }
+  bool shouldRepaint(covariant _SkyPainter old) => old.level != level;
 }

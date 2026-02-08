@@ -7,9 +7,10 @@ CREATE TABLE challenges (
     topic TEXT NOT NULL,          -- e.g., "Geometry", "Fractions", "Louisiana History"
     season TEXT NOT NULL,         -- e.g., "Fall 2023", "Spring 2024"
     week_number INTEGER NOT NULL, -- e.g., 1, 2, ... 52
+    grade_level INTEGER NOT NULL DEFAULT 4, -- 1 or 4
     difficulty_level INTEGER DEFAULT 1, -- 1-5, matching game levels?
-    active_start_date DATETIME,   -- When this challenge becomes available
-    active_end_date DATETIME      -- When it expires
+    active_start_date TIMESTAMPTZ,   -- When this challenge becomes available
+    active_end_date TIMESTAMPTZ      -- When it expires
 );
 
 -- Table: questions
@@ -21,7 +22,7 @@ CREATE TABLE questions (
     correct_option TEXT NOT NULL,
     wrong_option_1 TEXT NOT NULL,
     wrong_option_2 TEXT NOT NULL,
-    wrong_option_3 TEXT NOT NULL, -- Optional, can be empty/null if only 3 choices
+    wrong_option_3 TEXT, -- Optional, can be empty/null if only 3 choices
     FOREIGN KEY (challenge_id) REFERENCES challenges(id) ON DELETE CASCADE
 );
 
@@ -30,7 +31,7 @@ CREATE TABLE questions (
 CREATE TABLE student_progress (
     student_id TEXT NOT NULL,
     challenge_id TEXT NOT NULL,
-    completed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     score INTEGER,
     PRIMARY KEY (student_id, challenge_id),
     FOREIGN KEY (challenge_id) REFERENCES challenges(id)

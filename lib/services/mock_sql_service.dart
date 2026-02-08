@@ -30,6 +30,7 @@ class MockSQLService {
     return Challenge(
       id: 'week_06_geometry',
       topic: 'Geometry',
+      gradeLevel: 4,
       questions: [
         QuizQuestion(
           questionText: 'What is the perimeter of a square with side 4?',
@@ -53,7 +54,7 @@ class MockSQLService {
   // Simulate updating leaderboard
   static Future<void> submitScore(String studentName, int score) async {
     await Future.delayed(const Duration(milliseconds: 500)); // Simulate network
-    print('MOCK DB: Score submitted for $studentName: $score');
+    // debugPrint('MOCK DB: Score submitted for $studentName: $score');
     // Logic: If month changes -> reset leaderboard (omitted for simple prototype persistence)
   }
 }

@@ -13,79 +13,42 @@ class PlayerCharacter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Barney Gator Representation
+    // Select image based on state
+    String assetName = 'assets/images/ernie_run.png';
+    if (isJumping) {
+      assetName = 'assets/images/ernie_jump.png';
+    }
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 100),
-      width: 60,
-      height: 60,
+      width: 140, // Doubled size
+      height: 140,
       decoration: BoxDecoration(
-        color: FayColors.bayouGreen,
-        borderRadius: BorderRadius.circular(8),
-        border: isInvincible
-            ? Border.all(color: FayColors.gold, width: 4)
-            : null,
+        // Glow effect only when invincible
         boxShadow: isInvincible
             ? [
                 BoxShadow(
-                  color: FayColors.gold.withOpacity(0.5),
-                  blurRadius: 10,
-                  spreadRadius: 5,
+                  color: FayColors.gold.withValues(alpha: 0.6),
+                  blurRadius: 15,
+                  spreadRadius: 2,
                 ),
               ]
             : [],
       ),
-      child: Stack(
-        children: [
-          // Eyes
-          Positioned(
-            top: 10,
-            right: 10,
-            child: Row(
-              children: [_buildEye(), const SizedBox(width: 4), _buildEye()],
+      child: Image.asset(
+        assetName,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          // Fallback if image fails - keeping the old green box look as backup
+          return Container(
+            decoration: BoxDecoration(
+              color: FayColors.bayouGreen,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: FayColors.navy, width: 2),
             ),
-          ),
-          // Snout
-          Positioned(
-            bottom: 10,
-            right: -5,
-            child: Container(
-              width: 15,
-              height: 20,
-              decoration: BoxDecoration(
-                color: FayColors.bayouGreen,
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-          ),
-          // Legs (Simple animation based on jump?)
-          if (!isJumping)
-            Positioned(
-              bottom: 0,
-              left: 10,
-              child: Container(width: 10, height: 10, color: Colors.green[900]),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEye() {
-    return Container(
-      width: 12,
-      height: 12,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: Container(
-          width: 4,
-          height: 4,
-          decoration: const BoxDecoration(
-            color: Colors.black,
-            shape: BoxShape.circle,
-          ),
-        ),
+            child: const Center(child: Icon(Icons.person, color: Colors.white)),
+          );
+        },
       ),
     );
   }

@@ -1,10 +1,16 @@
 import 'dart:math';
 
 enum ObstacleType {
-  janitorBucket, // Level 2
+  log, // Level 1 (Bayou)
+  puddle, // Level 1 (Bayou)
+  rock, // Level 1 (Bayou)
+  janitorBucket, // Level 2 (Hallway)
+  books, // Level 2 & 3 (Hallway/Lab)
   beaker, // Level 3 (Scientific)
-  flyingPizza, // Level 4
-  car, // Level 5
+  flyingPizza, // Level 4 (Cafeteria)
+  food, // Level 4 (Cafeteria)
+  car, // Level 5 (Car Pool - SUV)
+  cone, // Level 5 (Car Pool - Traffic Cone)
   goldenBook, // Quiz Gate (Special)
 }
 
@@ -39,9 +45,27 @@ class ObstacleManager {
   void update(double dt, double runSpeed, int level, Function(Obstacle) onHit) {
     // Spawn Logic
     _spawnTimer += dt;
-    // Spawn rate increases with level?
-    double spawnInterval = 3.0 - (level * 0.3); // Level 1: 2.7s, Level 5: 1.5s
-    if (spawnInterval < 0.8) spawnInterval = 0.8;
+    // Progressive spawn rate increases with level for smooth difficulty curve
+    double spawnInterval;
+    switch (level) {
+      case 1:
+        spawnInterval = 6.0; // Very easy - learn mechanics
+        break;
+      case 2:
+        spawnInterval = 4.5; // Easy - comfortable
+        break;
+      case 3:
+        spawnInterval = 3.5; // Medium - engaging
+        break;
+      case 4:
+        spawnInterval = 2.8; // Hard - challenging
+        break;
+      case 5:
+        spawnInterval = 2.2; // Very hard - intense
+        break;
+      default:
+        spawnInterval = 6.0;
+    }
 
     if (_spawnTimer > spawnInterval) {
       _spawnObstacle(level);
@@ -66,27 +90,67 @@ class ObstacleManager {
       // We check collision in GameLoopScreen really, but here for cleanup.
 
       if (obs.x < -0.2) {
-        obstacles.removeAt(i);
+        obs.isCollected = false; // Reset
+        obs.x = 1.5 + _random.nextDouble(); // Recycle to far right
       }
     }
   }
 
   void _spawnObstacle(int level) {
-    // Determine type based on level
-    ObstacleType type = ObstacleType.janitorBucket;
-    if (level == 2)
-      type = ObstacleType.janitorBucket;
-    else if (level == 3)
-      type = ObstacleType.beaker;
-    else if (level == 4)
-      type = ObstacleType.flyingPizza;
-    else if (level == 5)
-      type = ObstacleType.car;
+    // Obstacle pools for each level (2-3 types per level for variety)
+    List<ObstacleType> obstaclePool = [];
+
+    switch (level) {
+      case 1: // Bayou
+        obstaclePool = [
+          ObstacleType.log,
+          ObstacleType.puddle,
+          ObstacleType.rock,
+        ];
+        break;
+      case 2: // Hallway
+        obstaclePool = [ObstacleType.janitorBucket, ObstacleType.books];
+        break;
+      case 3: // Science Lab
+        obstaclePool = [ObstacleType.beaker, ObstacleType.books];
+        break;
+      case 4: // Cafeteria
+        obstaclePool = [ObstacleType.flyingPizza, ObstacleType.food];
+        break;
+      case 5: // Car Pool
+        obstaclePool = [ObstacleType.car, ObstacleType.cone];
+        break;
+      default:
+        obstaclePool = [ObstacleType.log];
+    }
+
+    // Randomly select obstacle type from pool
+    ObstacleType type = obstaclePool[_random.nextInt(obstaclePool.length)];
+
+    // Double size for visibility
+    double width = 0.30; // Was 0.15
+    double height = 0.20; // Was 0.1
+    double y = 0.0; // Default ground
+
+    // Vary obstacle heights for more interesting gameplay
+    // Some obstacles spawn slightly elevated
+    if (type == ObstacleType.flyingPizza || type == ObstacleType.beaker) {
+      y = 0.05 + (_random.nextDouble() * 0.10); // Low air (0.05-0.15)
+    } else if (type == ObstacleType.books) {
+      // Books always on ground (easier to jump over)
+      y = 0.0;
+    }
 
     // Chance for Golden Book (Quiz)
     if (_random.nextDouble() < 0.2) {
       // 20% chance
       type = ObstacleType.goldenBook;
+      // Golden Book spawns in the air (Mario Coin style)
+      // Player jumps ~170px. Screen height ~800?
+      // 0.2 * 800 = 160. So 0.2 is high.
+      y = 0.25; // In the air
+      width = 0.15; // Keep books smaller/normal
+      height = 0.15;
     }
 
     obstacles.add(
@@ -94,10 +158,14 @@ class ObstacleManager {
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         type: type,
         x: 1.1, // Start off-screen right
-        y: 0.0, // Ground level
-        width: 0.15, // Relative width
-        height: 0.1, // Relative height
+        y: y,
+        width: width,
+        height: height,
       ),
     );
+  }
+
+  void clear() {
+    obstacles.clear();
   }
 }

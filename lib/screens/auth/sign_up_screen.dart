@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants.dart';
+import '../../services/supabase_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -24,14 +25,38 @@ class _SignUpScreenState extends State<SignUpScreen> {
     '5th Grade',
   ];
 
-  void _handleSignUp() {
+  final _supabaseService = SupabaseService();
+  bool _isLoading = false;
+
+  Future<void> _handleSignUp() async {
     if (_formKey.currentState!.validate()) {
-      // Mock Sign Up - In production, call Auth Service
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Account Created! Welcome to Fay Run.')),
-      );
-      // Navigate to Student Setup (Nickname)
-      Navigator.pushReplacementNamed(context, '/setup');
+      setState(() => _isLoading = true);
+      try {
+        await _supabaseService.signUp(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+          fullName: _nameController.text.trim(),
+          grade: _selectedGrade!,
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Account Created! Please check your email to confirm.',
+              ),
+            ),
+          );
+          Navigator.pop(context); // Go back to Login
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Sign Up Failed: ${e.toString()}')),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -105,7 +130,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         const SizedBox(height: 16),
 
                         DropdownButtonFormField<String>(
-                          value: _selectedGrade,
+                          initialValue: _selectedGrade,
                           decoration: const InputDecoration(
                             labelText: 'Grade Level',
                             prefixIcon: Icon(Icons.grade),
@@ -147,12 +172,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               backgroundColor: FayColors.gold,
                               foregroundColor: FayColors.navy,
                               padding: const EdgeInsets.symmetric(vertical: 16),
-                              textStyle: const TextStyle(
+                              textStyle: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            child: const Text('CREATE ACCOUNT'),
+                            child: _isLoading
+                                ? const CircularProgressIndicator(
+                                    color: FayColors.navy,
+                                  )
+                                : const Text('CREATE ACCOUNT'),
                           ),
                         ),
                       ],
