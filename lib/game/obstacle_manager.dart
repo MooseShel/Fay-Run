@@ -130,16 +130,9 @@ class ObstacleManager {
     // Double size for visibility
     double width = 0.30; // Was 0.15
     double height = 0.20; // Was 0.1
-    double y = 0.0; // Default ground
 
-    // Vary obstacle heights for more interesting gameplay
-    // Some obstacles spawn slightly elevated
-    if (type == ObstacleType.flyingPizza || type == ObstacleType.beaker) {
-      y = 0.05 + (_random.nextDouble() * 0.10); // Low air (0.05-0.15)
-    } else if (type == ObstacleType.books) {
-      // Books always on ground (easier to jump over)
-      y = 0.0;
-    }
+    // All obstacles spawn at ground level for consistent gameplay
+    double y = 0.0;
 
     // Chance for Golden Book (Quiz)
     if (_random.nextDouble() < 0.2) {

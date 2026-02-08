@@ -69,7 +69,20 @@ class GameState extends ChangeNotifier {
       final service = SupabaseService();
       // Use the current grade, default to 4 if not set
       final grade = currentGrade;
-      _currentChallenge = await service.getCurrentChallenge(gradeLevel: grade);
+
+      // Use current game level as week number for progressive difficulty
+      // Level 1 → Week 1 (easiest), Level 5 → Week 5 (hardest)
+      _currentChallenge = await service.getCurrentChallenge(
+        gradeLevel: grade,
+        weekNumber: _currentLevel, // Map game level to question week
+      );
+
+      if (_currentChallenge != null) {
+        debugPrint(
+          'Loaded challenge: ${_currentChallenge!.topic} '
+          'for Level $_currentLevel (Week $_currentLevel), Grade $grade',
+        );
+      }
     } catch (e) {
       debugPrint('Error loading challenge: $e');
     } finally {
