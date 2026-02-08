@@ -52,6 +52,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       'Parent Login',
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/signup');
+                      },
+                      child: const Text(
+                        'New Student? Create Account',
+                        style: TextStyle(color: FayColors.gold, fontSize: 16),
+                      ),
+                    ),
                     const SizedBox(height: 30),
                     TextFormField(
                       controller: _emailController,

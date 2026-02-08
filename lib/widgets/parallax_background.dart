@@ -4,11 +4,13 @@ import '../../core/constants.dart';
 class ParallaxBackground extends StatefulWidget {
   final double runSpeed;
   final bool isPaused;
+  final int level;
 
   const ParallaxBackground({
     super.key,
     required this.runSpeed,
     required this.isPaused,
+    this.level = 1,
   });
 
   @override
@@ -18,7 +20,7 @@ class ParallaxBackground extends StatefulWidget {
 class _ParallaxBackgroundState extends State<ParallaxBackground>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  double _offset = 0;
+  double _scrollOffset = 0;
 
   @override
   void initState() {
@@ -35,7 +37,7 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
   void _updateScroll() {
     if (widget.isPaused) return;
     setState(() {
-      _offset -= widget.runSpeed;
+      _scrollOffset += widget.runSpeed;
     });
   }
 
@@ -47,195 +49,163 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // Layer 0: Sky
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.blue[300]!,
-                Colors.yellow[100]!, // Day/Dusk feel
-              ],
-            ),
-          ),
-        ),
-
-        // Layer 1: Far Trees (Slow)
-        _ScrollingLayer(
-          offset: _offset * 0.2, // Parallax factor
-          child: CustomPaint(
-            size: Size.infinite,
-            painter: _TreePainter(color: FayColors.bayouGreen.withOpacity(0.5)),
-          ),
-        ),
-
-        // Layer 2: Mid Trees + Moss (Medium)
-        _ScrollingLayer(
-          offset: _offset * 0.5,
-          child: CustomPaint(
-            size: Size.infinite,
-            painter: _TreePainter(color: FayColors.bayouGreen),
-          ),
-        ),
-
-        // Layer 3: Ground/Path (Fast/Normal) - This matches player speed usually
-        // But for visual effect, let's say ground is the reference frame.
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: 100,
-          child: Container(
-            color: Colors.brown[400], // Dirt path
-            child: _ScrollingStrip(
-              offset: _offset,
-              itemWidth: 50,
-              itemBuilder: (index) => Container(
-                margin: const EdgeInsets.symmetric(horizontal: 2),
-                width: 46,
-                height: 10, // Stones or texture
-                color: Colors.brown[600],
-              ),
-            ),
-          ),
-        ),
-      ],
+    return CustomPaint(
+      painter: ParallaxPainter(
+        scrollOffset: _scrollOffset,
+        level: widget.level,
+      ),
+      size: Size.infinite,
     );
   }
 }
 
-class _ScrollingLayer extends StatelessWidget {
-  final double offset;
-  final Widget child;
+class ParallaxPainter extends CustomPainter {
+  final double scrollOffset;
+  final int level;
 
-  const _ScrollingLayer({required this.offset, required this.child});
+  ParallaxPainter({required this.scrollOffset, required this.level});
 
   @override
-  Widget build(BuildContext context) {
-    // Infinite scroll logic would normally use a texture or repeating pattern.
-    // Since we use CustomPaint, we can pass offset to painter.
-    // Or for simple widgets, we translate.
-    // For this prototype, let's assume the child fills height and repeats width.
-    // Using a simplified approach: wrapping in a Stack with 2 copies?
-    // Actually, passing offset to CustomPainter is most performant.
-    // But child is generic here.
+  void paint(Canvas canvas, Size size) {
+    // 1. Sky / Background Base
+    _drawSky(canvas, size, level);
 
-    // Let's change strategy: The CHILD determines how it draws based on offset.
-    // But standard Widget can't unless it knows offset.
-    // Let's assume child is a LayoutBuilder that keys off the offset? No.
+    // 2. Far Layer (Slow)
+    _drawFarLayer(canvas, size, scrollOffset * 0.2, level);
 
-    // Simplest: Use a Stack of 2 copies translating.
-    return Stack(
-      children: [
-        Positioned.fill(
-          left: offset % MediaQuery.of(context).size.width,
-          child: child,
-        ),
-        Positioned.fill(
-          left:
-              (offset % MediaQuery.of(context).size.width) -
-              MediaQuery.of(context).size.width,
-          child: child,
-        ),
-      ],
-    );
+    // 3. Near Layer (Fast)
+    _drawNearLayer(canvas, size, scrollOffset, level);
   }
-}
 
-// A simple strip of repeating items
-class _ScrollingStrip extends StatelessWidget {
-  final double offset;
-  final double itemWidth;
-  final Widget Function(int index) itemBuilder;
+  void _drawSky(Canvas canvas, Size size, int level) {
+    Color color;
+    switch (level) {
+      case 1:
+        color = Colors.lightBlueAccent;
+        break; // Bayou Sky
+      case 2:
+        color = const Color(0xFFE0E0E0);
+        break; // Hallway Wall (Grey)
+      case 3:
+        color = const Color(0xFFF0F0F0);
+        break; // Lab Wall (White)
+      case 4:
+        color = const Color(0xFFFFE0B2);
+        break; // Cafeteria Wall (Orange tint)
+      case 5:
+        color = Colors.blueGrey;
+        break; // Outside Sky
+      default:
+        color = Colors.lightBlueAccent;
+    }
 
-  const _ScrollingStrip({
-    required this.offset,
-    required this.itemWidth,
-    required this.itemBuilder,
-  });
+    final paint = Paint()..color = color;
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Just draw a pattern using a Row?
-        // Not efficient for infinite, but okay for prototype.
-        // Better: CustomPaint.
-        return CustomPaint(
-          painter: _StripPainter(
-            offset: offset,
-            itemWidth: itemWidth,
-            color: Colors.brown[600]!,
-          ),
-          size: Size.infinite,
+  void _drawFarLayer(Canvas canvas, Size size, double offset, int level) {
+    final paint = Paint();
+    double width = 100.0; // Pattern width
+
+    // Draw repeating pattern
+    double startX = -(offset % width);
+
+    for (double x = startX; x < size.width; x += width) {
+      if (level == 1) {
+        // Trees
+        paint.color = Colors.green[800]!;
+        canvas.drawRect(
+          Rect.fromLTWH(x + 20, size.height * 0.4, 40, size.height * 0.6),
+          paint,
         );
-      },
+        canvas.drawCircle(Offset(x + 40, size.height * 0.4), 30, paint);
+      } else if (level == 2) {
+        // Lockers
+        paint.color = FayColors.navy;
+        canvas.drawRect(
+          Rect.fromLTWH(x + 10, size.height * 0.3, 80, size.height * 0.7),
+          paint,
+        );
+        // Vents
+        paint.color = Colors.grey;
+        canvas.drawRect(
+          Rect.fromLTWH(x + 20, size.height * 0.35, 60, 10),
+          paint,
+        );
+      } else if (level == 3) {
+        // Lab Shelves
+        paint.color = Colors.brown;
+        canvas.drawRect(Rect.fromLTWH(x, size.height * 0.4, 90, 10), paint);
+        // Beakers on shelf
+        paint.color = Colors.purple.withOpacity(0.5);
+        canvas.drawRect(
+          Rect.fromLTWH(x + 20, size.height * 0.35, 10, 15),
+          paint,
+        );
+      } else if (level == 4) {
+        // Posters / Windows
+        paint.color = Colors.blue.withOpacity(0.3);
+        canvas.drawRect(
+          Rect.fromLTWH(x + 10, size.height * 0.2, 50, 50),
+          paint,
+        );
+      } else if (level == 5) {
+        // Buildings / Fence
+        paint.color = FayColors.brickRed;
+        canvas.drawRect(
+          Rect.fromLTWH(x, size.height * 0.5, 90, size.height * 0.5),
+          paint,
+        );
+      }
+    }
+  }
+
+  void _drawNearLayer(Canvas canvas, Size size, double offset, int level) {
+    final paint = Paint();
+
+    // Ground / Floor
+    switch (level) {
+      case 1:
+        paint.color = const Color(0xFF5D4037);
+        break; // Mud
+      case 2:
+        paint.color = const Color(0xFFBCAAA4);
+        break; // Tile
+      case 3:
+        paint.color = const Color(0xFFEEEEEE);
+        break; // Clean Tile
+      case 4:
+        paint.color = const Color(0xFFFFCC80);
+        break; // Wood/Linoleum
+      case 5:
+        paint.color = const Color(0xFF424242);
+        break; // Asphalt
+      default:
+        paint.color = const Color(0xFF5D4037);
+    }
+
+    canvas.drawRect(
+      Rect.fromLTWH(0, size.height - 100, size.width, 100),
+      paint,
     );
-  }
-}
 
-class _StripPainter extends CustomPainter {
-  final double offset;
-  final double itemWidth;
-  final Color color;
-
-  _StripPainter({
-    required this.offset,
-    required this.itemWidth,
-    required this.color,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = color;
-    double effectiveOffset = offset % itemWidth;
-
-    // Draw items across width
-    for (double i = effectiveOffset; i < size.width; i += itemWidth) {
-      canvas.drawRect(Rect.fromLTWH(i, 20, itemWidth * 0.8, 10), paint);
-    }
-    // Handle leading edge if offset is positive/negative logic
-    for (double i = effectiveOffset - itemWidth; i < 0; i += itemWidth) {
-      canvas.drawRect(Rect.fromLTWH(i, 20, itemWidth * 0.8, 10), paint);
+    // Road strips for Carpool
+    if (level == 5) {
+      paint.color = Colors.yellow;
+      double dashWidth = 40;
+      double startX = -(offset % (dashWidth * 2));
+      for (double x = startX; x < size.width; x += dashWidth * 2) {
+        canvas.drawRect(
+          Rect.fromLTWH(x, size.height - 50, dashWidth, 5),
+          paint,
+        );
+      }
     }
   }
 
   @override
-  bool shouldRepaint(covariant _StripPainter oldDelegate) => true;
-}
-
-class _TreePainter extends CustomPainter {
-  final Color color;
-
-  _TreePainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = color;
-    // Draw generic trees
-    // We just draw a few distinct shapes and let the parent stack handle the repetition?
-    // Parent _ScrollingLayer stacks 2 copies of this child.
-    // So we just need to fill 'size' (which is screen size) with a pattern that TILES seamlessly.
-
-    // Draw 3 trees distributed across width
-    final w = size.width;
-    final h = size.height;
-
-    _drawTree(canvas, paint, w * 0.2, h);
-    _drawTree(canvas, paint, w * 0.5, h);
-    _drawTree(canvas, paint, w * 0.8, h);
+  bool shouldRepaint(covariant ParallaxPainter oldDelegate) {
+    return oldDelegate.scrollOffset != scrollOffset ||
+        oldDelegate.level != level;
   }
-
-  void _drawTree(Canvas canvas, Paint paint, double x, double h) {
-    // Trunk
-    canvas.drawRect(Rect.fromLTWH(x - 10, h - 200, 20, 200), paint);
-    // Leaves (Circle)
-    canvas.drawCircle(Offset(x, h - 200), 60, paint);
-  }
-
-  @override
-  bool shouldRepaint(_TreePainter oldDelegate) => false;
 }

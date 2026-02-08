@@ -4,6 +4,7 @@ import 'core/theme.dart';
 import 'core/constants.dart';
 import 'providers/game_state.dart';
 import 'screens/auth/login_screen.dart';
+import 'screens/auth/sign_up_screen.dart';
 import 'screens/onboarding/student_setup_screen.dart';
 import 'screens/dashboard/main_menu_screen.dart';
 import 'screens/game/game_loop_screen.dart';
@@ -26,6 +27,7 @@ class FayGatorRunApp extends StatelessWidget {
         initialRoute: '/',
         routes: {
           '/': (context) => const LoginScreen(),
+          '/signup': (context) => const SignUpScreen(),
           '/setup': (context) => const StudentSetupScreen(),
           '/menu': (context) => const MainMenuScreen(),
           '/game': (context) => const GameLoopScreen(),

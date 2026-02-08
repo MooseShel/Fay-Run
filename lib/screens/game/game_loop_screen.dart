@@ -227,6 +227,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
             ParallaxBackground(
               runSpeed: gameState.runSpeed,
               isPaused: gameState.status != GameStatus.playing,
+              level: gameState.currentLevel,
             ),
 
             const AmbientEffects(),
