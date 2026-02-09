@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants.dart';
-
+import '../../services/supabase_service.dart';
 import '../../providers/game_state.dart';
 import '../../services/audio_service.dart';
 import '../../services/settings_service.dart';
@@ -16,6 +16,7 @@ class MainMenuScreen extends StatefulWidget {
 }
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
+  final _supabaseService = SupabaseService();
   @override
   void initState() {
     super.initState();
@@ -117,22 +118,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                   ),
                 );
 
-                await Supabase.instance.client
-                    .from('students')
-                    .delete()
-                    .eq(
-                      'parent_id',
-                      Supabase.instance.client.auth.currentUser!.id,
-                    );
-
-                // Delete Profile
-                await Supabase.instance.client
-                    .from('profiles')
-                    .delete()
-                    .eq('id', Supabase.instance.client.auth.currentUser!.id);
-
-                // Sign Out
-                await Supabase.instance.client.auth.signOut();
+                await _supabaseService.deleteAccount();
 
                 if (context.mounted) {
                   // Pop loading
