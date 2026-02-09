@@ -13,7 +13,7 @@ workflows:
         XCODE_WORKSPACE: "Runner.xcworkspace"
         XCODE_SCHEME: "Runner"
         BUNDLE_ID: "com.fayrun.app"
-        APP_STORE_APPLE_ID: 1234567890 # Replace with actual App ID from App Store Connect
+        APP_STORE_APPLE_ID: 1234567890 # Replace with actual App ID
       flutter: stable
       xcode: latest
       cocoapods: default
@@ -45,11 +45,34 @@ workflows:
           failure: true
       app_store_connect:
         auth: integration
-        # Configuration related to TestFlight (optional)
-        # Disabled auto-submission to prevent "Another build is in review" errors
-        # Manually submit builds to TestFlight review in App Store Connect
         submit_to_testflight: false
-        # beta_groups:
-        # Removing beta_groups to ensure no distribution is triggered.
-        # Configuration related to App Store (optional)
         submit_to_app_store: false
+
+  web-workflow:
+    name: Web Workflow
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    environment:
+      flutter: stable
+    scripts:
+      - name: Prepare Web Build (Inject Services)
+        script: |
+          sh scripts/prepare_web_build.sh
+      - name: Get Flutter packages
+        script: |
+          flutter clean
+          flutter packages pub get
+      - name: Flutter build web
+        script: |
+          # Build for Web. 
+          # Note: If deploying to GitHub Pages Project site, add --base-href /repo-name/
+          # For Codemagic Static Pages, base-href / is usually fine.
+          flutter build web --release --wasm
+    artifacts:
+      - build/web/**
+    publishing:
+      email:
+        recipients:
+          - hussein@mooseshel.com
+      static_pages:
+        publish: true
