@@ -78,17 +78,17 @@ class _AnimatedStaffChaosState extends State<AnimatedStaffChaos>
   String _getStaffImagePath() {
     switch (widget.event.type) {
       case StaffEventType.shoeTie:
-        return 'assets/images/staff_head.jpg';
+        return 'staff_head.jpg';
       case StaffEventType.coachWhistle:
-        return 'assets/images/staff_coach.jpg';
+        return 'staff_coach.jpg';
       case StaffEventType.librarianShush:
-        return 'assets/images/staff_librarian.jpg';
+        return 'staff_librarian.jpg';
       case StaffEventType.scienceSplat:
-        return 'assets/images/staff_science.jpg';
+        return 'staff_science.jpg';
       case StaffEventType.deanGlare:
-        return 'assets/images/staff_dean.jpg';
+        return 'staff_dean.jpg';
       case StaffEventType.peDrill:
-        return 'assets/images/staff_pe.png';
+        return 'staff_pe.png';
     }
   }
 
@@ -130,26 +130,19 @@ class _AnimatedStaffChaosState extends State<AnimatedStaffChaos>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Large headshot
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: FayColors.gold, width: 3),
-                      boxShadow: [
-                        BoxShadow(
-                          color: FayColors.gold.withValues(alpha: 0.5),
-                          blurRadius: 15,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: ClipOval(
-                      child: Image.asset(
-                        _getStaffImagePath(),
+                  // Large headshot - just the face, no border
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.asset(
+                      'assets/images/${_getStaffImagePath()}',
+                      width: 200,
+                      height: 200,
+                      fit: BoxFit.cover,
+                      errorBuilder: (c, e, s) => Container(
                         width: 200,
                         height: 200,
-                        fit: BoxFit.cover,
-                        errorBuilder: (c, e, s) => const Icon(
+                        color: FayColors.navy,
+                        child: const Icon(
                           Icons.person,
                           size: 120,
                           color: Colors.white,
