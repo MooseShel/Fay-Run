@@ -4,19 +4,31 @@ import '../../core/constants.dart';
 class PlayerCharacter extends StatelessWidget {
   final bool isJumping;
   final bool isInvincible;
+  final bool isCrashed;
+  final int runFrame;
 
   const PlayerCharacter({
     super.key,
     required this.isJumping,
     required this.isInvincible,
+    this.isCrashed = false,
+    this.runFrame = 0,
   });
 
   @override
   Widget build(BuildContext context) {
     // Select image based on state
-    String assetName = 'assets/images/ernie_run.png';
-    if (isJumping) {
+    String assetName;
+
+    if (isCrashed) {
+      assetName = 'assets/images/ernie_crash.png';
+    } else if (isJumping) {
       assetName = 'assets/images/ernie_jump.png';
+    } else {
+      // Run animation
+      assetName = runFrame == 0
+          ? 'assets/images/ernie_run.png'
+          : 'assets/images/ernie_run_2.png';
     }
 
     return AnimatedContainer(

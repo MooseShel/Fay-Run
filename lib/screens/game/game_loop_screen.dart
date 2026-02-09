@@ -42,6 +42,11 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   double _chaosTimer = 0;
   final Random _random = Random();
 
+  // Animation State
+  bool _isCrashed = false;
+  int _runFrame = 0;
+  double _runAnimationTimer = 0;
+
   @override
   void initState() {
     super.initState();
@@ -90,6 +95,13 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     }
 
     _chaosTimer += dt;
+
+    // Run Animation (10 frames per second approx)
+    _runAnimationTimer += dt;
+    if (_runAnimationTimer > 0.1) {
+      _runAnimationTimer = 0;
+      _runFrame = _runFrame == 0 ? 1 : 0;
+    }
 
     // Level Completion (e.g., Target = Speed * 600 for ~60s playtime)
     // Speed 2.5 * 600 = 1500 units
@@ -219,7 +231,20 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       if (!gameState.isInvincible) {
         AudioService().playBonk();
         gameState.takeDamage();
-        // Staff events are now random only, not triggered by collision
+
+        // Trigger crash animation
+        setState(() {
+          _isCrashed = true;
+        });
+
+        // Reset crash state after 500ms
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            setState(() {
+              _isCrashed = false;
+            });
+          }
+        });
       }
     }
   }
@@ -334,6 +359,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
               child: PlayerCharacter(
                 isJumping: _isJumping,
                 isInvincible: gameState.isInvincible,
+                isCrashed: _isCrashed,
+                runFrame: _runFrame,
               ),
             ),
 
