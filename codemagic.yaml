@@ -24,8 +24,6 @@ workflows:
       email:
         recipients:
           - hussein@mooseshel.com
-      static_pages:
-        publish: true
 
   ios-build:
     name: iOS Build
