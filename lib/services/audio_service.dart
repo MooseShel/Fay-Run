@@ -12,11 +12,25 @@ class AudioService {
 
   AudioService._internal();
 
-  // Initialize with settings
+  // SFX Pool
+  final List<AudioPlayer> _sfxPool = [];
+  final int _poolSize = 5;
+  int _poolIndex = 0;
+
+  // Initialize with settings and pool
   Future<void> init() async {
     await SettingsService().init();
     _isMuted = SettingsService().isMuted;
+
+    // Initialize SFX Pool
+    for (int i = 0; i < _poolSize; i++) {
+      final player = AudioPlayer();
+      await player.setPlayerMode(PlayerMode.lowLatency); // Optimize for SFX
+      _sfxPool.add(player);
+    }
   }
+
+  // ... (BGM methods remain same) ...
 
   // Create BGM player lazily only when needed
   Future<AudioPlayer?> _getBGMPlayer() async {
@@ -25,6 +39,9 @@ class AudioService {
     try {
       _bgmPlayer = AudioPlayer();
       await _bgmPlayer!.setReleaseMode(ReleaseMode.loop);
+      await _bgmPlayer!.setPlayerMode(
+        PlayerMode.mediaPlayer,
+      ); // BGM uses media player
 
       // Apply initial volume based on settings
       if (_isMuted) {
@@ -38,22 +55,27 @@ class AudioService {
     }
   }
 
-  // ... existing methods ...
+  // ... (toggleMute, playBGM, stopBGM, pauseBGM, resumeBGM remain same) ...
 
   void toggleMute() {
     _isMuted = !_isMuted;
     SettingsService().setMute(_isMuted); // Persist
 
-    if (_bgmPlayer == null) return;
-
-    try {
-      if (_isMuted) {
-        _bgmPlayer!.setVolume(0);
-      } else {
-        _bgmPlayer!.setVolume(0.4);
+    if (_bgmPlayer != null) {
+      try {
+        _bgmPlayer!.setVolume(_isMuted ? 0 : 0.4);
+      } catch (e) {
+        debugPrint('Error toggling BGM mute: $e');
       }
-    } catch (e) {
-      debugPrint('Error toggling mute: $e');
+    }
+
+    // Also mute any active voice
+    if (_voicePlayer != null) {
+      try {
+        _voicePlayer!.setVolume(_isMuted ? 0 : 1.0);
+      } catch (e) {
+        debugPrint('Error toggling Voice mute: $e');
+      }
     }
   }
 
@@ -61,12 +83,9 @@ class AudioService {
     if (_isMuted) return;
 
     final player = await _getBGMPlayer();
-    if (player == null) {
-      debugPrint('BGM player not available');
-      return;
-    }
+    if (player == null) return;
 
-    String musicAsset = Assets.musicBayou; // Default L1
+    String musicAsset = Assets.musicBayou;
     switch (level) {
       case 2:
         musicAsset = Assets.musicHallway;
@@ -83,7 +102,9 @@ class AudioService {
     }
 
     try {
-      await player.stop();
+      if (player.state == PlayerState.playing) {
+        await player.stop();
+      }
       await player.play(AssetSource(musicAsset), volume: 0.4);
     } catch (e) {
       debugPrint('Error playing BGM: $e');
@@ -119,13 +140,23 @@ class AudioService {
 
   Future<void> playSFX(String sfxName) async {
     if (_isMuted) return;
+    if (_sfxPool.isEmpty) return; // Should not happen if init called
 
     try {
-      final player = AudioPlayer();
-      await player.play(AssetSource(sfxName), mode: PlayerMode.lowLatency);
-      player.onPlayerComplete.listen((event) {
-        player.dispose();
-      });
+      // Round-robin pool selection
+      final player = _sfxPool[_poolIndex];
+      _poolIndex = (_poolIndex + 1) % _poolSize;
+
+      // Reset layer/state if needed, though stop() usually enough
+      if (player.state == PlayerState.playing) {
+        await player.stop();
+      }
+
+      await player.play(
+        AssetSource(sfxName),
+        volume: 0.6,
+        mode: PlayerMode.lowLatency,
+      );
     } catch (e) {
       debugPrint('Error playing SFX: $e');
     }
@@ -137,17 +168,16 @@ class AudioService {
     if (_isMuted) return;
 
     try {
-      // Create player if needed
       _voicePlayer ??= AudioPlayer();
 
-      // Stop any existing voice line to prevent overlapping voices
+      // Ensure clean state
       await _voicePlayer!.stop();
 
-      // Play new voice line
       await _voicePlayer!.play(
         AssetSource(assetPath),
         volume: 1.0,
-      ); // Max volume for voices
+        mode: PlayerMode.mediaPlayer, // Voices are longer, use media player
+      );
     } catch (e) {
       debugPrint('Error playing voice: $e');
     }
@@ -175,7 +205,6 @@ class AudioService {
     }
 
     if (asset.isNotEmpty) {
-      // Use dedicated voice player
       playVoice(asset);
     }
   }
@@ -184,8 +213,14 @@ class AudioService {
     try {
       await _bgmPlayer?.dispose();
       _bgmPlayer = null;
+
       await _voicePlayer?.dispose();
       _voicePlayer = null;
+
+      for (var player in _sfxPool) {
+        await player.dispose();
+      }
+      _sfxPool.clear();
     } catch (e) {
       debugPrint('Error disposing audio service: $e');
     }
