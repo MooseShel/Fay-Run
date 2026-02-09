@@ -59,7 +59,7 @@ workflows:
         # Disabled auto-submission to prevent "Another build is in review" errors
         # Manually submit builds to TestFlight review in App Store Connect
         submit_to_testflight: false
-        beta_groups:
-          - App Store Connect Users
+        # submit_to_testflight: false is sufficient.
+        # Removing beta_groups to ensure no distribution is triggered.
         # Configuration related to App Store (optional)
         submit_to_app_store: false
