@@ -10,7 +10,7 @@ This guide covers deploying Fay Gator Run to the App Store via Codemagic and App
 
 - **Version**: 1.0.0
 - **Build Number**: 2
-- **Bundle ID**: com.mooseshel.faygatorrun
+- **Bundle ID**: com.fayrun.app
 - **Display Name**: Fay Gator Run
 
 ---
@@ -45,7 +45,7 @@ This guide covers deploying Fay Gator Run to the App Store via Codemagic and App
    - Platform: iOS
    - Name: Fay Gator Run
    - Primary Language: English (U.S.)
-   - Bundle ID: com.mooseshel.faygatorrun
+   - Bundle ID: com.fayrun.app
    - SKU: faygatorrun (or unique identifier)
    - User Access: Full Access
 
@@ -114,7 +114,7 @@ Perfect for elementary students to practice their skills while having fun!
 1. **Navigate to**: App settings → Code signing identities
 2. **iOS code signing**:
    - Distribution certificate: Upload or fetch from App Store Connect
-   - Provisioning profile: App Store profile for com.mooseshel.faygatorrun
+   - Provisioning profile: App Store profile for com.fayrun.app
 3. **Save**
 
 ### Update codemagic.yaml
@@ -142,7 +142,7 @@ The [codemagic.yaml](file:///c:/Users/Husse/Documents/Fay%20Run/codemagic.yaml) 
 ### Environment Variables
 
 Set in Codemagic UI (if needed):
-- `BUNDLE_ID`: com.mooseshel.faygatorrun
+- `BUNDLE_ID`: com.fayrun.app
 - `APP_STORE_APPLE_ID`: (your 10-digit Apple ID)
 
 ---

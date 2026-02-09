@@ -8,11 +8,11 @@ workflows:
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.mooseshel.faygatorrun
+        bundle_identifier: com.fayrun.app
       vars:
         XCODE_WORKSPACE: "Runner.xcworkspace"
         XCODE_SCHEME: "Runner"
-        BUNDLE_ID: "com.mooseshel.faygatorrun"
+        BUNDLE_ID: "com.fayrun.app"
         APP_STORE_APPLE_ID: 1234567890 # Replace with actual App ID from App Store Connect
       flutter: stable
       xcode: latest
