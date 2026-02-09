@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/constants.dart';
 import '../../services/supabase_service.dart';
-import '../../services/biometric_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -23,34 +22,15 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final _supabaseService = SupabaseService();
-  final _biometricService = BiometricService();
   bool _isLoading = false;
-  bool _rememberMe = false;
-  bool _canCheckBiometrics = false;
-  bool _biometricEnabled = false;
 
   @override
   void initState() {
     super.initState();
-    _checkBiometrics();
     if (kDebugMode) {
       // Auto-login in debug mode
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        // _login(); // Disable auto-login to test biometrics
-      });
-    }
-  }
-
-  Future<void> _checkBiometrics() async {
-    final canCheck = await _biometricService.isBiometricAvailable();
-    final enabled = await _biometricService.isBiometricEnabled();
-
-    if (mounted) {
-      setState(() {
-        _canCheckBiometrics = canCheck;
-        _biometricEnabled = enabled;
-        // If enabled, auto-check "Remember Me"
-        if (enabled) _rememberMe = true;
+        // _login(); // Disable auto-login for testing
       });
     }
   }
@@ -63,13 +43,6 @@ class _LoginScreenState extends State<LoginScreen> {
         final password = _passwordController.text.trim();
 
         await _supabaseService.signIn(email: email, password: password);
-
-        // Handle Biometrics
-        if (_rememberMe && _canCheckBiometrics) {
-          await _biometricService.enableBiometric(email, password);
-        } else if (!_rememberMe) {
-          await _biometricService.disableBiometric();
-        }
 
         if (mounted) {
           Navigator.pushReplacementNamed(context, '/select_student');
@@ -100,138 +73,136 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _loginWithBiometrics() async {
-    setState(() => _isLoading = true);
-    final credentials = await _biometricService.authenticateAndGetCredentials();
-
-    if (credentials != null) {
-      // Auto-fill fields for visual feedback
-      _emailController.text = credentials['email']!;
-      _passwordController.text = credentials['password']!;
-
-      // Trigger login
-      await _login();
-    } else {
-      setState(() => _isLoading = false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: FayColors.navy,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Card(
-            elevation: 8,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(32.0),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [FayColors.navy, FayColors.navyDark],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
               child: Form(
                 key: _formKey,
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      AppStrings.schoolName,
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(
-                            color: FayColors.navy,
-                            fontWeight: FontWeight.bold,
-                          ),
+                    // App Logo/Title
+                    Icon(Icons.school, size: 80, color: FayColors.gold),
+                    const SizedBox(height: 16),
+                    const Text(
+                      AppStrings.appTitle,
+                      style: TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
-                    const SizedBox(height: 10),
-                    Text(
+                    const Text(
                       'Parent Login',
-                      style: Theme.of(context).textTheme.titleLarge,
+                      style: TextStyle(fontSize: 18, color: Colors.white70),
                     ),
+                    const SizedBox(height: 40),
+
+                    // Email Field
+                    TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        prefixIcon: const Icon(Icons.email),
+                        filled: true,
+                        fillColor: Colors.white.withValues(alpha: 0.1),
+                        labelStyle: const TextStyle(color: Colors.white70),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      style: const TextStyle(color: Colors.white),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your email';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Password Field
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        prefixIcon: const Icon(Icons.lock),
+                        filled: true,
+                        fillColor: Colors.white.withValues(alpha: 0.1),
+                        labelStyle: const TextStyle(color: Colors.white70),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      style: const TextStyle(color: Colors.white),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter your password';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Login Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _login,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: FayColors.gold,
+                          foregroundColor: FayColors.navy,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: FayColors.navy,
+                                ),
+                              )
+                            : const Text(
+                                'LOGIN',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Sign Up Link
                     TextButton(
                       onPressed: () {
                         Navigator.pushNamed(context, '/signup');
                       },
                       child: const Text(
-                        'New Student? Create Account',
-                        style: TextStyle(color: FayColors.gold, fontSize: 16),
+                        "Don't have an account? Sign Up",
+                        style: TextStyle(color: Colors.white70),
                       ),
                     ),
-                    const SizedBox(height: 30),
-                    TextFormField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.email),
-                      ),
-                      validator: (value) =>
-                          value!.isEmpty ? 'Please enter email' : null,
-                    ),
-                    const SizedBox(height: 20),
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Password',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.lock),
-                      ),
-                      validator: (value) =>
-                          value!.isEmpty ? 'Please enter password' : null,
-                    ),
-
-                    // Remember Me Checkbox
-                    if (_canCheckBiometrics)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        child: Row(
-                          children: [
-                            Checkbox(
-                              value: _rememberMe,
-                              activeColor: FayColors.gold,
-                              onChanged: (val) =>
-                                  setState(() => _rememberMe = val ?? false),
-                            ),
-                            const Text("Remember Me (Enable FaceID/TouchID)"),
-                          ],
-                        ),
-                      ),
-
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _login,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: FayColors.gold,
-                          foregroundColor: FayColors.navy,
-                        ),
-                        child: _isLoading
-                            ? const CircularProgressIndicator(
-                                color: FayColors.navy,
-                              )
-                            : const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 12.0),
-                                child: Text('Login'),
-                              ),
-                      ),
-                    ),
-
-                    // Biometric Button
-                    if (_biometricEnabled && !_isLoading)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 20),
-                        child: IconButton(
-                          icon: const Icon(
-                            Icons.fingerprint,
-                            size: 50,
-                            color: FayColors.navy,
-                          ),
-                          onPressed: _loginWithBiometrics,
-                          tooltip: 'Login with Biometrics',
-                        ),
-                      ),
                   ],
                 ),
               ),
