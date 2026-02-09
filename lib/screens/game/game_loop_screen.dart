@@ -50,13 +50,12 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   @override
   void initState() {
     super.initState();
-    _gameLoopController =
-        AnimationController(
-            vsync: this,
-            duration: const Duration(milliseconds: 16),
-          )
-          ..addListener(_gameLoop)
-          ..repeat();
+    _gameLoopController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 16),
+    )
+      ..addListener(_gameLoop)
+      ..repeat();
 
     // Load challenge from Supabase
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -96,9 +95,9 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
     _chaosTimer += dt;
 
-    // Run Animation (10 frames per second approx)
+    // Run Animation (Reduced speed: approx 5 frames per second)
     _runAnimationTimer += dt;
-    if (_runAnimationTimer > 0.1) {
+    if (_runAnimationTimer > 0.2) {
       _runAnimationTimer = 0;
       _runFrame = _runFrame == 0 ? 1 : 0;
     }
@@ -179,9 +178,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         // Golden Books: 15% padding (easier to collect)
         // Obstacles: 35% padding (more forgiving)
         double obsPaddingX = isGoldenBook ? obs.width * 0.15 : obs.width * 0.35;
-        double obsPaddingY = isGoldenBook
-            ? obs.height * 0.15
-            : obs.height * 0.35;
+        double obsPaddingY =
+            isGoldenBook ? obs.height * 0.15 : obs.height * 0.35;
 
         double obsLeft = obs.x + obsPaddingX;
         double obsRight = obs.x + obs.width - obsPaddingX;
@@ -251,8 +249,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
   void _showQuiz(GameState gameState) {
     // Use loaded challenge or fallback to a default one
-    final challenge =
-        gameState.currentChallenge ??
+    final challenge = gameState.currentChallenge ??
         Challenge(
           id: 'fallback_math',
           topic: 'Math',
