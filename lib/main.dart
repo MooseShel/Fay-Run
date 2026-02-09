@@ -10,6 +10,7 @@ import 'screens/onboarding/student_setup_screen.dart';
 import 'screens/auth/student_select_screen.dart'; // Import
 import 'screens/dashboard/main_menu_screen.dart';
 import 'screens/game/game_loop_screen.dart';
+import 'services/audio_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +19,8 @@ Future<void> main() async {
     url: AppStrings.supabaseUrl,
     anonKey: AppStrings.supabaseAnonKey,
   );
+
+  await AudioService().init();
 
   final session = Supabase.instance.client.auth.currentSession;
   final initialRoute = session != null ? '/select_student' : '/';

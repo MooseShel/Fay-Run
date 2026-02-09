@@ -1,5 +1,7 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
+import '../core/assets.dart';
+import 'settings_service.dart';
 
 class AudioService {
   static final AudioService _instance = AudioService._internal();
@@ -10,6 +12,12 @@ class AudioService {
 
   AudioService._internal();
 
+  // Initialize with settings
+  Future<void> init() async {
+    await SettingsService().init();
+    _isMuted = SettingsService().isMuted;
+  }
+
   // Create BGM player lazily only when needed
   Future<AudioPlayer?> _getBGMPlayer() async {
     if (_bgmPlayer != null) return _bgmPlayer;
@@ -17,10 +25,35 @@ class AudioService {
     try {
       _bgmPlayer = AudioPlayer();
       await _bgmPlayer!.setReleaseMode(ReleaseMode.loop);
+
+      // Apply initial volume based on settings
+      if (_isMuted) {
+        await _bgmPlayer!.setVolume(0);
+      }
+
       return _bgmPlayer;
     } catch (e) {
       debugPrint('Error creating BGM player: $e');
       return null;
+    }
+  }
+
+  // ... existing methods ...
+
+  void toggleMute() {
+    _isMuted = !_isMuted;
+    SettingsService().setMute(_isMuted); // Persist
+
+    if (_bgmPlayer == null) return;
+
+    try {
+      if (_isMuted) {
+        _bgmPlayer!.setVolume(0);
+      } else {
+        _bgmPlayer!.setVolume(0.4);
+      }
+    } catch (e) {
+      debugPrint('Error toggling mute: $e');
     }
   }
 
@@ -33,19 +66,19 @@ class AudioService {
       return;
     }
 
-    String musicAsset = 'audio/music_bayou.mp3'; // Default L1
+    String musicAsset = Assets.musicBayou; // Default L1
     switch (level) {
       case 2:
-        musicAsset = 'audio/music_hallway.mp3';
+        musicAsset = Assets.musicHallway;
         break;
       case 3:
-        musicAsset = 'audio/music_lab.mp3';
+        musicAsset = Assets.musicLab;
         break;
       case 4:
-        musicAsset = 'audio/music_cafeteria.mp3';
+        musicAsset = Assets.musicCafeteria;
         break;
       case 5:
-        musicAsset = 'audio/music_carpool.mp3';
+        musicAsset = Assets.musicCarpool;
         break;
     }
 
@@ -98,43 +131,28 @@ class AudioService {
     }
   }
 
-  void playJump() => playSFX('audio/jump.mp3');
-  void playBonk() => playSFX('audio/bonk.mp3');
-  void playCoin() => playSFX('audio/ding.mp3');
-  void playPowerup() => playSFX('audio/powerup.mp3');
+  void playJump() => playSFX(Assets.sfxJump);
+  void playBonk() => playSFX(Assets.sfxBonk);
+  void playCoin() => playSFX(Assets.sfxCoin);
+  void playPowerup() => playSFX(Assets.sfxPowerup);
 
   void playStaffSound(String staffType) {
     String asset = '';
     if (staffType.contains('shoeTie')) {
-      asset = 'audio/staff_head.mp3';
+      asset = Assets.voiceHead;
     } else if (staffType.contains('coachWhistle')) {
-      asset = 'audio/staff_coach.mp3';
+      asset = Assets.voiceCoach;
     } else if (staffType.contains('librarianShush')) {
-      asset = 'audio/staff_librarian.mp3';
+      asset = Assets.voiceLibrarian;
     } else if (staffType.contains('scienceSplat')) {
-      asset = 'audio/staff_science.mp3';
+      asset = Assets.voiceScience;
     } else if (staffType.contains('deanGlare')) {
-      asset = 'audio/staff_head.mp3';
+      asset = Assets.voiceDean; // Corrected from staff_head.mp3
     } else if (staffType.contains('peDrill')) {
-      asset = 'audio/staff_coach.mp3';
+      asset = Assets.voicePe; // Corrected from staff_coach.mp3
     }
 
     if (asset.isNotEmpty) playSFX(asset);
-  }
-
-  void toggleMute() {
-    _isMuted = !_isMuted;
-    if (_bgmPlayer == null) return;
-
-    try {
-      if (_isMuted) {
-        _bgmPlayer!.setVolume(0);
-      } else {
-        _bgmPlayer!.setVolume(0.4);
-      }
-    } catch (e) {
-      debugPrint('Error toggling mute: $e');
-    }
   }
 
   Future<void> dispose() async {

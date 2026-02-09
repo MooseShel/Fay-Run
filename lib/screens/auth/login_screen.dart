@@ -24,6 +24,17 @@ class _LoginScreenState extends State<LoginScreen> {
   final _supabaseService = SupabaseService();
   bool _isLoading = false;
 
+  @override
+  void initState() {
+    super.initState();
+    if (kDebugMode) {
+      // Auto-login in debug mode
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _login();
+      });
+    }
+  }
+
   Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);

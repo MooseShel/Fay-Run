@@ -3,7 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants.dart';
 
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/game_state.dart';
+import '../../services/audio_service.dart';
+import '../../services/settings_service.dart';
 import 'leaderboard_screen.dart';
 
 class MainMenuScreen extends StatefulWidget {
@@ -21,6 +24,143 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<GameState>().loadChallenge();
     });
+  }
+
+  void _showSettings(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: FayColors.navy,
+        title: Text(
+          'Settings',
+          style: GoogleFonts.fredoka(color: Colors.white),
+        ),
+        content: StatefulBuilder(
+          builder: (context, setState) {
+            final isMuted = SettingsService().isMuted;
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SwitchListTile(
+                  title: Text(
+                    'Mute Audio',
+                    style: GoogleFonts.nunito(color: Colors.white),
+                  ),
+                  value: isMuted,
+                  activeColor: FayColors.gold,
+                  onChanged: (val) {
+                    setState(() {
+                      AudioService().toggleMute();
+                    });
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.delete_forever, color: Colors.red),
+                  title: Text(
+                    'Delete Account',
+                    style: GoogleFonts.nunito(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  onTap: () {
+                    // Close settings dialog first
+                    Navigator.pop(context);
+                    _showDeleteConfirmation(context);
+                  },
+                ),
+              ],
+            );
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close', style: TextStyle(color: FayColors.gold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: FayColors.navy,
+        title: Text(
+          'Delete Account?',
+          style: GoogleFonts.fredoka(color: Colors.red),
+        ),
+        content: Text(
+          'Are you sure you want to delete your account? This will permanently delete all student profiles, scores, and data. This action cannot be undone.',
+          style: GoogleFonts.nunito(color: Colors.white),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.white70),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              try {
+                // Show loading indicator
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (context) => const Center(
+                    child: CircularProgressIndicator(color: FayColors.gold),
+                  ),
+                );
+
+                await Supabase.instance.client
+                    .from('students')
+                    .delete()
+                    .eq(
+                      'parent_id',
+                      Supabase.instance.client.auth.currentUser!.id,
+                    );
+
+                // Delete Profile
+                await Supabase.instance.client
+                    .from('profiles')
+                    .delete()
+                    .eq('id', Supabase.instance.client.auth.currentUser!.id);
+
+                // Sign Out
+                await Supabase.instance.client.auth.signOut();
+
+                if (context.mounted) {
+                  // Pop loading
+                  Navigator.pop(context);
+                  // Pop dialog
+                  Navigator.pop(context);
+                  // Go to Login
+                  Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/',
+                    (route) => false,
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  Navigator.pop(context); // Pop loading
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                }
+              }
+            },
+            child: const Text('DELETE', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -74,6 +214,12 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                           context,
                           '/select_student',
                         );
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.settings, color: Colors.white70),
+                      onPressed: () {
+                        _showSettings(context);
                       },
                     ),
                   ],

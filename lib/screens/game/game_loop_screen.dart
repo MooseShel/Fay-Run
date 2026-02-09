@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/game_state.dart';
 import '../../core/constants.dart';
 import '../../models/staff_event.dart';
-import '../../services/mock_sql_service.dart';
+import '../../models/challenge.dart'; // Needed for fallback
 import '../../widgets/parallax_background.dart';
 import '../../widgets/player_character.dart';
 import '../../widgets/game/ambient_effects.dart';
@@ -219,11 +219,33 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   }
 
   void _showQuiz(GameState gameState) {
-    // Use loaded challenge or fallback to mock
+    // Use loaded challenge or fallback to a default one
     final challenge =
-        gameState.currentChallenge ?? MockSQLService.getWeeklyChallenge();
+        gameState.currentChallenge ??
+        Challenge(
+          id: 'fallback_math',
+          topic: 'Math',
+          gradeLevel: 4,
+          questions: [
+            QuizQuestion(
+              questionText: 'What is 5 + 5?',
+              options: ['10', '12', '8', '20'],
+              correctOptionIndex: 0,
+            ),
+            QuizQuestion(
+              questionText: 'What is 10 - 3?',
+              options: ['7', '6', '5', '4'],
+              correctOptionIndex: 0,
+            ),
+            QuizQuestion(
+              questionText: 'What is 3 x 3?',
+              options: ['9', '6', '12', '15'],
+              correctOptionIndex: 0,
+            ),
+          ],
+        );
 
-    // Get Unique Question
+    // Get Unique Question or Random from fallback
     final question = gameState.getNextQuestion();
 
     showDialog(

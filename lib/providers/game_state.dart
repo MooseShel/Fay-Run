@@ -98,6 +98,8 @@ class GameState extends ChangeNotifier {
     notifyListeners();
     try {
       final service = SupabaseService();
+      // Also fetch/repair parent profile in background
+      service.getProfile();
       _students = await service.getStudents();
     } catch (e) {
       debugPrint('Error loading students: $e');

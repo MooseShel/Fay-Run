@@ -13,11 +13,22 @@ class SupabaseService {
     required String fullName,
     required String grade,
   }) async {
-    return _client.auth.signUp(
+    final response = await _client.auth.signUp(
       email: email,
       password: password,
       data: {'full_name': fullName, 'grade': grade},
     );
+
+    // If auto-confirm is on and we have a session, create profile immediately
+    if (response.session != null) {
+      await upsertProfile(
+        firstName: fullName.split(' ').first,
+        nickname: fullName,
+        grade: grade,
+      );
+    }
+
+    return response;
   }
 
   Future<AuthResponse> signIn({
@@ -29,6 +40,25 @@ class SupabaseService {
 
   Future<void> signOut() async {
     await _client.auth.signOut();
+  }
+
+  Future<void> deleteAccount() async {
+    final user = _client.auth.currentUser;
+    if (user == null) return;
+
+    try {
+      // 1. Delete all students associated with this parent
+      await _client.from('students').delete().eq('parent_id', user.id);
+
+      // 2. Delete parent profile
+      await _client.from('profiles').delete().eq('id', user.id);
+
+      // 3. Sign out (since we can't easily auto-delete the Auth user from client)
+      await signOut();
+    } catch (e) {
+      debugPrint('Error deleting account: $e');
+      rethrow;
+    }
   }
 
   User? get currentUser => _client.auth.currentUser;
@@ -74,37 +104,31 @@ class SupabaseService {
           .maybeSingle();
 
       // Fallback 1: Try current week with any topic
-      if (response == null) {
-        response = await _client
-            .from('challenges')
-            .select('*, questions(*)')
-            .eq('grade_level', gradeLevel)
-            .eq('week_number', currentWeek)
-            .limit(1)
-            .maybeSingle();
-      }
+      response ??= await _client
+          .from('challenges')
+          .select('*, questions(*)')
+          .eq('grade_level', gradeLevel)
+          .eq('week_number', currentWeek)
+          .limit(1)
+          .maybeSingle();
 
       // Fallback 2: Try Week 1 with rotated topic
-      if (response == null) {
-        response = await _client
-            .from('challenges')
-            .select('*, questions(*)')
-            .eq('grade_level', gradeLevel)
-            .eq('week_number', 1)
-            .eq('topic', selectedTopic)
-            .maybeSingle();
-      }
+      response ??= await _client
+          .from('challenges')
+          .select('*, questions(*)')
+          .eq('grade_level', gradeLevel)
+          .eq('week_number', 1)
+          .eq('topic', selectedTopic)
+          .maybeSingle();
 
       // Fallback 3: Week 1 Math (guaranteed to exist)
-      if (response == null) {
-        response = await _client
-            .from('challenges')
-            .select('*, questions(*)')
-            .eq('grade_level', gradeLevel)
-            .eq('week_number', 1)
-            .eq('topic', 'Math')
-            .maybeSingle();
-      }
+      response ??= await _client
+          .from('challenges')
+          .select('*, questions(*)')
+          .eq('grade_level', gradeLevel)
+          .eq('week_number', 1)
+          .eq('topic', 'Math')
+          .maybeSingle();
 
       if (response == null) return null;
       return Challenge.fromJson(response);
@@ -257,6 +281,27 @@ class SupabaseService {
           .select()
           .eq('id', user.id)
           .maybeSingle();
+
+      // Auto-repair: If profile is missing but user is auth'd, create it from metadata
+      if (response == null) {
+        final metadata = user.userMetadata;
+        final fullName = metadata?['full_name'] as String? ?? 'User';
+        final grade = metadata?['grade'] as String? ?? '1st Grade';
+
+        await upsertProfile(
+          firstName: fullName.split(' ').first,
+          nickname: fullName,
+          grade: grade,
+        );
+
+        // Fetch again
+        return await _client
+            .from('profiles')
+            .select()
+            .eq('id', user.id)
+            .maybeSingle();
+      }
+
       return response;
     } catch (e) {
       return null;
