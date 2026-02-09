@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/constants.dart';
 import '../../services/supabase_service.dart';
+import '../../services/biometric_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -22,15 +23,34 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final _supabaseService = SupabaseService();
+  final _biometricService = BiometricService();
   bool _isLoading = false;
+  bool _rememberMe = false;
+  bool _canCheckBiometrics = false;
+  bool _biometricEnabled = false;
 
   @override
   void initState() {
     super.initState();
+    _checkBiometrics();
     if (kDebugMode) {
       // Auto-login in debug mode
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _login();
+        // _login(); // Disable auto-login to test biometrics
+      });
+    }
+  }
+
+  Future<void> _checkBiometrics() async {
+    final canCheck = await _biometricService.isBiometricAvailable();
+    final enabled = await _biometricService.isBiometricEnabled();
+
+    if (mounted) {
+      setState(() {
+        _canCheckBiometrics = canCheck;
+        _biometricEnabled = enabled;
+        // If enabled, auto-check "Remember Me"
+        if (enabled) _rememberMe = true;
       });
     }
   }
@@ -39,10 +59,18 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState!.validate()) {
       setState(() => _isLoading = true);
       try {
-        await _supabaseService.signIn(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-        );
+        final email = _emailController.text.trim();
+        final password = _passwordController.text.trim();
+
+        await _supabaseService.signIn(email: email, password: password);
+
+        // Handle Biometrics
+        if (_rememberMe && _canCheckBiometrics) {
+          await _biometricService.enableBiometric(email, password);
+        } else if (!_rememberMe) {
+          await _biometricService.disableBiometric();
+        }
+
         if (mounted) {
           Navigator.pushReplacementNamed(context, '/select_student');
         }
@@ -69,6 +97,22 @@ class _LoginScreenState extends State<LoginScreen> {
       } finally {
         if (mounted) setState(() => _isLoading = false);
       }
+    }
+  }
+
+  Future<void> _loginWithBiometrics() async {
+    setState(() => _isLoading = true);
+    final credentials = await _biometricService.authenticateAndGetCredentials();
+
+    if (credentials != null) {
+      // Auto-fill fields for visual feedback
+      _emailController.text = credentials['email']!;
+      _passwordController.text = credentials['password']!;
+
+      // Trigger login
+      await _login();
+    } else {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -128,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextFormField(
                       controller: _passwordController,
                       obscureText: true,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Password',
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.lock),
@@ -136,7 +180,25 @@ class _LoginScreenState extends State<LoginScreen> {
                       validator: (value) =>
                           value!.isEmpty ? 'Please enter password' : null,
                     ),
-                    const SizedBox(height: 30),
+
+                    // Remember Me Checkbox
+                    if (_canCheckBiometrics)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        child: Row(
+                          children: [
+                            Checkbox(
+                              value: _rememberMe,
+                              activeColor: FayColors.gold,
+                              onChanged: (val) =>
+                                  setState(() => _rememberMe = val ?? false),
+                            ),
+                            const Text("Remember Me (Enable FaceID/TouchID)"),
+                          ],
+                        ),
+                      ),
+
+                    const SizedBox(height: 20),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -155,6 +217,21 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                       ),
                     ),
+
+                    // Biometric Button
+                    if (_biometricEnabled && !_isLoading)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 20),
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.fingerprint,
+                            size: 50,
+                            color: FayColors.navy,
+                          ),
+                          onPressed: _loginWithBiometrics,
+                          tooltip: 'Login with Biometrics',
+                        ),
+                      ),
                   ],
                 ),
               ),

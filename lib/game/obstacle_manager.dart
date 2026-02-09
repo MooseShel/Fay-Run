@@ -90,8 +90,9 @@ class ObstacleManager {
       // We check collision in GameLoopScreen really, but here for cleanup.
 
       if (obs.x < -0.2) {
-        obs.isCollected = false; // Reset
-        obs.x = 1.5 + _random.nextDouble(); // Recycle to far right
+        // Remove off-screen obstacles instead of recycling
+        // This prevents accumulation and keeps obstacle count manageable
+        obstacles.removeAt(i);
       }
     }
   }

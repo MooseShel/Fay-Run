@@ -270,7 +270,6 @@ class _GameLoopScreenState extends State<GameLoopScreen>
           } else {
             AudioService().playBonk();
             gameState.takeDamage();
-            gameState.triggerStaffEvent(StaffEventType.scienceSplat);
           }
 
           // submit result to backend
