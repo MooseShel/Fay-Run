@@ -8,44 +8,48 @@ class AudioService {
   factory AudioService() => _instance;
 
   AudioPlayer? _bgmPlayer;
+  AudioPlayer? _voicePlayer;
   bool _isMuted = false;
+  bool _isInitialized = false;
 
   AudioService._internal();
 
-  // SFX Pool
+  // SFX Pool - lazily initialized
   final List<AudioPlayer> _sfxPool = [];
   final int _poolSize = 5;
   int _poolIndex = 0;
 
-  // Initialize with settings and pool
+  // Initialize settings only - no audio players yet!
   Future<void> init() async {
     try {
       await SettingsService().init();
       _isMuted = SettingsService().isMuted;
-
-      // Initialize SFX Pool with defensive error handling
-      for (int i = 0; i < _poolSize; i++) {
-        try {
-          final player = AudioPlayer();
-          // Give the player time to initialize before setting mode
-          await Future.delayed(const Duration(milliseconds: 50));
-          await player.setPlayerMode(PlayerMode.lowLatency);
-          _sfxPool.add(player);
-        } catch (e) {
-          debugPrint('Error initializing SFX player $i: $e');
-          // Continue with remaining players even if one fails
-        }
-      }
-
-      debugPrint(
-        'AudioService initialized with ${_sfxPool.length} SFX players',
-      );
+      debugPrint('AudioService: Settings loaded (muted: $_isMuted)');
     } catch (e) {
-      debugPrint('Error initializing AudioService: $e');
+      debugPrint('Error initializing AudioService settings: $e');
     }
   }
 
-  // ... (BGM methods remain same) ...
+  // Lazy initialization of SFX pool - called on first sound play
+  Future<void> _ensureInitialized() async {
+    if (_isInitialized) return;
+    _isInitialized = true;
+
+    debugPrint('AudioService: Lazy initializing SFX pool...');
+
+    for (int i = 0; i < _poolSize; i++) {
+      try {
+        final player = AudioPlayer();
+        // Skip setPlayerMode on iOS to avoid native crashes
+        // The default mode works fine for SFX
+        _sfxPool.add(player);
+      } catch (e) {
+        debugPrint('Error creating SFX player $i: $e');
+      }
+    }
+
+    debugPrint('AudioService: Initialized ${_sfxPool.length} SFX players');
+  }
 
   // Create BGM player lazily only when needed
   Future<AudioPlayer?> _getBGMPlayer() async {
@@ -54,11 +58,7 @@ class AudioService {
     try {
       _bgmPlayer = AudioPlayer();
       await _bgmPlayer!.setReleaseMode(ReleaseMode.loop);
-      await _bgmPlayer!.setPlayerMode(
-        PlayerMode.mediaPlayer,
-      ); // BGM uses media player
 
-      // Apply initial volume based on settings
       if (_isMuted) {
         await _bgmPlayer!.setVolume(0);
       }
@@ -70,11 +70,9 @@ class AudioService {
     }
   }
 
-  // ... (toggleMute, playBGM, stopBGM, pauseBGM, resumeBGM remain same) ...
-
   void toggleMute() {
     _isMuted = !_isMuted;
-    SettingsService().setMute(_isMuted); // Persist
+    SettingsService().setMute(_isMuted);
 
     if (_bgmPlayer != null) {
       try {
@@ -84,7 +82,6 @@ class AudioService {
       }
     }
 
-    // Also mute any active voice
     if (_voicePlayer != null) {
       try {
         _voicePlayer!.setVolume(_isMuted ? 0 : 1.0);
@@ -94,33 +91,38 @@ class AudioService {
     }
   }
 
+  bool get isMuted => _isMuted;
+
   Future<void> playBGM(int level) async {
     if (_isMuted) return;
 
-    final player = await _getBGMPlayer();
-    if (player == null) return;
-
-    String musicAsset = Assets.musicBayou;
-    switch (level) {
-      case 2:
-        musicAsset = Assets.musicHallway;
-        break;
-      case 3:
-        musicAsset = Assets.musicLab;
-        break;
-      case 4:
-        musicAsset = Assets.musicCafeteria;
-        break;
-      case 5:
-        musicAsset = Assets.musicCarpool;
-        break;
-    }
-
     try {
-      if (player.state == PlayerState.playing) {
-        await player.stop();
+      final player = await _getBGMPlayer();
+      if (player == null) return;
+
+      String asset;
+      switch (level) {
+        case 1:
+          asset = Assets.musicBayou;
+          break;
+        case 2:
+          asset = Assets.musicHallway;
+          break;
+        case 3:
+          asset = Assets.musicLab;
+          break;
+        case 4:
+          asset = Assets.musicCafeteria;
+          break;
+        case 5:
+          asset = Assets.musicCarpool;
+          break;
+        default:
+          asset = Assets.musicBayou;
       }
-      await player.play(AssetSource(musicAsset), volume: 0.4);
+
+      await player.stop();
+      await player.play(AssetSource(asset), volume: 0.4);
     } catch (e) {
       debugPrint('Error playing BGM: $e');
     }
@@ -155,44 +157,33 @@ class AudioService {
 
   Future<void> playSFX(String sfxName) async {
     if (_isMuted) return;
-    if (_sfxPool.isEmpty) return; // Should not happen if init called
+
+    // Lazy init on first SFX play
+    await _ensureInitialized();
+
+    if (_sfxPool.isEmpty) return;
 
     try {
-      // Round-robin pool selection
       final player = _sfxPool[_poolIndex];
-      _poolIndex = (_poolIndex + 1) % _poolSize;
+      _poolIndex = (_poolIndex + 1) % _sfxPool.length;
 
-      // Reset layer/state if needed, though stop() usually enough
       if (player.state == PlayerState.playing) {
         await player.stop();
       }
 
-      await player.play(
-        AssetSource(sfxName),
-        volume: 0.6,
-        mode: PlayerMode.lowLatency,
-      );
+      await player.play(AssetSource(sfxName), volume: 0.6);
     } catch (e) {
       debugPrint('Error playing SFX: $e');
     }
   }
-
-  AudioPlayer? _voicePlayer;
 
   Future<void> playVoice(String assetPath) async {
     if (_isMuted) return;
 
     try {
       _voicePlayer ??= AudioPlayer();
-
-      // Ensure clean state
       await _voicePlayer!.stop();
-
-      await _voicePlayer!.play(
-        AssetSource(assetPath),
-        volume: 1.0,
-        mode: PlayerMode.mediaPlayer, // Voices are longer, use media player
-      );
+      await _voicePlayer!.play(AssetSource(assetPath), volume: 1.0);
     } catch (e) {
       debugPrint('Error playing voice: $e');
     }
@@ -236,6 +227,7 @@ class AudioService {
         await player.dispose();
       }
       _sfxPool.clear();
+      _isInitialized = false;
     } catch (e) {
       debugPrint('Error disposing audio service: $e');
     }
