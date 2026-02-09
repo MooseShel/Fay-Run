@@ -5,21 +5,31 @@ class AudioService {
   static final AudioService _instance = AudioService._internal();
   factory AudioService() => _instance;
 
-  final AudioPlayer _bgmPlayer = AudioPlayer();
-
-  // Cache players for overlapping SFX if needed,
-  // but for simplicity we'll use a single SFX player or standard mode "low latency"
-  // actually AudioPlayer(playerId: 'sfx') might cut off previous.
-  // Ideally use a pool for SFX, but let's stick to simple first.
+  AudioPlayer? _bgmPlayer;
+  bool _isInitialized = false;
 
   bool _isMuted = false;
 
-  AudioService._internal() {
-    _bgmPlayer.setReleaseMode(ReleaseMode.loop);
+  AudioService._internal();
+
+  // Lazy initialization to prevent crashes on iOS
+  Future<void> _ensureInitialized() async {
+    if (_isInitialized) return;
+
+    try {
+      _bgmPlayer = AudioPlayer();
+      await _bgmPlayer!.setReleaseMode(ReleaseMode.loop);
+      _isInitialized = true;
+    } catch (e) {
+      debugPrint('Error initializing audio player: $e');
+    }
   }
 
   Future<void> playBGM(int level) async {
     if (_isMuted) return;
+
+    await _ensureInitialized();
+    if (_bgmPlayer == null) return;
 
     String musicAsset = 'audio/music_bayou.mp3'; // Default L1
     switch (level) {
@@ -38,24 +48,27 @@ class AudioService {
     }
 
     try {
-      await _bgmPlayer.stop(); // Stop current
+      await _bgmPlayer!.stop(); // Stop current
       // AssetSource automatically adds 'assets/', so we just need 'audio/...'
-      await _bgmPlayer.play(AssetSource(musicAsset), volume: 0.4);
+      await _bgmPlayer!.play(AssetSource(musicAsset), volume: 0.4);
     } catch (e) {
       debugPrint('Error playing BGM: $e');
     }
   }
 
   Future<void> stopBGM() async {
-    await _bgmPlayer.stop();
+    if (_bgmPlayer == null) return;
+    await _bgmPlayer!.stop();
   }
 
   Future<void> pauseBGM() async {
-    await _bgmPlayer.pause();
+    if (_bgmPlayer == null) return;
+    await _bgmPlayer!.pause();
   }
 
   Future<void> resumeBGM() async {
-    await _bgmPlayer.resume();
+    if (_bgmPlayer == null) return;
+    await _bgmPlayer!.resume();
   }
 
   Future<void> playSFX(String sfxName) async {
@@ -106,9 +119,9 @@ class AudioService {
   void playStaffSound(String staffType) {
     String asset = '';
     // Map staff event types to audio files
-    if (staffType.contains('shoeTie'))
+    if (staffType.contains('shoeTie')) {
       asset = 'audio/staff_head.mp3';
-    else if (staffType.contains('coachWhistle'))
+    } else if (staffType.contains('coachWhistle'))
       asset = 'audio/staff_coach.mp3';
     else if (staffType.contains('librarianShush'))
       asset = 'audio/staff_librarian.mp3';
@@ -124,10 +137,12 @@ class AudioService {
 
   void toggleMute() {
     _isMuted = !_isMuted;
+    if (_bgmPlayer == null) return;
+
     if (_isMuted) {
-      _bgmPlayer.setVolume(0);
+      _bgmPlayer!.setVolume(0);
     } else {
-      _bgmPlayer.setVolume(0.4);
+      _bgmPlayer!.setVolume(0.4);
     }
   }
 }
