@@ -134,7 +134,7 @@ class _AnimatedStaffChaosState extends State<AnimatedStaffChaos>
                   ClipRRect(
                     borderRadius: BorderRadius.circular(10),
                     child: Image.asset(
-                      'assets/images/${_getStaffImagePath()}',
+                      'images/${_getStaffImagePath()}',
                       width: 200,
                       height: 200,
                       fit: BoxFit.cover,

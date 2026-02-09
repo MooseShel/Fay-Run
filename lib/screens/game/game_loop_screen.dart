@@ -109,14 +109,18 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     // Random Staff Appearances (Every 5-10s for fun sounds/visuals only)
     if (_chaosTimer > 5 + _random.nextInt(5)) {
       _chaosTimer = 0;
-      final eventType =
-          StaffEventType.values[_random.nextInt(StaffEventType.values.length)];
 
-      // Show staff event notification (visual only, no gameplay effects)
-      gameState.triggerStaffEvent(eventType);
+      // Only trigger if no staff event is currently active
+      if (gameState.activeStaffEvent == null) {
+        final eventType = StaffEventType
+            .values[_random.nextInt(StaffEventType.values.length)];
 
-      // Play Staff Sound
-      AudioService().playStaffSound(eventType.toString());
+        // Show staff event notification (visual only, no gameplay effects)
+        gameState.triggerStaffEvent(eventType);
+
+        // Play Staff Sound
+        AudioService().playStaffSound(eventType.toString());
+      }
     }
 
     // 1. Physics Update
