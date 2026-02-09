@@ -9,6 +9,7 @@ import '../../widgets/parallax_background.dart';
 import '../../widgets/player_character.dart';
 import '../../widgets/game/ambient_effects.dart';
 import '../../widgets/game/quiz_overlay.dart';
+import '../../widgets/game/animated_staff_chaos.dart';
 import '../../game/obstacle_manager.dart';
 import '../../services/audio_service.dart';
 
@@ -310,13 +311,9 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                   color: Colors.black.withValues(alpha: 0.8),
                 ),
               ), // Placeholder for Splat visual
-
+            // Staff Chaos - Animated center screen appearance
             if (gameState.activeStaffEvent != null)
-              Positioned(
-                top: 100,
-                right: 20,
-                child: _StaffEventCard(event: gameState.activeStaffEvent!),
-              ),
+              AnimatedStaffChaos(event: gameState.activeStaffEvent!),
 
             Positioned(top: 40, left: 20, child: _buildHUD(gameState)),
 
@@ -532,77 +529,6 @@ class _GameLoopScreenState extends State<GameLoopScreen>
           ),
         ),
       ],
-    );
-  }
-}
-
-class _StaffEventCard extends StatelessWidget {
-  final StaffEvent event;
-  const _StaffEventCard({required this.event});
-
-  @override
-  Widget build(BuildContext context) {
-    String imagePath = '';
-    switch (event.type) {
-      case StaffEventType.shoeTie:
-        imagePath = 'assets/images/staff_head_school.jpg';
-        break;
-      case StaffEventType.coachWhistle:
-        imagePath = 'assets/images/staff_coach.jpg';
-        break;
-      case StaffEventType.librarianShush:
-        imagePath = 'assets/images/staff_librarian.jpg';
-        break;
-      case StaffEventType.scienceSplat:
-        imagePath = 'assets/images/staff_science.jpg';
-        break;
-      case StaffEventType.deanGlare:
-        imagePath = 'assets/images/staff_dean.jpg';
-        break;
-      case StaffEventType.peDrill:
-        imagePath = 'assets/images/staff_pe.png';
-        break;
-    }
-
-    return Card(
-      color: FayColors.navy,
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (imagePath.isNotEmpty)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(50),
-                child: Image.asset(
-                  imagePath,
-                  width: 100,
-                  height: 100,
-                  fit: BoxFit.cover,
-                  errorBuilder: (c, e, s) =>
-                      const Icon(Icons.person, size: 60, color: Colors.white),
-                ),
-              ),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  event.title,
-                  style: TextStyle(
-                    color: FayColors.gold,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  event.message,
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
