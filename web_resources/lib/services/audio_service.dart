@@ -18,6 +18,11 @@ class AudioService {
     _bgmPlayer.setReleaseMode(ReleaseMode.loop);
   }
 
+  Future<void> init() async {
+    // Initialize audio settings if needed
+    // For now, no-op or load settings
+  }
+
   Future<void> playBGM(int level) async {
     if (_isMuted) return;
 
