@@ -6,30 +6,32 @@ class AudioService {
   factory AudioService() => _instance;
 
   AudioPlayer? _bgmPlayer;
-  bool _isInitialized = false;
-
   bool _isMuted = false;
 
   AudioService._internal();
 
-  // Lazy initialization to prevent crashes on iOS
-  Future<void> _ensureInitialized() async {
-    if (_isInitialized) return;
+  // Create BGM player lazily only when needed
+  Future<AudioPlayer?> _getBGMPlayer() async {
+    if (_bgmPlayer != null) return _bgmPlayer;
 
     try {
       _bgmPlayer = AudioPlayer();
       await _bgmPlayer!.setReleaseMode(ReleaseMode.loop);
-      _isInitialized = true;
+      return _bgmPlayer;
     } catch (e) {
-      debugPrint('Error initializing audio player: $e');
+      debugPrint('Error creating BGM player: $e');
+      return null;
     }
   }
 
   Future<void> playBGM(int level) async {
     if (_isMuted) return;
 
-    await _ensureInitialized();
-    if (_bgmPlayer == null) return;
+    final player = await _getBGMPlayer();
+    if (player == null) {
+      debugPrint('BGM player not available');
+      return;
+    }
 
     String musicAsset = 'audio/music_bayou.mp3'; // Default L1
     switch (level) {
@@ -48,9 +50,8 @@ class AudioService {
     }
 
     try {
-      await _bgmPlayer!.stop(); // Stop current
-      // AssetSource automatically adds 'assets/', so we just need 'audio/...'
-      await _bgmPlayer!.play(AssetSource(musicAsset), volume: 0.4);
+      await player.stop();
+      await player.play(AssetSource(musicAsset), volume: 0.4);
     } catch (e) {
       debugPrint('Error playing BGM: $e');
     }
@@ -58,30 +59,37 @@ class AudioService {
 
   Future<void> stopBGM() async {
     if (_bgmPlayer == null) return;
-    await _bgmPlayer!.stop();
+    try {
+      await _bgmPlayer!.stop();
+    } catch (e) {
+      debugPrint('Error stopping BGM: $e');
+    }
   }
 
   Future<void> pauseBGM() async {
     if (_bgmPlayer == null) return;
-    await _bgmPlayer!.pause();
+    try {
+      await _bgmPlayer!.pause();
+    } catch (e) {
+      debugPrint('Error pausing BGM: $e');
+    }
   }
 
   Future<void> resumeBGM() async {
     if (_bgmPlayer == null) return;
-    await _bgmPlayer!.resume();
+    try {
+      await _bgmPlayer!.resume();
+    } catch (e) {
+      debugPrint('Error resuming BGM: $e');
+    }
   }
 
   Future<void> playSFX(String sfxName) async {
     if (_isMuted) return;
-    // sfxName e.g. 'audio/jump.mp3'
+
     try {
-      // Create a temporary player for overlapping sounds
       final player = AudioPlayer();
       await player.play(AssetSource(sfxName), mode: PlayerMode.lowLatency);
-      // Auto dispose handled by fire-and-forget?
-      // AudioPlayers usually need disposal, but for short SFX in simple apps this is often okay
-      // or we let them finish. 'lowLatency' is good.
-      // Better pattern: keep a pool. But for now new instance per SFX is safest for overlap.
       player.onPlayerComplete.listen((event) {
         player.dispose();
       });
@@ -90,47 +98,26 @@ class AudioService {
     }
   }
 
-  // Pre-defined SFX
-  // Pre-defined SFX - Remove .mp3 because we might have been adding it twice,
-  // OR the user said "bonk.mp3mp3".
-  // Let's check playSFX usage.
-  // The Strings in playJump etc ARE 'audio/jump.mp3'.
-  // playSFX does: await player.play(AssetSource(sfxName));
-  // AssetSource ADDS 'assets/'.
-  // So 'assets/audio/jump.mp3' is correct if the file is at 'assets/audio/jump.mp3'.
-  // Wait, if the error was "assets/assets/audio/bonk.mp3mp3", then:
-  // 1. AssetSource added 'assets/' -> 'assets/'
-  // 2. I passed 'assets/audio/bonk.mp3' ? No I passed 'audio/bonk.mp3'.
-  // 3. Where did the second .mp3 come from?
-  // User log: "GET /assets/assets/audio/bonk.mp3mp3"
-  // Maybe `AssetSource` doesn't need extension? No, it does.
-  // Ah, maybe I was doing something like `playSFX(current + '.mp3')` elsewhere?
-  // Checking `playStaffSound`: `asset = 'audio/staff_head.mp3'`.
-  // Checking `playSFX`: `AssetSource(sfxName)`.
-  // The log "bonk.mp3mp3" implies sfxName was "audio/bonk.mp3.mp3" or "bonk.mp3.mp3".
-  // Let's strictly define paths here.
-
   void playJump() => playSFX('audio/jump.mp3');
-  void playBonk() => playSFX('audio/bonk.mp3'); // Collision
-  void playCoin() => playSFX('audio/ding.mp3'); // Score/Quiz Correct
-  void playPowerup() => playSFX('audio/powerup.mp3'); // Quiz Invincible
+  void playBonk() => playSFX('audio/bonk.mp3');
+  void playCoin() => playSFX('audio/ding.mp3');
+  void playPowerup() => playSFX('audio/powerup.mp3');
 
-  // Staff
   void playStaffSound(String staffType) {
     String asset = '';
-    // Map staff event types to audio files
     if (staffType.contains('shoeTie')) {
       asset = 'audio/staff_head.mp3';
-    } else if (staffType.contains('coachWhistle'))
+    } else if (staffType.contains('coachWhistle')) {
       asset = 'audio/staff_coach.mp3';
-    else if (staffType.contains('librarianShush'))
+    } else if (staffType.contains('librarianShush')) {
       asset = 'audio/staff_librarian.mp3';
-    else if (staffType.contains('scienceSplat'))
+    } else if (staffType.contains('scienceSplat')) {
       asset = 'audio/staff_science.mp3';
-    else if (staffType.contains('deanGlare'))
-      asset = 'audio/staff_head.mp3'; // Dean uses head of school voice
-    else if (staffType.contains('peDrill'))
-      asset = 'audio/staff_coach.mp3'; // PE uses coach voice
+    } else if (staffType.contains('deanGlare')) {
+      asset = 'audio/staff_head.mp3';
+    } else if (staffType.contains('peDrill')) {
+      asset = 'audio/staff_coach.mp3';
+    }
 
     if (asset.isNotEmpty) playSFX(asset);
   }
@@ -139,10 +126,23 @@ class AudioService {
     _isMuted = !_isMuted;
     if (_bgmPlayer == null) return;
 
-    if (_isMuted) {
-      _bgmPlayer!.setVolume(0);
-    } else {
-      _bgmPlayer!.setVolume(0.4);
+    try {
+      if (_isMuted) {
+        _bgmPlayer!.setVolume(0);
+      } else {
+        _bgmPlayer!.setVolume(0.4);
+      }
+    } catch (e) {
+      debugPrint('Error toggling mute: $e');
+    }
+  }
+
+  Future<void> dispose() async {
+    try {
+      await _bgmPlayer?.dispose();
+      _bgmPlayer = null;
+    } catch (e) {
+      debugPrint('Error disposing audio service: $e');
     }
   }
 }
