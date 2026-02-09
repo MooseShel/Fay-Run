@@ -19,14 +19,29 @@ class AudioService {
 
   // Initialize with settings and pool
   Future<void> init() async {
-    await SettingsService().init();
-    _isMuted = SettingsService().isMuted;
+    try {
+      await SettingsService().init();
+      _isMuted = SettingsService().isMuted;
 
-    // Initialize SFX Pool
-    for (int i = 0; i < _poolSize; i++) {
-      final player = AudioPlayer();
-      await player.setPlayerMode(PlayerMode.lowLatency); // Optimize for SFX
-      _sfxPool.add(player);
+      // Initialize SFX Pool with defensive error handling
+      for (int i = 0; i < _poolSize; i++) {
+        try {
+          final player = AudioPlayer();
+          // Give the player time to initialize before setting mode
+          await Future.delayed(const Duration(milliseconds: 50));
+          await player.setPlayerMode(PlayerMode.lowLatency);
+          _sfxPool.add(player);
+        } catch (e) {
+          debugPrint('Error initializing SFX player $i: $e');
+          // Continue with remaining players even if one fails
+        }
+      }
+
+      debugPrint(
+        'AudioService initialized with ${_sfxPool.length} SFX players',
+      );
+    } catch (e) {
+      debugPrint('Error initializing AudioService: $e');
     }
   }
 
