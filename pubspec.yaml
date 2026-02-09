@@ -16,10 +16,10 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+22
+version: 1.0.0+23
 
 environment:
-  sdk: '>=3.27.0 <4.0.0'
+  sdk: '>=3.10.0 <4.0.0'  # Temporarily relaxed to allow Codemagic setup, upgraded to 3.27.x in build script
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
