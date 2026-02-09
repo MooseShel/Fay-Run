@@ -257,7 +257,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     showDialog(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.black.withValues(alpha: 0.7), // Darker overlay
+      barrierColor: Colors.black.withOpacity(0.7), // Darker overlay
       builder: (context) => QuizOverlay(
         challenge: challenge,
         question: question,
@@ -356,7 +356,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                   ),
                   onPressed: () => context.read<GameState>().pauseGame(),
                   style: IconButton.styleFrom(
-                    backgroundColor: Colors.white.withValues(alpha: 0.5),
+                    backgroundColor: Colors.white.withOpacity(0.5),
                   ),
                 ),
               ),
@@ -416,7 +416,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
             // 7. Level Complete Overlay
             if (gameState.status == GameStatus.levelComplete)
               Container(
-                color: FayColors.navy.withValues(alpha: 0.9),
+                color: FayColors.navy.withOpacity(0.9),
                 child: Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,

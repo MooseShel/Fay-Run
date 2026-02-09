@@ -28,7 +28,7 @@ class PlayerCharacter extends StatelessWidget {
         boxShadow: isInvincible
             ? [
                 BoxShadow(
-                  color: FayColors.gold.withValues(alpha: 0.6),
+                  color: FayColors.gold.withOpacity(0.6),
                   blurRadius: 15,
                   spreadRadius: 2,
                 ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'constants.dart';
 
 class FayTheme {
@@ -7,27 +6,27 @@ class FayTheme {
     return ThemeData(
       primaryColor: FayColors.navy,
       scaffoldBackgroundColor: const Color(0xFFF5F9FF), // Light blue tint
-      // Text Theme (Google Fonts)
-      textTheme: GoogleFonts.nunitoTextTheme().copyWith(
-        displayLarge: GoogleFonts.fredoka(
+      // Text Theme (System Fonts)
+      textTheme: const TextTheme().copyWith(
+        displayLarge: const TextStyle(
           fontSize: 32,
           fontWeight: FontWeight.bold,
           color: FayColors.navy,
         ),
-        displayMedium: GoogleFonts.fredoka(
+        displayMedium: const TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.bold,
           color: FayColors.navy,
         ),
-        bodyLarge: GoogleFonts.nunito(fontSize: 18, color: FayColors.text),
+        bodyLarge: const TextStyle(fontSize: 18, color: FayColors.text),
       ),
 
-      appBarTheme: AppBarTheme(
+      appBarTheme: const AppBarTheme(
         backgroundColor: FayColors.navy,
         foregroundColor: FayColors.white,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: GoogleFonts.fredoka(
+        titleTextStyle: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.bold,
           color: FayColors.white,
@@ -49,12 +48,9 @@ class FayTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20), // Rounded cartoon look
           ),
-          textStyle: GoogleFonts.fredoka(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
+          textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
           elevation: 4,
-          shadowColor: FayColors.navyDark.withValues(alpha: 0.4),
+          shadowColor: FayColors.navyDark.withOpacity(0.4),
         ),
       ),
 
@@ -64,7 +60,7 @@ class FayTheme {
         fillColor: Colors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: FayColors.navy.withValues(alpha: 0.2)),
+          borderSide: BorderSide(color: FayColors.navy.withOpacity(0.2)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -75,14 +71,6 @@ class FayTheme {
           vertical: 16,
         ),
       ),
-
-      /*
-      cardTheme: CardTheme(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        elevation: 4,
-        shadowColor: Colors.black.withValues(alpha: 0.1),
-      ),
-      */
     );
   }
 }

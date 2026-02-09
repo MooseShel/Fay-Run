@@ -103,7 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         labelText: 'Email',
                         prefixIcon: const Icon(Icons.email),
                         filled: true,
-                        fillColor: Colors.white.withValues(alpha: 0.1),
+                        fillColor: Colors.white.withOpacity(0.1),
                         labelStyle: const TextStyle(color: Colors.white70),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -128,7 +128,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         labelText: 'Password',
                         prefixIcon: const Icon(Icons.lock),
                         filled: true,
-                        fillColor: Colors.white.withValues(alpha: 0.1),
+                        fillColor: Colors.white.withOpacity(0.1),
                         labelStyle: const TextStyle(color: Colors.white70),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),

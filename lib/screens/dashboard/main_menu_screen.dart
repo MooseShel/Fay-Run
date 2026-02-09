@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants.dart';
 import '../../services/supabase_service.dart';
 import '../../providers/game_state.dart';
@@ -31,10 +30,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: FayColors.navy,
-        title: Text(
-          'Settings',
-          style: GoogleFonts.fredoka(color: Colors.white),
-        ),
+        title: const Text('Settings', style: TextStyle(color: Colors.white)),
         content: StatefulBuilder(
           builder: (context, setState) {
             final isMuted = SettingsService().isMuted;
@@ -42,9 +38,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 SwitchListTile(
-                  title: Text(
+                  title: const Text(
                     'Mute Audio',
-                    style: GoogleFonts.nunito(color: Colors.white),
+                    style: TextStyle(color: Colors.white),
                   ),
                   value: isMuted,
                   activeColor: FayColors.gold,
@@ -57,9 +53,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 const Divider(),
                 ListTile(
                   leading: const Icon(Icons.delete_forever, color: Colors.red),
-                  title: Text(
+                  title: const Text(
                     'Delete Account',
-                    style: GoogleFonts.nunito(
+                    style: TextStyle(
                       color: Colors.red,
                       fontWeight: FontWeight.bold,
                     ),
@@ -89,13 +85,13 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: FayColors.navy,
-        title: Text(
+        title: const Text(
           'Delete Account?',
-          style: GoogleFonts.fredoka(color: Colors.red),
+          style: TextStyle(color: Colors.red),
         ),
-        content: Text(
+        content: const Text(
           'Are you sure you want to delete your account? This will permanently delete all student profiles, scores, and data. This action cannot be undone.',
-          style: GoogleFonts.nunito(color: Colors.white),
+          style: TextStyle(color: Colors.white),
         ),
         actions: [
           TextButton(
@@ -186,7 +182,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                         student != null
                             ? (student['grade'] ?? 'Grade ?')
                             : 'Guest',
-                        style: GoogleFonts.nunito(
+                        style: const TextStyle(
                           color: FayColors.gold,
                           fontWeight: FontWeight.bold,
                         ),
@@ -217,18 +213,15 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
+                    const Text(
                       'Welcome Back,',
-                      style: GoogleFonts.nunito(
-                        color: Colors.white70,
-                        fontSize: 20,
-                      ),
+                      style: TextStyle(color: Colors.white70, fontSize: 20),
                     ),
                     Text(
                       gameState.generatedNickname.isNotEmpty
                           ? gameState.generatedNickname
                           : 'Future Gator',
-                      style: GoogleFonts.fredoka(
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -241,11 +234,11 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               const SizedBox(height: 30),
 
               // Level Selector Title
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24.0),
                 child: Text(
                   'Select Level',
-                  style: GoogleFonts.fredoka(
+                  style: TextStyle(
                     color: FayColors.gold,
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -289,7 +282,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                           const SizedBox(height: 16),
                           Text(
                             'Level $level',
-                            style: GoogleFonts.fredoka(
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 24,
                               fontWeight: FontWeight.bold,

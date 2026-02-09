@@ -243,16 +243,14 @@ class _ParticlePainter extends CustomPainter {
 
   void _drawFirefly(Canvas canvas, Offset pos, _Particle p) {
     final paint = Paint()
-      ..color = Colors.yellowAccent.withValues(alpha: p.opacity.clamp(0.0, 1.0))
+      ..color = Colors.yellowAccent.withOpacity(p.opacity.clamp(0.0, 1.0))
       ..style = PaintingStyle.fill;
 
     canvas.drawCircle(pos, p.size, paint);
 
     // Glow
     final glowPaint = Paint()
-      ..color = Colors.yellowAccent.withValues(
-        alpha: p.opacity.clamp(0.0, 1.0) * 0.3,
-      )
+      ..color = Colors.yellowAccent.withOpacity(p.opacity.clamp(0.0, 1.0) * 0.3)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
 
     canvas.drawCircle(pos, p.size * 2.5, glowPaint);
@@ -264,7 +262,7 @@ class _ParticlePainter extends CustomPainter {
     canvas.rotate(p.rotation);
 
     final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.9)
+      ..color = Colors.white.withOpacity(0.9)
       ..style = PaintingStyle.fill;
 
     // Draw "open book" shape (two rects with a gap/spine)
@@ -289,7 +287,7 @@ class _ParticlePainter extends CustomPainter {
 
     // Spine/Border
     final borderPaint = Paint()
-      ..color = Colors.grey.withValues(alpha: 0.5)
+      ..color = Colors.grey.withOpacity(0.5)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
 
@@ -308,14 +306,14 @@ class _ParticlePainter extends CustomPainter {
 
   void _drawBubble(Canvas canvas, Offset pos, _Particle p) {
     final paint = Paint()
-      ..color = Colors.lightBlueAccent.withValues(alpha: 0.3)
+      ..color = Colors.lightBlueAccent.withOpacity(0.3)
       ..style = PaintingStyle.fill;
 
     canvas.drawCircle(pos, p.size, paint);
 
     // Border
     final borderPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.6)
+      ..color = Colors.white.withOpacity(0.6)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
 
@@ -323,7 +321,7 @@ class _ParticlePainter extends CustomPainter {
 
     // Shine
     final shinePaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.8)
+      ..color = Colors.white.withOpacity(0.8)
       ..style = PaintingStyle.fill;
 
     canvas.drawCircle(
@@ -393,8 +391,8 @@ class _ParticlePainter extends CustomPainter {
 
   void _drawExhaust(Canvas canvas, Offset pos, _Particle p) {
     final paint = Paint()
-      ..color = Colors.grey.shade600.withValues(
-        alpha: p.opacity.clamp(0.0, 1.0) * 0.5,
+      ..color = Colors.grey.shade600.withOpacity(
+        p.opacity.clamp(0.0, 1.0) * 0.5,
       )
       ..maskFilter = MaskFilter.blur(BlurStyle.normal, p.size * 0.5);
 

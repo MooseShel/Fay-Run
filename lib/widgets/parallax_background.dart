@@ -191,7 +191,7 @@ class _GroundPainter extends CustomPainter {
       // This avoids the "treadmill" strobing effect
 
       Paint scuffPaint = Paint()
-        ..color = Colors.white.withValues(alpha: 0.25)
+        ..color = Colors.white.withOpacity(0.25)
         ..style = PaintingStyle.fill;
 
       // Draw repeating texture chunks
@@ -244,7 +244,7 @@ class _GroundPainter extends CustomPainter {
       canvas.drawRect(Rect.fromLTWH(0, 0, width, 10), edgePaint);
 
       Paint grassPaint = Paint()
-        ..color = const Color(0xFF33691E).withValues(alpha: 0.3);
+        ..color = const Color(0xFF33691E).withOpacity(0.3);
       // Occasional grass tufts
       double chunkWidth = 150.0;
       double chunkOffset = scrollOffset % chunkWidth;

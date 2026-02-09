@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants.dart';
 import '../../models/challenge.dart';
 
@@ -58,7 +57,7 @@ class _QuizOverlayState extends State<QuizOverlay>
             border: Border.all(color: FayColors.gold, width: 4),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
+                color: Colors.black.withOpacity(0.3),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -85,7 +84,7 @@ class _QuizOverlayState extends State<QuizOverlay>
                     const SizedBox(height: 8),
                     Text(
                       widget.challenge.topic,
-                      style: GoogleFonts.fredoka(
+                      style: const TextStyle(
                         color: FayColors.navy,
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -102,7 +101,7 @@ class _QuizOverlayState extends State<QuizOverlay>
                   children: [
                     Text(
                       widget.question.questionText,
-                      style: GoogleFonts.nunito(
+                      style: const TextStyle(
                         color: FayColors.text,
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
@@ -137,7 +136,7 @@ class _QuizOverlayState extends State<QuizOverlay>
                             ),
                             child: Text(
                               option,
-                              style: GoogleFonts.fredoka(fontSize: 18),
+                              style: const TextStyle(fontSize: 18),
                               textAlign: TextAlign.center,
                             ),
                           ),
