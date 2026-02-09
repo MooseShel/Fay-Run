@@ -106,8 +106,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       );
     }
 
-    // Random Staff Appearances (Every 5-10s for fun sounds/visuals only)
-    if (_chaosTimer > 5 + _random.nextInt(5)) {
+    // Random Staff Appearances (Every 10-15s for fun sounds/visuals only)
+    if (_chaosTimer > 10 + _random.nextInt(5)) {
       _chaosTimer = 0;
 
       // Only trigger if no staff event is currently active
