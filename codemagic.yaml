@@ -14,10 +14,21 @@ workflows:
         XCODE_SCHEME: "Runner"
         BUNDLE_ID: "com.fayrun.app"
         APP_STORE_APPLE_ID: 1234567890 # Replace with actual App ID from App Store Connect
-      flutter: 3.27.1
+      flutter: stable
       xcode: latest
       cocoapods: default
     scripts:
+      - name: Verify and update Flutter to 3.27.x
+        script: |
+          echo "Current Flutter version:"
+          flutter --version
+          echo "Current Dart SDK version:"
+          dart --version
+          echo "Upgrading Flutter to stable channel 3.27.x..."
+          flutter channel stable
+          flutter upgrade --force
+          flutter --version
+          dart --version
       - name: Set up code signing settings on Xcode project
         script: |
           xcode-project use-profiles
