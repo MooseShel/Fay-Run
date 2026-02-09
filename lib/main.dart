@@ -14,10 +14,9 @@ import 'services/audio_service.dart';
 import 'services/crash_report_service.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runZonedGuarded(
     () async {
-      WidgetsFlutterBinding.ensureInitialized();
-
       // Audio stub (no native code)
       await AudioService().init();
 
