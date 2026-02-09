@@ -43,7 +43,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                     style: TextStyle(color: Colors.white),
                   ),
                   value: isMuted,
-                  activeColor: FayColors.gold,
+                  activeThumbColor: FayColors.gold,
                   onChanged: (val) {
                     setState(() {
                       AudioService().toggleMute();
