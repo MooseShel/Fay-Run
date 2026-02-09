@@ -131,10 +131,134 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
       left: 0,
       right: 0,
       bottom: 0,
-      height:
-          100, // Keep height for logical consistency if needed, but make transparent
-      child: Container(color: Colors.transparent), // Made transparent
+      height: 100, // Ground height
+      child: RepaintBoundary(
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return CustomPaint(
+              painter: _GroundPainter(
+                level: widget.level,
+                scrollOffset: _scrollOffset,
+              ),
+              size: Size.infinite,
+            );
+          },
+        ),
+      ),
     );
+  }
+}
+
+class _GroundPainter extends CustomPainter {
+  final int level;
+  final double scrollOffset;
+
+  _GroundPainter({required this.level, required this.scrollOffset});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double groundHeight = size.height;
+    final double width = size.width;
+
+    // Base Ground Color
+    Paint basePaint = Paint();
+    switch (level) {
+      case 2: // Hallway
+        basePaint.color = const Color(0xFFD7CCC8); // Beige
+        break;
+      case 3: // Lab
+        basePaint.color = const Color(0xFFE1F5FE); // Light Blue
+        break;
+      case 4: // Cafeteria
+        basePaint.color = const Color(0xFFFFE0B2); // Orange/Peach
+        break;
+      case 5: // Carpool
+        basePaint.color = const Color(0xFF616161); // Dark Gray (Road)
+        break;
+      default: // Bayou
+        basePaint.color = const Color(0xFF558B2F); // Grass Green
+    }
+    canvas.drawRect(Rect.fromLTWH(0, 0, width, groundHeight), basePaint);
+
+    // Detail Patterns (Scrolling)
+
+    // Unsed but kept for reference if needed
+    // final double offset = scrollOffset % 50.0;
+
+    if (level == 2 || level == 3 || level == 4) {
+      // Indoor: Terrazzo / Speckled look instead of Grid
+      // This avoids the "treadmill" strobing effect
+
+      Paint scuffPaint = Paint()
+        ..color = Colors.white.withValues(alpha: 0.25)
+        ..style = PaintingStyle.fill;
+
+      // Draw repeating texture chunks
+      double chunkWidth = 200.0;
+      double chunkOffset = scrollOffset % chunkWidth;
+
+      // Draw enough chunks to cover width + 1 extra
+      for (double x = -chunkOffset; x < width; x += chunkWidth) {
+        // Draw a few "details" in this 200px chunk ensuring disjoint placement
+        // to look like random floor markings/reflection
+
+        // Detail 1: Small circle
+        canvas.drawCircle(Offset(x + 40, 30), 4, scuffPaint);
+
+        // Detail 2: Thin horizontal "reflection" line
+        canvas.drawRect(Rect.fromLTWH(x + 100, 60, 50, 4), scuffPaint);
+
+        // Detail 3: Tiny dot
+        canvas.drawCircle(Offset(x + 180, 20), 2, scuffPaint);
+
+        // Detail 4: Another small rect
+        canvas.drawRect(Rect.fromLTWH(x + 150, 80, 20, 3), scuffPaint);
+      }
+    } else if (level == 5) {
+      // Road Markings (Dashed Line)
+      Paint linePaint = Paint()
+        ..color = Colors.white
+        ..strokeWidth = 4.0
+        ..style = PaintingStyle.stroke;
+
+      // Increase dash spacing to look less fast/busy
+      double dashWidth = 40;
+      double dashSpace = 80; // Doubled spacing from 40 to 80
+      double startX = -(scrollOffset % (dashWidth + dashSpace));
+
+      Path dashPath = Path();
+      for (double x = startX; x < width; x += dashWidth + dashSpace) {
+        dashPath.moveTo(x, groundHeight / 2); // Center of lane
+        dashPath.lineTo(x + dashWidth, groundHeight / 2);
+      }
+      canvas.drawPath(dashPath, linePaint);
+
+      // Curb
+      Paint curbPaint = Paint()..color = const Color(0xFFE0E0E0);
+      canvas.drawRect(Rect.fromLTWH(0, 0, width, 10), curbPaint);
+    } else {
+      // Grass Details (Bayou)
+      // Simple darker top edge for depth
+      Paint edgePaint = Paint()..color = const Color(0xFF33691E);
+      canvas.drawRect(Rect.fromLTWH(0, 0, width, 10), edgePaint);
+
+      Paint grassPaint = Paint()
+        ..color = const Color(0xFF33691E).withValues(alpha: 0.3);
+      // Occasional grass tufts
+      double chunkWidth = 150.0;
+      double chunkOffset = scrollOffset % chunkWidth;
+
+      for (double x = -chunkOffset; x < width; x += chunkWidth) {
+        canvas.drawCircle(Offset(x + 30, 40), 3, grassPaint);
+        canvas.drawCircle(Offset(x + 100, 70), 5, grassPaint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _GroundPainter old) {
+    return old.level != level || old.scrollOffset != scrollOffset;
   }
 }
 

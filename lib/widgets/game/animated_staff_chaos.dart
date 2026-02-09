@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/staff_event.dart';
 import '../../core/constants.dart';
+import '../../core/assets.dart';
 
 class AnimatedStaffChaos extends StatefulWidget {
   final StaffEvent event;
@@ -78,17 +79,17 @@ class _AnimatedStaffChaosState extends State<AnimatedStaffChaos>
   String _getStaffImagePath() {
     switch (widget.event.type) {
       case StaffEventType.shoeTie:
-        return 'staff_head.jpg';
+        return Assets.staffHead;
       case StaffEventType.coachWhistle:
-        return 'staff_coach.jpg';
+        return Assets.staffCoach;
       case StaffEventType.librarianShush:
-        return 'staff_librarian.jpg';
+        return Assets.staffLibrarian;
       case StaffEventType.scienceSplat:
-        return 'staff_science.jpg';
+        return Assets.staffScience;
       case StaffEventType.deanGlare:
-        return 'staff_dean.jpg';
+        return Assets.staffDean;
       case StaffEventType.peDrill:
-        return 'staff_pe.png';
+        return Assets.staffPe;
     }
   }
 
@@ -134,7 +135,7 @@ class _AnimatedStaffChaosState extends State<AnimatedStaffChaos>
                   ClipRRect(
                     borderRadius: BorderRadius.circular(10),
                     child: Image.asset(
-                      'images/${_getStaffImagePath()}',
+                      'assets/images/${_getStaffImagePath()}',
                       width: 200,
                       height: 200,
                       fit: BoxFit.cover,
@@ -150,24 +151,8 @@ class _AnimatedStaffChaosState extends State<AnimatedStaffChaos>
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  // Title with glow effect
-                  Text(
-                    widget.event.title.toUpperCase(),
-                    style: TextStyle(
-                      color: FayColors.gold,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      shadows: [
-                        Shadow(
-                          color: FayColors.gold.withValues(alpha: 0.8),
-                          blurRadius: 10,
-                        ),
-                      ],
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
+                  // Title removed as per request
+                  // const SizedBox(height: 8),
                   // Message
                   Text(
                     widget.event.message,

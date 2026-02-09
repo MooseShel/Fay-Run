@@ -219,7 +219,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       if (!gameState.isInvincible) {
         AudioService().playBonk();
         gameState.takeDamage();
-        gameState.triggerStaffEvent(StaffEventType.shoeTie);
+        // Staff events are now random only, not triggered by collision
       }
     }
   }
