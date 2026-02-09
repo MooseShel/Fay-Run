@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants.dart';
 
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../providers/game_state.dart';
 import '../../services/audio_service.dart';
 import '../../services/settings_service.dart';

@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart'; // Add for kDebugMode
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/constants.dart';
 import '../../services/supabase_service.dart';
 
@@ -46,20 +45,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (mounted) {
           Navigator.pushReplacementNamed(context, '/select_student');
-        }
-      } on AuthException catch (e) {
-        if (mounted) {
-          String message = 'Login Failed';
-          if (e.message.contains('Email not confirmed')) {
-            message = 'Please check your email to confirm your account.';
-          } else if (e.message.contains('Invalid login credentials')) {
-            message = 'Invalid email or password.';
-          } else {
-            message = e.message;
-          }
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(message), backgroundColor: Colors.red),
-          );
         }
       } catch (e) {
         if (mounted) {
