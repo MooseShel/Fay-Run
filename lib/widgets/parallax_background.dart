@@ -131,8 +131,9 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
       left: 0,
       right: 0,
       bottom: 0,
-      height: 100, // Ground height
-      child: Container(color: Colors.white),
+      height:
+          100, // Keep height for logical consistency if needed, but make transparent
+      child: Container(color: Colors.transparent), // Made transparent
     );
   }
 }

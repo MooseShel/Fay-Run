@@ -326,7 +326,7 @@ class GameState extends ChangeNotifier {
   // Questions
   final Set<String> _answeredQuestions = {};
 
-  void startNextLevel() {
+  Future<void> startNextLevel() async {
     if (_currentLevel < 5) {
       // Unlock next level logic
       if (_currentLevel >= _maxLevel) {
@@ -335,6 +335,10 @@ class GameState extends ChangeNotifier {
 
       _currentLevel++;
       _resetLevelPhysics();
+
+      // Reload challenge for the new level (new questions)
+      await loadChallenge();
+
       _status = GameStatus.playing; // Directly set to playing
       notifyListeners();
     } else {

@@ -131,6 +131,28 @@ class AudioService {
     }
   }
 
+  AudioPlayer? _voicePlayer;
+
+  Future<void> playVoice(String assetPath) async {
+    if (_isMuted) return;
+
+    try {
+      // Create player if needed
+      _voicePlayer ??= AudioPlayer();
+
+      // Stop any existing voice line to prevent overlapping voices
+      await _voicePlayer!.stop();
+
+      // Play new voice line
+      await _voicePlayer!.play(
+        AssetSource(assetPath),
+        volume: 1.0,
+      ); // Max volume for voices
+    } catch (e) {
+      debugPrint('Error playing voice: $e');
+    }
+  }
+
   void playJump() => playSFX(Assets.sfxJump);
   void playBonk() => playSFX(Assets.sfxBonk);
   void playCoin() => playSFX(Assets.sfxCoin);
@@ -147,18 +169,23 @@ class AudioService {
     } else if (staffType.contains('scienceSplat')) {
       asset = Assets.voiceScience;
     } else if (staffType.contains('deanGlare')) {
-      asset = Assets.voiceDean; // Corrected from staff_head.mp3
+      asset = Assets.voiceDean;
     } else if (staffType.contains('peDrill')) {
-      asset = Assets.voicePe; // Corrected from staff_coach.mp3
+      asset = Assets.voicePe;
     }
 
-    if (asset.isNotEmpty) playSFX(asset);
+    if (asset.isNotEmpty) {
+      // Use dedicated voice player
+      playVoice(asset);
+    }
   }
 
   Future<void> dispose() async {
     try {
       await _bgmPlayer?.dispose();
       _bgmPlayer = null;
+      await _voicePlayer?.dispose();
+      _voicePlayer = null;
     } catch (e) {
       debugPrint('Error disposing audio service: $e');
     }

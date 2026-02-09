@@ -91,8 +91,14 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
     _chaosTimer += dt;
 
-    // Level Completion (e.g., every 1000 meters)
-    if (_distanceRun > 1000) {
+    // Level Completion (e.g., Target = Speed * 600 for ~60s playtime)
+    // Speed 2.5 * 600 = 1500 units
+    // Speed 3.6 * 600 = 2160 units
+    // Calculation: Distance/Frame = Speed * 0.16. Frame/Sec = 60. Distance/Sec = Speed * 9.6.
+    // Target for 60s = Speed * 9.6 * 60 = Speed * 576. Let's round to 600 for simplicity.
+    final targetDistance = gameState.runSpeed * 600;
+
+    if (_distanceRun > targetDistance) {
       _distanceRun = 0;
       gameState.completeLevel();
       // Stop music when level completes
