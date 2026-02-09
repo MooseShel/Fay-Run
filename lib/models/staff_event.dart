@@ -34,35 +34,35 @@ class StaffEvent {
           type: type,
           title: 'The Coach',
           message: 'HUSTLE!',
-          duration: const Duration(seconds: 5),
+          duration: const Duration(seconds: 2),
         );
       case StaffEventType.librarianShush:
         return StaffEvent(
           type: type,
           title: 'The Librarian',
           message: 'Shhhhh!',
-          duration: const Duration(seconds: 5),
+          duration: const Duration(seconds: 2),
         );
       case StaffEventType.scienceSplat:
         return StaffEvent(
           type: type,
           title: 'Science Teacher',
           message: 'Whoopsie!',
-          duration: const Duration(seconds: 3),
+          duration: const Duration(seconds: 2),
         );
       case StaffEventType.deanGlare:
         return StaffEvent(
           type: type,
           title: 'Dean of Students',
           message: 'Detention!',
-          duration: const Duration(seconds: 5),
+          duration: const Duration(seconds: 2),
         );
       case StaffEventType.peDrill:
         return StaffEvent(
           type: type,
           title: 'PE Staff',
           message: 'Drill Time!',
-          duration: const Duration(seconds: 5),
+          duration: const Duration(seconds: 2),
         );
     }
   }
