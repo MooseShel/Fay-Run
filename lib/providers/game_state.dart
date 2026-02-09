@@ -116,10 +116,12 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadLeaderboard() async {
+  Future<void> loadLeaderboard({String? grade}) async {
     try {
       final service = SupabaseService();
-      _leaderboard = await service.getLeaderboard();
+      // Use provided grade, or fall back to current student's grade if logged in
+      final filterGrade = grade ?? currentStudent?['grade'];
+      _leaderboard = await service.getLeaderboard(grade: filterGrade);
       notifyListeners();
     } catch (e) {
       debugPrint('Error loading leaderboard: $e');
@@ -133,12 +135,24 @@ class GameState extends ChangeNotifier {
   ) async {
     try {
       final service = SupabaseService();
+      // Add student
       await service.addStudent(
         firstName: firstName,
         nickname: nickname,
         grade: grade,
       );
-      await loadStudents(); // Refresh list
+
+      // Reload students
+      await loadStudents();
+
+      // Auto-select the newly created student (most recent one)
+      if (_students.isNotEmpty) {
+        // Since we order by created_at ascending in getStudents, the last one *should* be the new one.
+        // But to be safe, let's find it by nickname/name or just take the last one.
+        // Given the low volume, taking the last one is a reasonable heuristic for now.
+        final newStudent = _students.last;
+        selectStudent(newStudent);
+      }
     } catch (e) {
       debugPrint('Error adding student: $e');
     }
@@ -201,6 +215,12 @@ class GameState extends ChangeNotifier {
     }
   }
 
+  void forfeitGame() {
+    _score = 0; // Reset score (Forfeit)
+    _status = GameStatus.menu;
+    notifyListeners();
+  }
+
   void takeDamage() {
     if (_isInvincible) return;
 
@@ -260,6 +280,27 @@ class GameState extends ChangeNotifier {
       } catch (e) {
         debugPrint('Error saving high score: $e');
       }
+    }
+  }
+
+  Future<void> recordQuizResult(String challengeId, bool correct) async {
+    if (_currentStudent == null) return;
+
+    // Don't record progress for fallback/offline challenges (prevent FK errors)
+    if (challengeId == 'fallback_math' || challengeId.startsWith('fallback')) {
+      debugPrint('Skipping progress save for fallback challenge: $challengeId');
+      return;
+    }
+
+    try {
+      final service = SupabaseService();
+      await service.submitQuizResult(
+        studentId: _currentStudent!['id'],
+        challengeId: challengeId,
+        score: correct ? 100 : 0,
+      );
+    } catch (e) {
+      debugPrint('Error recording quiz result: $e');
     }
   }
 

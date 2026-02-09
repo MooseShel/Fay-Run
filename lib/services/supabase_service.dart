@@ -10,22 +10,18 @@ class SupabaseService {
   Future<AuthResponse> signUp({
     required String email,
     required String password,
-    required String fullName,
-    required String grade,
+    required String firstName,
+    required String lastName,
   }) async {
     final response = await _client.auth.signUp(
       email: email,
       password: password,
-      data: {'full_name': fullName, 'grade': grade},
+      data: {'first_name': firstName, 'last_name': lastName},
     );
 
     // If auto-confirm is on and we have a session, create profile immediately
     if (response.session != null) {
-      await upsertProfile(
-        firstName: fullName.split(' ').first,
-        nickname: fullName,
-        grade: grade,
-      );
+      await upsertProfile(firstName: firstName, lastName: lastName);
     }
 
     return response;
@@ -140,14 +136,12 @@ class SupabaseService {
 
   // Submit a quiz result
   Future<void> submitQuizResult({
+    required String studentId,
     required String challengeId,
     required int score,
   }) async {
-    final user = _client.auth.currentUser;
-    if (user == null) return;
-
     await _client.from('student_progress').upsert({
-      'student_id': user.id,
+      'student_id': studentId,
       'challenge_id': challengeId,
       'score': score,
       'completed_at': DateTime.now().toIso8601String(),
@@ -239,11 +233,17 @@ class SupabaseService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getLeaderboard() async {
+  Future<List<Map<String, dynamic>>> getLeaderboard({String? grade}) async {
     try {
-      final response = await _client
+      dynamic query = _client
           .from('students')
-          .select('nickname, grade, high_score')
+          .select('nickname, grade, high_score');
+
+      if (grade != null) {
+        query = query.eq('grade', grade);
+      }
+
+      final response = await query
           .order('high_score', ascending: false)
           .limit(10);
       return List<Map<String, dynamic>>.from(response);
@@ -254,10 +254,11 @@ class SupabaseService {
 
   // --- Legacy Single-Profile (Keep for backward compat/parent profile) ---
 
+  // --- Parent Profile Management ---
+
   Future<void> upsertProfile({
     required String firstName,
-    required String nickname,
-    required String grade,
+    required String lastName,
   }) async {
     final user = _client.auth.currentUser;
     if (user == null) return;
@@ -265,8 +266,7 @@ class SupabaseService {
     await _client.from('profiles').upsert({
       'id': user.id,
       'first_name': firstName,
-      'nickname': nickname,
-      'grade': grade,
+      'last_name': lastName,
       'updated_at': DateTime.now().toIso8601String(),
     });
   }
@@ -285,14 +285,10 @@ class SupabaseService {
       // Auto-repair: If profile is missing but user is auth'd, create it from metadata
       if (response == null) {
         final metadata = user.userMetadata;
-        final fullName = metadata?['full_name'] as String? ?? 'User';
-        final grade = metadata?['grade'] as String? ?? '1st Grade';
+        final firstName = metadata?['first_name'] as String? ?? 'Parent';
+        final lastName = metadata?['last_name'] as String? ?? 'User';
 
-        await upsertProfile(
-          firstName: fullName.split(' ').first,
-          nickname: fullName,
-          grade: grade,
-        );
+        await upsertProfile(firstName: firstName, lastName: lastName);
 
         // Fetch again
         return await _client

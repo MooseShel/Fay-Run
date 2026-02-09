@@ -342,12 +342,14 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                   width: double.infinity,
                   child: OutlinedButton.icon(
                     onPressed: () {
-                      context.read<GameState>().loadLeaderboard();
+                      final grade = student?['grade'];
+                      context.read<GameState>().loadLeaderboard(grade: grade);
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => LeaderboardScreen(
                             leaderboard: context.watch<GameState>().leaderboard,
+                            grade: grade,
                           ),
                         ),
                       );

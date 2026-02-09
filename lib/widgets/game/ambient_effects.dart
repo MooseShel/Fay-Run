@@ -35,6 +35,14 @@ class _AmbientEffectsState extends State<AmbientEffects>
     _initParticles();
   }
 
+  @override
+  void didUpdateWidget(AmbientEffects oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.level != widget.level) {
+      _initParticles();
+    }
+  }
+
   void _initParticles() {
     _particles.clear();
 
@@ -256,22 +264,44 @@ class _ParticlePainter extends CustomPainter {
     canvas.rotate(p.rotation);
 
     final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.8)
+      ..color = Colors.white.withValues(alpha: 0.9)
       ..style = PaintingStyle.fill;
 
-    final rect = Rect.fromCenter(
-      center: Offset.zero,
-      width: p.size,
-      height: p.size * 1.4,
-    );
-    canvas.drawRect(rect, paint);
+    // Draw "open book" shape (two rects with a gap/spine)
+    final double width = p.size * 1.5;
+    final double height = p.size;
 
-    // Border
+    // Left page
+    final leftPage = Rect.fromCenter(
+      center: Offset(-width * 0.25, 0),
+      width: width * 0.5,
+      height: height,
+    );
+    canvas.drawRect(leftPage, paint);
+
+    // Right page
+    final rightPage = Rect.fromCenter(
+      center: Offset(width * 0.25, 0),
+      width: width * 0.5,
+      height: height,
+    );
+    canvas.drawRect(rightPage, paint);
+
+    // Spine/Border
     final borderPaint = Paint()
-      ..color = Colors.grey.withValues(alpha: 0.3)
+      ..color = Colors.grey.withValues(alpha: 0.5)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
-    canvas.drawRect(rect, borderPaint);
+
+    canvas.drawRect(leftPage, borderPaint);
+    canvas.drawRect(rightPage, borderPaint);
+
+    // Spine center line
+    canvas.drawLine(
+      Offset(0, -height / 2),
+      Offset(0, height / 2),
+      borderPaint..color = Colors.black12,
+    );
 
     canvas.restore();
   }

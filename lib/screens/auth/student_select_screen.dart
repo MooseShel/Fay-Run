@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants.dart';
 import '../../providers/game_state.dart';
+import '../dashboard/leaderboard_screen.dart';
 
 class StudentSelectScreen extends StatefulWidget {
   const StudentSelectScreen({super.key});
@@ -33,6 +34,69 @@ class _StudentSelectScreenState extends State<StudentSelectScreen> {
     }
   }
 
+  void _viewClassLeaderboards() {
+    final students = context.read<GameState>().students;
+    if (students.isEmpty) return;
+
+    // Extract unique grades
+    final grades = students
+        .map((s) => s['grade'] as String?)
+        .where((g) => g != null)
+        .toSet()
+        .toList();
+
+    if (grades.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No grades found for students.')),
+      );
+      return;
+    }
+
+    if (grades.length == 1) {
+      _openLeaderboard(grades.first!);
+    } else {
+      _showGradeSelectionDialog(grades.cast<String>());
+    }
+  }
+
+  void _showGradeSelectionDialog(List<String> grades) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: FayColors.navy,
+        title: const Text(
+          'Select Grade',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: grades.map((grade) {
+            return ListTile(
+              title: Text(grade, style: const TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                _openLeaderboard(grade);
+              },
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  void _openLeaderboard(String grade) {
+    context.read<GameState>().loadLeaderboard(grade: grade);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LeaderboardScreen(
+          leaderboard: context.watch<GameState>().leaderboard,
+          grade: grade,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final students = context.watch<GameState>().students;
@@ -44,6 +108,11 @@ class _StudentSelectScreenState extends State<StudentSelectScreen> {
         centerTitle: true,
         automaticallyImplyLeading: false, // Don't go back to login easily?
         actions: [
+          IconButton(
+            icon: const Icon(Icons.leaderboard),
+            tooltip: 'Class Leaderboards',
+            onPressed: _viewClassLeaderboards,
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () {

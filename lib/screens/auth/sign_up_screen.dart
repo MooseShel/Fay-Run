@@ -11,19 +11,10 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  String? _selectedGrade;
-
-  final List<String> _grades = [
-    'Kindergarten',
-    '1st Grade',
-    '2nd Grade',
-    '3rd Grade',
-    '4th Grade',
-    '5th Grade',
-  ];
 
   final _supabaseService = SupabaseService();
   bool _isLoading = false;
@@ -35,8 +26,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
         await _supabaseService.signUp(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
-          fullName: _nameController.text.trim(),
-          grade: _selectedGrade!,
+          firstName: _firstNameController.text.trim(),
+          lastName: _lastNameController.text.trim(),
         );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -62,7 +53,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -103,16 +95,38 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        TextFormField(
-                          controller: _nameController,
-                          decoration: const InputDecoration(
-                            labelText: 'Full Name',
-                            prefixIcon: Icon(Icons.person),
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) => value == null || value.isEmpty
-                              ? 'Please enter your name'
-                              : null,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: _firstNameController,
+                                decoration: const InputDecoration(
+                                  labelText: 'First Name',
+                                  prefixIcon: Icon(Icons.person),
+                                  border: OutlineInputBorder(),
+                                ),
+                                validator: (value) =>
+                                    value == null || value.isEmpty
+                                    ? 'Required'
+                                    : null,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: TextFormField(
+                                controller: _lastNameController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Last Name',
+                                  prefixIcon: Icon(Icons.person_outline),
+                                  border: OutlineInputBorder(),
+                                ),
+                                validator: (value) =>
+                                    value == null || value.isEmpty
+                                    ? 'Required'
+                                    : null,
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
@@ -126,26 +140,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               value == null || !value.contains('@')
                               ? 'Enter a valid email'
                               : null,
-                        ),
-                        const SizedBox(height: 16),
-
-                        DropdownButtonFormField<String>(
-                          initialValue: _selectedGrade,
-                          decoration: const InputDecoration(
-                            labelText: 'Grade Level',
-                            prefixIcon: Icon(Icons.grade),
-                            border: OutlineInputBorder(),
-                          ),
-                          items: _grades.map((grade) {
-                            return DropdownMenuItem(
-                              value: grade,
-                              child: Text(grade),
-                            );
-                          }).toList(),
-                          onChanged: (val) =>
-                              setState(() => _selectedGrade = val),
-                          validator: (val) =>
-                              val == null ? 'Please select a grade' : null,
                         ),
                         const SizedBox(height: 16),
 
@@ -181,7 +175,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 ? const CircularProgressIndicator(
                                     color: FayColors.navy,
                                   )
-                                : const Text('CREATE ACCOUNT'),
+                                : const Text('CREATE PARENT ACCOUNT'),
                           ),
                         ),
                       ],

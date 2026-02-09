@@ -266,6 +266,10 @@ class _GameLoopScreenState extends State<GameLoopScreen>
             gameState.takeDamage();
             gameState.triggerStaffEvent(StaffEventType.scienceSplat);
           }
+
+          // submit result to backend
+          gameState.recordQuizResult(challenge.id, isCorrect);
+
           gameState.resumeGame();
         },
       ),
@@ -334,6 +338,24 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
             Positioned(top: 40, left: 20, child: _buildHUD(gameState)),
 
+            // Pause Button
+            if (gameState.status == GameStatus.playing)
+              Positioned(
+                top: 40,
+                right: 20,
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.pause,
+                    color: FayColors.navy,
+                    size: 32,
+                  ),
+                  onPressed: () => context.read<GameState>().pauseGame(),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white.withValues(alpha: 0.5),
+                  ),
+                ),
+              ),
+
             // 6. Pause/Menu Overlay
             if (gameState.status == GameStatus.paused)
               Container(
@@ -352,7 +374,34 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                       ),
                       ElevatedButton(
                         onPressed: () => context.read<GameState>().resumeGame(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: FayColors.gold,
+                          foregroundColor: FayColors.navy,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 32,
+                            vertical: 12,
+                          ),
+                        ),
                         child: const Text('RESUME'),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          // Stop music
+                          AudioService().stopBGM();
+                          // Forfeit score and return to menu
+                          context.read<GameState>().forfeitGame();
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red[400],
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 32,
+                            vertical: 12,
+                          ),
+                        ),
+                        child: const Text('EXIT LEVEL'),
                       ),
                     ],
                   ),

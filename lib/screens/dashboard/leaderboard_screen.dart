@@ -3,15 +3,16 @@ import '../../core/constants.dart';
 
 class LeaderboardScreen extends StatelessWidget {
   final List<Map<String, dynamic>> leaderboard;
+  final String? grade;
 
-  const LeaderboardScreen({super.key, required this.leaderboard});
+  const LeaderboardScreen({super.key, required this.leaderboard, this.grade});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: FayColors.navy,
       appBar: AppBar(
-        title: const Text('Top Gators'),
+        title: Text(grade != null ? '$grade Leaderboard' : 'Top Gators'),
         centerTitle: true,
         backgroundColor: FayColors.navyDark,
         elevation: 0,
