@@ -12,13 +12,15 @@ import 'screens/dashboard/main_menu_screen.dart';
 import 'screens/game/game_loop_screen.dart';
 import 'services/audio_service.dart';
 import 'services/crash_report_service.dart';
+import 'services/supabase_service.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runZonedGuarded(
     () async {
-      // Audio stub (no native code)
-      await AudioService().init();
+      // Initialize Services
+      await SupabaseService().init();
+      await AudioService().init(); // Audio stub (no native code)
 
       // Error handlers
       FlutterError.onError = (FlutterErrorDetails details) {

@@ -1,9 +1,21 @@
 ﻿import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/challenge.dart';
+import '../core/constants.dart';
 
 class SupabaseService {
-  final SupabaseClient _client = Supabase.instance.client;
+  static final SupabaseService _instance = SupabaseService._internal();
+  factory SupabaseService() => _instance;
+  SupabaseService._internal();
+
+  SupabaseClient get _client => Supabase.instance.client;
+
+  Future<void> init() async {
+    await Supabase.initialize(
+      url: AppStrings.supabaseUrl,
+      anonKey: AppStrings.supabaseAnonKey,
+    );
+  }
 
   // --- Auth ---
 
@@ -193,13 +205,10 @@ class SupabaseService {
       if (response != null) {
         final currentHigh = (response['high_score'] as int?) ?? 0;
         if (newScore > currentHigh) {
-          await _client
-              .from('students')
-              .update({
-                'high_score': newScore,
-                'updated_at': DateTime.now().toIso8601String(),
-              })
-              .eq('id', studentId);
+          await _client.from('students').update({
+            'high_score': newScore,
+            'updated_at': DateTime.now().toIso8601String(),
+          }).eq('id', studentId);
         }
       }
     } catch (e) {
@@ -219,13 +228,10 @@ class SupabaseService {
       if (response != null) {
         final currentMax = (response['max_level'] as int?) ?? 1;
         if (level > currentMax) {
-          await _client
-              .from('students')
-              .update({
-                'max_level': level,
-                'updated_at': DateTime.now().toIso8601String(),
-              })
-              .eq('id', studentId);
+          await _client.from('students').update({
+            'max_level': level,
+            'updated_at': DateTime.now().toIso8601String(),
+          }).eq('id', studentId);
         }
       }
     } catch (e) {
@@ -235,17 +241,15 @@ class SupabaseService {
 
   Future<List<Map<String, dynamic>>> getLeaderboard({String? grade}) async {
     try {
-      dynamic query = _client
-          .from('students')
-          .select('nickname, grade, high_score');
+      dynamic query =
+          _client.from('students').select('nickname, grade, high_score');
 
       if (grade != null) {
         query = query.eq('grade', grade);
       }
 
-      final response = await query
-          .order('high_score', ascending: false)
-          .limit(10);
+      final response =
+          await query.order('high_score', ascending: false).limit(10);
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       return [];

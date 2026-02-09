@@ -3,6 +3,12 @@ import '../models/challenge.dart';
 
 /// Stub SupabaseService - all network features disabled to avoid native plugin crashes on iOS 18.2
 class SupabaseService {
+  static final SupabaseService _instance = SupabaseService._internal();
+  factory SupabaseService() => _instance;
+  SupabaseService._internal();
+
+  Future<void> init() async {}
+
   // --- Auth ---
 
   Future<dynamic> signUp({
