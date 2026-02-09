@@ -306,15 +306,6 @@ class _GameLoopScreenState extends State<GameLoopScreen>
               ),
             ),
 
-            // Ink Splat Overlay (Science Event)
-            if (gameState.activeStaffEvent?.type == StaffEventType.scienceSplat)
-              Center(
-                child: Icon(
-                  Icons.blur_on,
-                  size: 300,
-                  color: Colors.black.withValues(alpha: 0.8),
-                ),
-              ), // Placeholder for Splat visual
             // Staff Chaos - Animated center screen appearance
             if (gameState.activeStaffEvent != null)
               AnimatedStaffChaos(event: gameState.activeStaffEvent!),

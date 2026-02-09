@@ -246,9 +246,11 @@ Builds trigger automatically on:
 - Verify build number incremented
 - Check email for Apple notifications
 
-**Missing Compliance**:
-- Add export compliance in App Store Connect
-- Answer encryption questions
+**Export Compliance**:
+- ✅ **Automated**: The app includes `ITSAppUsesNonExemptEncryption = false` in [Info.plist](file:///c:/Users/Husse/Documents/Fay%20Run/ios/Runner/Info.plist)
+- This declares the app only uses standard iOS encryption (HTTPS/TLS)
+- No manual export compliance steps needed for new builds
+- **For existing builds without this key**: Manually provide export compliance in App Store Connect → TestFlight → Select Build → Provide Export Compliance Information
 
 ---
 
