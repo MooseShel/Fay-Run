@@ -12,8 +12,13 @@ class SettingsService {
   bool get isMuted => _isMuted;
 
   Future<void> init() async {
-    final prefs = await SharedPreferences.getInstance();
-    _isMuted = prefs.getBool(_keyMute) ?? false;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _isMuted = prefs.getBool(_keyMute) ?? false;
+    } catch (e) {
+      // Default to unmuted if settings fail to load
+      _isMuted = false;
+    }
   }
 
   Future<void> setMute(bool muted) async {
