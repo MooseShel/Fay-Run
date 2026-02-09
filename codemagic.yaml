@@ -47,7 +47,9 @@ workflows:
       app_store_connect:
         auth: integration
         # Configuration related to TestFlight (optional)
-        submit_to_testflight: true
+        # Disabled auto-submission to prevent "Another build is in review" errors
+        # Manually submit builds to TestFlight review in App Store Connect
+        submit_to_testflight: false
         beta_groups:
           - App Store Connect Users
         # Configuration related to App Store (optional)
