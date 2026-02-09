@@ -46,25 +46,26 @@ class ObstacleManager {
     // Spawn Logic
     _spawnTimer += dt;
     // Progressive spawn rate increases with level for smooth difficulty curve
+    // Rebalanced for more linear progression (less gap between 3 and 4)
     double spawnInterval;
     switch (level) {
       case 1:
-        spawnInterval = 6.0; // Very easy - learn mechanics
+        spawnInterval = 4.5; // Slightly faster start - engaging from level 1
         break;
       case 2:
-        spawnInterval = 4.5; // Easy - comfortable
+        spawnInterval = 3.8; // Moderate challenge
         break;
       case 3:
-        spawnInterval = 3.5; // Medium - engaging
+        spawnInterval = 3.2; // Steady ramp up
         break;
       case 4:
-        spawnInterval = 2.8; // Hard - challenging
+        spawnInterval = 2.7; // Challenging but not sudden jump
         break;
       case 5:
-        spawnInterval = 2.2; // Very hard - intense
+        spawnInterval = 2.2; // Very hard - intense finale
         break;
       default:
-        spawnInterval = 6.0;
+        spawnInterval = 4.5;
     }
 
     if (_spawnTimer > spawnInterval) {
