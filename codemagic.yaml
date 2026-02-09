@@ -1,6 +1,34 @@
 workflows:
-  ios-workflow:
-    name: iOS Workflow
+  web-build:
+    name: Web Build (New)
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    environment:
+      flutter: stable
+    scripts:
+      - name: Prepare Web Build (Inject Services)
+        script: |
+          sh scripts/prepare_web_build.sh
+      - name: Get Flutter packages
+        script: |
+          flutter clean
+          flutter packages pub get
+      - name: Flutter build web
+        script: |
+          # Build for Web
+          # Note: If deploying to GitHub Pages Project site, add --base-href /repo-name/
+          flutter build web --release --wasm
+    artifacts:
+      - build/web/**
+    publishing:
+      email:
+        recipients:
+          - hussein@mooseshel.com
+      static_pages:
+        publish: true
+
+  ios-build:
+    name: iOS Build
     max_build_duration: 120
     instance_type: mac_mini_m1
     integrations:
@@ -13,7 +41,7 @@ workflows:
         XCODE_WORKSPACE: "Runner.xcworkspace"
         XCODE_SCHEME: "Runner"
         BUNDLE_ID: "com.fayrun.app"
-        APP_STORE_APPLE_ID: 1234567890 # Replace with actual App ID
+        APP_STORE_APPLE_ID: 1234567890
       flutter: stable
       xcode: latest
       cocoapods: default
@@ -47,32 +75,3 @@ workflows:
         auth: integration
         submit_to_testflight: false
         submit_to_app_store: false
-
-  web-workflow:
-    name: Web Workflow
-    max_build_duration: 60
-    instance_type: mac_mini_m1
-    environment:
-      flutter: stable
-    scripts:
-      - name: Prepare Web Build (Inject Services)
-        script: |
-          sh scripts/prepare_web_build.sh
-      - name: Get Flutter packages
-        script: |
-          flutter clean
-          flutter packages pub get
-      - name: Flutter build web
-        script: |
-          # Build for Web. 
-          # Note: If deploying to GitHub Pages Project site, add --base-href /repo-name/
-          # For Codemagic Static Pages, base-href / is usually fine.
-          flutter build web --release --wasm
-    artifacts:
-      - build/web/**
-    publishing:
-      email:
-        recipients:
-          - hussein@mooseshel.com
-      static_pages:
-        publish: true
