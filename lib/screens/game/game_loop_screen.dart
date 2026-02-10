@@ -194,9 +194,9 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         double obsPixelY = obs.y * screenSize.height;
 
         double obsPaddingX =
-            isGoldenBook ? obsPixelWidth * 0.15 : obsPixelWidth * 0.35;
+            isGoldenBook ? obsPixelWidth * 0.10 : obsPixelWidth * 0.20;
         double obsPaddingY =
-            isGoldenBook ? obsPixelHeight * 0.15 : obsPixelHeight * 0.35;
+            isGoldenBook ? obsPixelHeight * 0.10 : obsPixelHeight * 0.20;
 
         double obsLeft = obsPixelX + obsPaddingX;
         double obsRight = obsPixelX + obsPixelWidth - obsPaddingX;
@@ -348,19 +348,9 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
             ..._obstacleManager.obstacles.map(
               (obs) {
-                // Special visual correction for Left-to-Right SUV which seems to float
-                double extraOffset = 0.0;
-                if (obs.type == ObstacleType.car && obs.direction == 1.0) {
-                  extraOffset =
-                      screenSize.height * 0.05; // Lower by another 5% for SUV_2
-                }
-
                 return Positioned(
                   left: obs.x * screenSize.width,
-                  bottom: _groundHeight +
-                      (obs.y * screenSize.height) -
-                      (screenSize.height * 0.025) - // Standard correction
-                      extraOffset, // Specific correction
+                  bottom: _groundHeight + (obs.y * screenSize.height),
                   width: obs.width * screenSize.height, // Use Height as base
                   height: obs.height * screenSize.height,
                   child: _buildObstacleWidget(obs),

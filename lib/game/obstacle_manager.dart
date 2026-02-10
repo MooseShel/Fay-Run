@@ -55,22 +55,22 @@ class ObstacleManager {
     double spawnInterval;
     switch (level) {
       case 1:
-        spawnInterval = 3.5; // Faster start
+        spawnInterval = 3.0; // Faster start
         break;
       case 2:
-        spawnInterval = 3.0;
-        break;
-      case 3:
         spawnInterval = 2.5;
         break;
+      case 3:
+        spawnInterval = 2.1;
+        break;
       case 4:
-        spawnInterval = 2.0;
+        spawnInterval = 1.7;
         break;
       case 5:
-        spawnInterval = 1.5; // Intense
+        spawnInterval = 1.4; // Intense
         break;
       default:
-        spawnInterval = 3.5;
+        spawnInterval = 3.0;
     }
 
     if (_spawnTimer > spawnInterval) {
@@ -140,42 +140,42 @@ class ObstacleManager {
 
     switch (type) {
       case ObstacleType.log:
-        width = 0.18;
-        height = 0.08;
+        width = 0.27; // 0.18 * 1.5
+        height = 0.12; // 0.08 * 1.5
         break;
       case ObstacleType.puddle:
-        width = 0.12;
-        height = 0.05;
+        width = 0.18; // 0.12 * 1.5
+        height = 0.075; // 0.05 * 1.5
         break;
       case ObstacleType.rock:
-        width = 0.10;
-        height = 0.08;
+        width = 0.15; // 0.10 * 1.5
+        height = 0.12; // 0.08 * 1.5
         break;
       case ObstacleType.janitorBucket:
       case ObstacleType.beaker:
-        width = 0.10;
-        height = 0.12;
+        width = 0.15; // 0.10 * 1.5
+        height = 0.18; // 0.12 * 1.5
         break;
       case ObstacleType.books:
-        width = 0.12;
-        height = 0.10;
+        width = 0.18; // 0.12 * 1.5
+        height = 0.15; // 0.10 * 1.5
         break;
       case ObstacleType.flyingPizza:
       case ObstacleType.food:
-        width = 0.08;
-        height = 0.08;
+        width = 0.12; // 0.08 * 1.5
+        height = 0.12; // 0.08 * 1.5
         break;
       case ObstacleType.cone:
-        width = 0.08;
-        height = 0.10;
+        width = 0.12; // 0.08 * 1.5
+        height = 0.15; // 0.10 * 1.5
         break;
       case ObstacleType.car:
-        width = 0.45; // Wide SUV
-        height = 0.30; // Taller than gator (0.18) -> Double Jump
+        width = 0.675; // 0.45 * 1.5
+        height = 0.45; // 0.30 * 1.5
         break;
       case ObstacleType.goldenBook:
-        width = 0.12;
-        height = 0.12;
+        width = 0.18; // 0.12 * 1.5
+        height = 0.18; // 0.12 * 1.5
         break;
     }
 
@@ -187,8 +187,8 @@ class ObstacleManager {
       // 20% chance
       type = ObstacleType.goldenBook;
       y = 0.25; // In the air
-      width = 0.12;
-      height = 0.12;
+      width = 0.18; // 0.12 * 1.5
+      height = 0.18; // 0.12 * 1.5
     }
 
     // Determine spawn side and direction

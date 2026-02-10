@@ -73,11 +73,15 @@ class AudioService {
     if (_isMuted) {
       _bgmPlayer.setVolume(0);
       _voicePlayer.setVolume(0);
-      for (var p in _sfxPool) p.setVolume(0);
+      for (var p in _sfxPool) {
+        p.setVolume(0);
+      }
     } else {
       _bgmPlayer.setVolume(0.5);
       _voicePlayer.setVolume(1.0);
-      for (var p in _sfxPool) p.setVolume(1.0);
+      for (var p in _sfxPool) {
+        p.setVolume(1.0);
+      }
     }
   }
 
@@ -195,6 +199,8 @@ class AudioService {
   Future<void> dispose() async {
     await _bgmPlayer.dispose();
     await _voicePlayer.dispose();
-    for (var p in _sfxPool) await p.dispose();
+    for (var p in _sfxPool) {
+      await p.dispose();
+    }
   }
 }
