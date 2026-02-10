@@ -360,16 +360,25 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
             // Obstacles
             ..._obstacleManager.obstacles.map(
-              (obs) => Positioned(
-                left: obs.x * screenSize.width,
-                bottom: _groundHeight +
-                    (obs.y * screenSize.height) -
-                    (screenSize.height *
-                        0.025), // Visual correction to prevent floating
-                width: obs.width * screenSize.width,
-                height: obs.height * screenSize.height,
-                child: _buildObstacleWidget(obs),
-              ),
+              (obs) {
+                // Special visual correction for Left-to-Right SUV which seems to float
+                double extraOffset = 0.0;
+                if (obs.type == ObstacleType.car && obs.direction == 1.0) {
+                  extraOffset =
+                      screenSize.height * 0.05; // Lower by another 5% for SUV_2
+                }
+
+                return Positioned(
+                  left: obs.x * screenSize.width,
+                  bottom: _groundHeight +
+                      (obs.y * screenSize.height) -
+                      (screenSize.height * 0.025) - // Standard correction
+                      extraOffset, // Specific correction
+                  width: obs.width * screenSize.width,
+                  height: obs.height * screenSize.height,
+                  child: _buildObstacleWidget(obs),
+                );
+              },
             ),
 
             Positioned(
