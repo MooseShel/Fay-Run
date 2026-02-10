@@ -39,7 +39,7 @@ const RESOURCES = {"flutter.js": "24bc71911b75b5f8135c949e27a2984e",
 "assets/assets/images/obstacle_rock.png": "ffad3ccc5b48c31b7c0b01afbb235985",
 "assets/assets/images/ernie_jump.png": "f994d220040069c6e690b5241a4cba42",
 "assets/assets/images/bg_layer_trees.png": "1d211e070680b6280f0711ac3cef617b",
-"assets/assets/images/item_golden_book.png": "1cb12ba6f06448c79dfa617cd233bc8c",
+"assets/assets/images/item_golden_book.png": "b21a93e63da14f24b4da922bcdcb4f81",
 "assets/assets/images/staff_dean.jpg": "29098ba48ad5d0e66dd76dd50a53ffab",
 "assets/assets/images/obstacle_books.png": "3aafe5947030ede819848bb956b1154b",
 "assets/assets/images/obstacle_food.png": "94d5a916caf8f8c6fa06bc0e7584bea2",
@@ -82,10 +82,10 @@ const RESOURCES = {"flutter.js": "24bc71911b75b5f8135c949e27a2984e",
 "canvaskit/canvaskit.js.symbols": "a3c9f77715b642d0437d9c275caba91e",
 "canvaskit/skwasm.js.symbols": "3a4aadf4e8141f284bd524976b1d6bdc",
 "favicon.png": "5dcef449791fa27946b3d35ad8803796",
-"main.dart.wasm": "c2f49e805bdc9215719647e9ecdccd91",
-"flutter_bootstrap.js": "a378a0753a0dbe2b3b263d9ce3aa6c88",
-"version.json": "f2e8731afb69aa5b5400b1ffbc82f734",
-"main.dart.js": "8c14c0f27d08395f62ad5913198923d3"};
+"main.dart.wasm": "11cf75bf14335b4286e8dabf800b76bb",
+"flutter_bootstrap.js": "60cfafab7ae5ab73f80268503c8ab219",
+"version.json": "d5a3724cb3d8b1ccbb4d37ed8e7b67d1",
+"main.dart.js": "5fd6ab2a3607878f4018253d2f780ebc"};
 // The application shell files that are downloaded before a service worker can
 // start.
 const CORE = ["main.dart.js",

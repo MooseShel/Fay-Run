@@ -44801,11 +44801,11 @@ case 5:s=A.b([B.lm,B.Pg],j)
 break
 default:s=A.b([B.w9],j)}j=this.b
 r=s[j.kf(s.length)]
-if(r===B.lm){q=0.45
-p=0.28}else{q=0.3
+if(r===B.lm){q=0.25
+p=0.28}else{q=0.17
 p=0.2}if(j.e6()<0.2){r=B.i1
-q=0.22
-p=0.22
+q=0.12
+p=0.12
 o=0.25}else o=0
 n=1.1
 m=-1
@@ -45723,20 +45723,20 @@ s.z=!1
 s.Q=0}},
 $S:0}
 A.aqI.prototype={
-$0(){var s,r,q,p,o,n,m,l,k,j,i,h,g,f,e,d,c,b,a,a0=this.a,a1=a0.e,a2=this.b
-a1.axX(0.016,a2.z,a2.y,new A.aqG())
-for(a1=a1.a,s=a1.length,r=this.c,q=r.b,p=q*0.18,r=r.a,o=p/r*0.4,n=r*0.3,m=n/r+o,l=(n+p)/r-o,k=0;k<a1.length;a1.length===s||(0,A.J)(a1),++k){j=a1[k]
-i=j.b===B.i1
-r=j.e
-h=i?r*0.15:r*0.35
-g=j.f
-f=i?g*0.15:g*0.35
-e=j.c
-d=j.d
-c=a0.f
-b=e+h<l&&e+r-h>m
-a=c/q+0.054<d+g-f&&(c+p)/q-0.054>d+f
-if(b&&a&&!j.x)a0.adr(j,a2)}},
+$0(){var s,r,q,p,o,n,m,l,k,j,i,h,g,f,e,d,c,b,a,a0,a1,a2=this.a,a3=a2.e,a4=this.b
+a3.axX(0.016,a4.z,a4.y,new A.aqG())
+for(a3=a3.a,s=a3.length,r=this.c,q=r.b,p=q*0.18,o=p*0.4,r=r.a,n=r*0.3,m=n+o,l=n+p-o,k=p*0.3,j=0;j<a3.length;a3.length===s||(0,A.J)(a3),++j){i=a3[j]
+h=i.b===B.i1
+g=i.e*q
+f=i.f*q
+e=i.c*r
+d=i.d*q
+c=h?g*0.15:g*0.35
+b=h?f*0.15:f*0.35
+a=a2.f
+a0=e+c<l&&e+g-c>m
+a1=a+k<d+f-b&&a+p-k>d+b
+if(a0&&a1&&!i.x)a2.adr(i,a4)}},
 $S:0}
 A.aqG.prototype={
 $1(a){},
@@ -45771,9 +45771,8 @@ s.r=13
 s.z=!0;++s.Q},
 $S:0}
 A.aqP.prototype={
-$1(a){var s=a.b===B.lm&&a.r===1?this.b.b*0.05:0,r=a.c,q=this.b,p=q.a
-q=q.b
-return A.nP(50+a.d*q-q*0.025-s,this.a.a94(a),a.f*q,null,r*p,null,null,a.e*p)},
+$1(a){var s=a.b===B.lm&&a.r===1?this.b.b*0.05:0,r=a.c,q=this.b,p=q.b
+return A.nP(50+a.d*p-p*0.025-s,this.a.a94(a),a.f*p,null,r*q.a,null,null,a.e*p)},
 $S:289}
 A.aqQ.prototype={
 $0(){return A.dD(this.a,!1,t.A).a_M()},
