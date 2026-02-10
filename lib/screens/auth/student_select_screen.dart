@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants.dart';
 import '../../providers/game_state.dart';
 import '../dashboard/leaderboard_screen.dart';
+import '../../services/supabase_service.dart';
 
 class StudentSelectScreen extends StatefulWidget {
   const StudentSelectScreen({super.key});
@@ -115,8 +116,12 @@ class _StudentSelectScreenState extends State<StudentSelectScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () {
-              Navigator.pushReplacementNamed(context, '/'); // Logout
+            onPressed: () async {
+              await SupabaseService().signOut();
+              if (context.mounted) {
+                Navigator.pushNamedAndRemoveUntil(
+                    context, '/', (route) => false);
+              }
             },
           ),
         ],
@@ -144,11 +149,11 @@ class _StudentSelectScreenState extends State<StudentSelectScreen> {
                   : GridView.builder(
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                            childAspectRatio: 0.8,
-                          ),
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        childAspectRatio: 0.8,
+                      ),
                       itemCount: students.length + 1, // +1 for "Add New"
                       itemBuilder: (context, index) {
                         if (index == students.length) {

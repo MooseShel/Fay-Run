@@ -26,11 +26,21 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    if (kDebugMode) {
-      // Auto-login in debug mode
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        // _login(); // Disable auto-login for testing
-      });
+    _checkSession();
+  }
+
+  Future<void> _checkSession() async {
+    // Check if user is already logged in (persisted session)
+    final user = _supabaseService.currentUser;
+    if (user != null) {
+      // Small delay to ensure widget is mounted and avoid flash
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/select_student');
+      }
+    } else if (kDebugMode) {
+      // Auto-login in debug mode (optional, currently disabled)
+      // _login();
     }
   }
 
