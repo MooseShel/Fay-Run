@@ -45646,7 +45646,7 @@ break
 case 8:if(a.r===1){n.a=p
 r=p}else{n.a=o
 r=o}break
-case 9:r=n.a="assets/images/obstacle_cone.png"
+case 9:r=n.a="assets/images/obstacle_cone"+s+".png"
 break
 case 10:r=n.a="assets/images/item_golden_book.png"
 break
