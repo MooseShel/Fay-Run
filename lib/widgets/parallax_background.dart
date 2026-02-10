@@ -47,35 +47,25 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
 
   @override
   Widget build(BuildContext context) {
-    String assetPath;
-    switch (widget.level) {
-      case 2:
-        assetPath = 'assets/images/bg_layer_lockers.png';
-        break;
-      case 3:
-        assetPath = 'assets/images/bg_science_lab.png';
-        break;
-      case 4:
-        assetPath = 'assets/images/bg_cafeteria.png';
-        break;
-      case 5:
-        assetPath = 'assets/images/bg_carpool.png';
-        break;
-      default:
-        assetPath = 'assets/images/bg_layer_trees.png';
-    }
+    // Use the new naming convention: bg_fay_1.png through bg_fay_10.png
+    // Note: Level 2 is a JPG, others are PNG
+    final String extension = widget.level == 2 ? 'jpg' : 'png';
+    final String assetPath =
+        'assets/images/bgs/bg_fay_${widget.level}.$extension';
 
     return Stack(
       children: [
-        // 1. Sky / Gradient Base (Using CustomPainter for complex gradients)
+        // 1. Sky / Gradient Base
         Positioned.fill(
           child: CustomPaint(painter: _SkyPainter(level: widget.level)),
         ),
 
-        // 2. Far Layer (Images for all levels)
-        Positioned.fill(child: _buildScrollingImage(assetPath, 0.2)),
+        // 2. Far Layer (Images with seamless tiling)
+        Positioned.fill(
+          child: _buildScrollingImage(assetPath, 0.2),
+        ),
 
-        // 3. Near Layer / Ground (Image-based)
+        // 3. Near Layer / Ground
         _buildScrollingGround(),
       ],
     );
@@ -84,41 +74,20 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
   Widget _buildScrollingImage(String assetPath, double speedMultiplier) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final screenWidth = constraints.maxWidth;
-        final screenHeight = constraints.maxHeight;
-
-        // Tiling Strategy: Overlap & Natural Width
-        // The user states images are "very wide" and have transparent backgrounds.
-        // We use BoxFit.fitHeight to scale them correctly to viewport height.
-        // We do NOT constrain the width, letting the image be as wide as it naturally is.
-        // We define a "vertical" tile width (scrollWidth) that determines when the *next* tile starts.
-        // If imageWidth > scrollWidth, they overlap.
-
-        // Assume a loop period roughly equal to 16:9 (1.77) to ensure regular tiling
-        // even if the image is wider (overlap) or narrower (gap - unlikely given "very wide")
-        final double scrollWidth = screenHeight * 1.77;
-
-        final totalScroll = _scrollOffset * speedMultiplier;
-        final double xPos = -(totalScroll % scrollWidth);
-
-        // We need enough tiles to cover screenWidth.
-        final int tileCount = (screenWidth / scrollWidth).ceil() + 1;
+        final double scrollPos = _scrollOffset * speedMultiplier;
 
         return Stack(
           children: [
-            for (int i = 0; i <= tileCount; i++)
-              Positioned(
-                left: xPos + (scrollWidth * i),
-                top: 0,
-                bottom: 0,
-                // NO width constraint -> allows image to be wider than scrollWidth
-                child: Image.asset(
-                  assetPath,
-                  fit: BoxFit.fitHeight,
-                  alignment:
-                      Alignment.centerLeft, // Anchor left so overlap goes right
-                ),
+            Positioned.fill(
+              left: -scrollPos,
+              right: -constraints.maxWidth, // Allow overflow for tiling
+              child: Image.asset(
+                assetPath,
+                repeat: ImageRepeat.repeatX,
+                fit: BoxFit.fitHeight,
+                alignment: Alignment.centerLeft,
               ),
+            ),
           ],
         );
       },
@@ -163,20 +132,31 @@ class _GroundPainter extends CustomPainter {
     // Base Ground Color
     Paint basePaint = Paint();
     switch (level) {
-      case 2: // Hallway
-        basePaint.color = const Color(0xFFD7CCC8); // Beige
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+      case 5:
+        basePaint.color =
+            const Color(0xFF558B2F); // Grass Landscape (Levels 1-5)
         break;
-      case 3: // Lab
-        basePaint.color = const Color(0xFFE1F5FE); // Light Blue
+      case 6: // Playground
+        basePaint.color = const Color(0xFFD7CCC8); // Tan/Mulch
         break;
-      case 4: // Cafeteria
-        basePaint.color = const Color(0xFFFFE0B2); // Orange/Peach
+      case 7: // Garden
+        basePaint.color = const Color(0xFF795548); // Brown (Dirt/Garden)
         break;
-      case 5: // Carpool
-        basePaint.color = const Color(0xFF616161); // Dark Gray (Road)
+      case 8: // Meadow
+        basePaint.color = const Color(0xFF8BC34A); // Brighter Green
         break;
-      default: // Bayou
-        basePaint.color = const Color(0xFF558B2F); // Grass Green
+      case 9: // Gym
+        basePaint.color = const Color(0xFFBBDEFB); // Polished Blue Floor
+        break;
+      case 10: // Cafeteria
+        basePaint.color = const Color(0xFFFFE0B2); // Peach Tile
+        break;
+      default:
+        basePaint.color = const Color(0xFF558B2F);
     }
     canvas.drawRect(Rect.fromLTWH(0, 0, width, groundHeight), basePaint);
 
@@ -269,20 +249,27 @@ class _SkyPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     List<Color> colors;
     switch (level) {
-      case 1: // Bayou
-        colors = [Colors.lightBlue[300]!, Colors.lightBlue[50]!];
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+      case 5:
+        colors = [Colors.lightBlue[300]!, Colors.lightBlue[50]!]; // Nature
         break;
-      case 2: // Hallway
-        colors = [const Color(0xFFE0E0E0), const Color(0xFFFAFAFA)];
+      case 6: // Playground
+        colors = [Colors.orange[100]!, Colors.white];
         break;
-      case 3: // Lab
-        colors = [const Color(0xFFF5F5F5), Colors.white];
+      case 7: // Garden
+        colors = [Colors.green[100]!, Colors.white];
         break;
-      case 4: // Cafeteria
-        colors = [const Color(0xFFFFE0B2), const Color(0xFFFFF3E0)];
+      case 8: // Meadow
+        colors = [Colors.teal[100]!, Colors.white];
         break;
-      case 5: // Carpool
-        colors = [const Color(0xFF455A64), const Color(0xFFFFCC80)];
+      case 9: // Gym
+        colors = [Colors.blue[100]!, Colors.white];
+        break;
+      case 10: // Cafeteria
+        colors = [Colors.amber[50]!, Colors.white];
         break;
       default:
         colors = [Colors.lightBlue, Colors.white];

@@ -1,9 +1,9 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/game_state.dart';
 import '../../core/constants.dart';
-import '../../models/staff_event.dart';
 import '../../models/challenge.dart'; // Needed for fallback
 import '../../widgets/parallax_background.dart';
 import '../../widgets/player_character.dart';
@@ -70,6 +70,18 @@ class _GameLoopScreenState extends State<GameLoopScreen>
           const AssetImage('assets/images/obstacle_log.png'), context);
       precacheImage(
           const AssetImage('assets/images/obstacle_rock.png'), context);
+
+      // Precache 10 Backgrounds
+      for (int i = 1; i <= 10; i++) {
+        final ext = i == 2 ? 'jpg' : 'png';
+        precacheImage(AssetImage('assets/images/bgs/bg_fay_$i.$ext'), context);
+      }
+
+      // Precache Backpacks
+      precacheImage(
+          const AssetImage('assets/images/obstacle_backpack.png'), context);
+      precacheImage(
+          const AssetImage('assets/images/obstacle_backpack_2.png'), context);
 
       final state = context.read<GameState>();
       state.loadChallenge();
@@ -138,19 +150,13 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     }
 
     // Random Staff Appearances (Every 10-15s for fun sounds/visuals only)
-    if (_chaosTimer > 10 + _random.nextInt(5)) {
+    // Reduce timer for debug/testing to see it more often
+    if (_chaosTimer > (kDebugMode ? 5 : 10) + _random.nextInt(5)) {
       _chaosTimer = 0;
 
       // Only trigger if no staff event is currently active
       if (gameState.activeStaffEvent == null) {
-        final eventType = StaffEventType
-            .values[_random.nextInt(StaffEventType.values.length)];
-
-        // Show staff event notification (visual only, no gameplay effects)
-        gameState.triggerStaffEvent(eventType);
-
-        // Play Staff Sound
-        AudioService().playStaffSound(eventType.toString());
+        gameState.triggerStaffChaos();
       }
     }
 
@@ -193,6 +199,9 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         double obsPixelX = obs.x * screenSize.width;
         double obsPixelY = obs.y * screenSize.height;
 
+        double verticalOffset =
+            _getObstacleVerticalOffset(obs, screenSize.height);
+
         double obsPaddingX =
             isGoldenBook ? obsPixelWidth * 0.10 : obsPixelWidth * 0.20;
         double obsPaddingY =
@@ -200,8 +209,9 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
         double obsLeft = obsPixelX + obsPaddingX;
         double obsRight = obsPixelX + obsPixelWidth - obsPaddingX;
-        double obsBottom = obsPixelY + obsPaddingY;
-        double obsTop = obsPixelY + obsPixelHeight - obsPaddingY;
+        double obsBottom = obsPixelY - verticalOffset + obsPaddingY;
+        double obsTop =
+            obsPixelY - verticalOffset + obsPixelHeight - obsPaddingY;
 
         // Player Hitbox (Responsive)
         double playerPixelSize = screenSize.height * 0.18;
@@ -327,6 +337,18 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     }
   }
 
+  double _getObstacleVerticalOffset(Obstacle obs, double screenHeight) {
+    // Standard 2% drop for perspective
+    double offset = screenHeight * 0.02;
+
+    if (obs.type == ObstacleType.car && obs.direction == 1.0) {
+      // Left-to-Right cars are in the nearer lane (closer to camera), need more drop
+      offset = screenHeight * 0.06;
+    }
+
+    return offset;
+  }
+
   @override
   Widget build(BuildContext context) {
     final gameState = context.watch<GameState>();
@@ -351,12 +373,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                 // Background perspective correction
                 // Road lanes require objects to be slightly lower to look grounded
                 double verticalOffset =
-                    screenSize.height * 0.02; // Standard 2% drop
-
-                if (obs.type == ObstacleType.car && obs.direction == 1.0) {
-                  // Left-to-Right cars are in the nearer lane, need more drop
-                  verticalOffset = screenSize.height * 0.06;
-                }
+                    _getObstacleVerticalOffset(obs, screenSize.height);
 
                 return Positioned(
                   left: obs.x * screenSize.width,
@@ -543,67 +560,105 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
   Widget _buildObstacleWidget(Obstacle obs) {
     String assetName = '';
-    String suffix = obs.variant == 2 ? '_2' : '';
+    // New assets have _1 and _2, old have nothing and _2.
+    // We'll try to build a path and handle fallbacks in the errorBuilder.
+    String baseName = '';
+    bool useNumericVariant = false;
 
     switch (obs.type) {
       case ObstacleType.log:
-        assetName = 'assets/images/obstacle_log$suffix.png';
+        baseName = 'obstacle_log';
         break;
       case ObstacleType.puddle:
-        assetName = 'assets/images/obstacle_puddle$suffix.png';
+        baseName = 'obstacle_puddle';
         break;
       case ObstacleType.rock:
-        assetName = 'assets/images/obstacle_rock$suffix.png';
+        baseName = 'obstacle_rock';
         break;
       case ObstacleType.janitorBucket:
-        assetName = 'assets/images/obstacle_bucket$suffix.png';
+        baseName = 'obstacle_bucket';
         break;
       case ObstacleType.books:
-        assetName = 'assets/images/obstacle_books$suffix.png';
+        baseName = 'obstacle_books';
         break;
       case ObstacleType.beaker:
-        // No variant 2 for beaker known, fallback to original if needed or assume exists
-        // Checking file list: no beaker_2. Just bucket_2.
-        // Let's use bucket for now as per original code, or just keep original.
-        assetName = 'assets/images/obstacle_bucket.png';
+        baseName = 'obstacle_beaker';
         break;
       case ObstacleType.flyingPizza:
-        assetName = 'assets/images/obstacle_food$suffix.png';
-        break;
       case ObstacleType.food:
-        assetName = 'assets/images/obstacle_food$suffix.png';
+        baseName = 'obstacle_food';
         break;
       case ObstacleType.car:
-        // Custom logic for cars based on direction (Level 5)
-        if (obs.direction == 1.0) {
-          // Moving Right (Left-to-Right) -> New Variant (Suv 2)
-          assetName = 'assets/images/obstacle_suv_2.png';
-        } else {
-          // Moving Left (Right-to-Left) -> Original (Suv)
-          assetName = 'assets/images/obstacle_suv.png';
-        }
+        baseName = obs.direction == 1.0 ? 'obstacle_suv_2' : 'obstacle_suv';
         break;
       case ObstacleType.cone:
-        assetName = 'assets/images/obstacle_cone$suffix.png';
+        baseName = 'obstacle_cone';
+        break;
+      case ObstacleType.backpack:
+        baseName = 'obstacle_backpack';
+        break;
+      case ObstacleType.trashCan:
+        baseName = 'obstacle_trash_can';
+        useNumericVariant = true;
+        break;
+      case ObstacleType.hydrant:
+        baseName = 'obstacle_hydrant';
+        useNumericVariant = true;
+        break;
+      case ObstacleType.bench:
+        baseName = 'obstacle_bench';
+        useNumericVariant = true;
+        break;
+      case ObstacleType.tire:
+        baseName = 'obstacle_tire';
+        useNumericVariant = true;
+        break;
+      case ObstacleType.flowerPot:
+        baseName = 'obstacle_flower_pot';
+        useNumericVariant = true;
+        break;
+      case ObstacleType.gnome:
+        baseName = 'obstacle_gnome';
+        useNumericVariant = true;
         break;
       case ObstacleType.goldenBook:
-        assetName = 'assets/images/item_golden_book.png';
-        break;
+        return Image.asset(
+          'assets/images/item_golden_book.png',
+          fit: BoxFit.contain,
+          alignment: Alignment.bottomCenter,
+        );
     }
 
-    if (assetName.isEmpty) return const SizedBox();
+    if (baseName.isEmpty) return const SizedBox();
+
+    String variantSuffix = '';
+    if (useNumericVariant) {
+      variantSuffix = '_${obs.variant}';
+    } else if (obs.variant == 2) {
+      variantSuffix = '_2';
+    }
+
+    assetName = 'assets/images/obstacles/$baseName$variantSuffix.png';
 
     return Image.asset(
       assetName,
       fit: BoxFit.contain,
       alignment: Alignment.bottomCenter, // Ensure sprite sits at bottom of box
       errorBuilder: (context, error, stackTrace) {
-        // Fallback to original if variant missing
+        // Fallback: try without variant if it fails
         return Image.asset(
-          assetName.replaceFirst('_2', ''),
+          'assets/images/obstacles/$baseName.png',
           fit: BoxFit.contain,
           alignment: Alignment.bottomCenter,
-          errorBuilder: (c, e, s) => const SizedBox(),
+          errorBuilder: (c, e, s) {
+            // Last resort: try base folder if it hasn't moved yet or naming differs
+            return Image.asset(
+              'assets/images/$baseName.png',
+              fit: BoxFit.contain,
+              alignment: Alignment.bottomCenter,
+              errorBuilder: (c, e, s) => const SizedBox(),
+            );
+          },
         );
       },
     );

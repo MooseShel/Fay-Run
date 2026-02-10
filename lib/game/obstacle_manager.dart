@@ -12,6 +12,13 @@ enum ObstacleType {
   food, // Level 4 (Cafeteria)
   car, // Level 5 (Car Pool - SUV)
   cone, // Level 5 (Car Pool - Traffic Cone)
+  backpack, // Level 6 (Playground)
+  trashCan, // New Campus Grounds
+  hydrant, // New Campus Grounds
+  bench, // New Campus Grounds
+  tire, // New Playground
+  flowerPot, // New Garden
+  gnome, // New Garden
   goldenBook, // Quiz Gate (Special)
 }
 
@@ -69,6 +76,17 @@ class ObstacleManager {
       case 5:
         spawnInterval = 1.4; // Intense
         break;
+      case 6:
+      case 7:
+        spawnInterval = 1.3;
+        break;
+      case 8:
+      case 9:
+        spawnInterval = 1.2;
+        break;
+      case 10:
+        spawnInterval = 1.0; // Maximum Chaos
+        break;
       default:
         spawnInterval = 3.0;
     }
@@ -108,24 +126,40 @@ class ObstacleManager {
     List<ObstacleType> obstaclePool = [];
 
     switch (level) {
-      case 1: // Bayou
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+      case 5: // Campus Grounds
         obstaclePool = [
           ObstacleType.log,
           ObstacleType.puddle,
           ObstacleType.rock,
+          ObstacleType.trashCan,
+          ObstacleType.hydrant,
+          ObstacleType.bench,
+          ObstacleType.cone,
         ];
         break;
-      case 2: // Hallway
-        obstaclePool = [ObstacleType.janitorBucket, ObstacleType.books];
+      case 6: // Playground
+        obstaclePool = [ObstacleType.tire, ObstacleType.cone];
         break;
-      case 3: // Science Lab
-        obstaclePool = [ObstacleType.beaker, ObstacleType.books];
+      case 7: // Garden
+        obstaclePool = [
+          ObstacleType.flowerPot,
+          ObstacleType.gnome,
+          ObstacleType.puddle,
+          ObstacleType.rock
+        ];
         break;
-      case 4: // Cafeteria
+      case 8: // Meadow
+        obstaclePool = [ObstacleType.log, ObstacleType.rock];
+        break;
+      case 9: // Gym
+        obstaclePool = [ObstacleType.janitorBucket, ObstacleType.cone];
+        break;
+      case 10: // Cafeteria
         obstaclePool = [ObstacleType.flyingPizza, ObstacleType.food];
-        break;
-      case 5: // Car Pool
-        obstaclePool = [ObstacleType.car, ObstacleType.cone];
         break;
       default:
         obstaclePool = [ObstacleType.log];
@@ -166,12 +200,40 @@ class ObstacleManager {
         height = 0.12; // 0.08 * 1.5
         break;
       case ObstacleType.cone:
-        width = 0.12; // 0.08 * 1.5
-        height = 0.15; // 0.10 * 1.5
+        width = 0.12;
+        height = 0.15;
+        break;
+      case ObstacleType.trashCan:
+        width = 0.15;
+        height = 0.20;
+        break;
+      case ObstacleType.hydrant:
+        width = 0.12;
+        height = 0.18;
+        break;
+      case ObstacleType.bench:
+        width = 0.25;
+        height = 0.15;
+        break;
+      case ObstacleType.tire:
+        width = 0.15;
+        height = 0.15;
+        break;
+      case ObstacleType.flowerPot:
+        width = 0.15;
+        height = 0.15;
+        break;
+      case ObstacleType.gnome:
+        width = 0.12;
+        height = 0.15;
         break;
       case ObstacleType.car:
         width = 0.50; // More proportional (down from 0.675)
         height = 0.25; // More proportional (down from 0.45)
+        break;
+      case ObstacleType.backpack:
+        width = 0.15;
+        height = 0.18;
         break;
       case ObstacleType.goldenBook:
         width = 0.18; // 0.12 * 1.5

@@ -9,11 +9,16 @@ class Assets {
   static const String ernie = 'ernie.png';
 
   // Audio - Background Music
-  static const String musicBayou = 'audio/music_bayou.mp3';
-  static const String musicHallway = 'audio/music_hallway.mp3';
-  static const String musicLab = 'audio/music_lab.mp3';
+  static const String musicBayou1 = 'audio/music_bayou_1.mp3';
+  static const String musicBayou2 = 'audio/music_bayou_2.mp3';
+  static const String musicBayou3 = 'audio/music_bayou_3.mp3';
+  static const String musicBayou4 = 'audio/music_bayou_4.mp3';
+  static const String musicBayou5 = 'audio/music_bayou_5.mp3';
+  static const String musicBayou6 = 'audio/music_bayou_6.mp3';
+  static const String musicGarden = 'audio/music_garden.mp3';
+  static const String musicMedow = 'audio/music_medow.mp3';
+  static const String musicPlayground = 'audio/music_playground.mp3';
   static const String musicCafeteria = 'audio/music_cafeteria.mp3';
-  static const String musicCarpool = 'audio/music_carpool.mp3';
 
   // Audio - SFX
   static const String sfxJump = 'audio/jump.mp3';

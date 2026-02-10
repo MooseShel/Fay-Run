@@ -254,7 +254,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 child: ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   scrollDirection: Axis.horizontal,
-                  itemCount: 5, // 5 Levels
+                  itemCount: 10, // 10 Levels
                   itemBuilder: (context, index) {
                     final level = index + 1;
                     final isUnlocked = level <= gameState.maxLevel;
@@ -293,8 +293,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                             ElevatedButton(
                               onPressed: () {
                                 context.read<GameState>().startGame(
-                                  level: level,
-                                );
+                                      level: level,
+                                    );
                                 Navigator.pushNamed(context, '/game');
                               },
                               style: ElevatedButton.styleFrom(

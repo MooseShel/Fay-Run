@@ -7,6 +7,10 @@ enum ParticleType {
   bubble, // Level 3 - transparent, upward
   food, // Level 4 - food icons, floating
   exhaust, // Level 5 - gray, horizontal drift
+  leaf, // Levels 1-5 - green/brown, fluttering
+  petal, // Level 7 - pink/white, drifting
+  butterfly, // Level 8 - colorful, jittery
+  dust, // Level 9 - light grey, slow suspension
 }
 
 class AmbientEffects extends StatefulWidget {
@@ -50,22 +54,29 @@ class _AmbientEffectsState extends State<AmbientEffects>
     ParticleType type;
     switch (widget.level) {
       case 1:
-        type = ParticleType.firefly;
-        break;
       case 2:
+      case 3:
+      case 4:
+      case 5:
+        type = ParticleType.leaf; // Campus Landscape
+        break;
+      case 6: // Playground
         type = ParticleType.paper;
         break;
-      case 3:
-        type = ParticleType.bubble;
+      case 7: // Garden
+        type = ParticleType.petal;
         break;
-      case 4:
+      case 8: // Meadow
+        type = ParticleType.butterfly;
+        break;
+      case 9: // Gym
+        type = ParticleType.dust;
+        break;
+      case 10: // Cafeteria
         type = ParticleType.food;
         break;
-      case 5:
-        type = ParticleType.exhaust;
-        break;
       default:
-        type = ParticleType.firefly;
+        type = ParticleType.leaf;
     }
 
     // Create particles
@@ -101,6 +112,14 @@ class _AmbientEffectsState extends State<AmbientEffects>
         return (_random.nextDouble() - 0.5) * 0.002;
       case ParticleType.exhaust:
         return 0.008 + _random.nextDouble() * 0.004; // Drift right
+      case ParticleType.leaf:
+        return 0.004 + _random.nextDouble() * 0.003; // Drift left
+      case ParticleType.petal:
+        return 0.003 + _random.nextDouble() * 0.002;
+      case ParticleType.butterfly:
+        return (_random.nextDouble() - 0.5) * 0.01; // Erratic
+      case ParticleType.dust:
+        return (_random.nextDouble() - 0.5) * 0.001;
     }
   }
 
@@ -116,6 +135,14 @@ class _AmbientEffectsState extends State<AmbientEffects>
         return (_random.nextDouble() - 0.5) * 0.003; // Gentle float
       case ParticleType.exhaust:
         return (_random.nextDouble() - 0.5) * 0.002; // Slight drift
+      case ParticleType.leaf:
+        return 0.002 + _random.nextDouble() * 0.002; // Falling
+      case ParticleType.petal:
+        return 0.004 + _random.nextDouble() * 0.002; // Falling
+      case ParticleType.butterfly:
+        return (_random.nextDouble() - 0.5) * 0.01; // Erratic
+      case ParticleType.dust:
+        return (_random.nextDouble() - 0.5) * 0.001;
     }
   }
 
@@ -131,6 +158,14 @@ class _AmbientEffectsState extends State<AmbientEffects>
         return 15.0 + _random.nextDouble() * 7.5;
       case ParticleType.exhaust:
         return 9.0 + _random.nextDouble() * 9.0;
+      case ParticleType.leaf:
+        return 8.0 + _random.nextDouble() * 6.0;
+      case ParticleType.petal:
+        return 6.0 + _random.nextDouble() * 4.0;
+      case ParticleType.butterfly:
+        return 10.0 + _random.nextDouble() * 5.0;
+      case ParticleType.dust:
+        return 2.0 + _random.nextDouble() * 2.0;
     }
   }
 
@@ -164,9 +199,10 @@ class _AmbientEffectsState extends State<AmbientEffects>
             if (p.y > 1.1) p.y = -0.1;
           }
 
-          // Pulse opacity for fireflies and exhaust
+          // Pulse opacity for some types
           if (p.type == ParticleType.firefly ||
-              p.type == ParticleType.exhaust) {
+              p.type == ParticleType.exhaust ||
+              p.type == ParticleType.dust) {
             p.opacity += p.pulseSpeed;
             if (p.opacity > 1.0 || p.opacity < 0.2) {
               p.pulseSpeed *= -1;
@@ -236,6 +272,18 @@ class _ParticlePainter extends CustomPainter {
           break;
         case ParticleType.exhaust:
           _drawExhaust(canvas, pos, p);
+          break;
+        case ParticleType.leaf:
+          _drawLeaf(canvas, pos, p);
+          break;
+        case ParticleType.petal:
+          _drawPetal(canvas, pos, p);
+          break;
+        case ParticleType.butterfly:
+          _drawButterfly(canvas, pos, p);
+          break;
+        case ParticleType.dust:
+          _drawDust(canvas, pos, p);
           break;
       }
     }
@@ -395,6 +443,71 @@ class _ParticlePainter extends CustomPainter {
         p.opacity.clamp(0.0, 1.0) * 0.5,
       )
       ..maskFilter = MaskFilter.blur(BlurStyle.normal, p.size * 0.5);
+
+    canvas.drawCircle(pos, p.size, paint);
+  }
+
+  void _drawLeaf(Canvas canvas, Offset pos, _Particle p) {
+    canvas.save();
+    canvas.translate(pos.dx, pos.dy);
+    canvas.rotate(p.rotation);
+
+    final paint = Paint()
+      ..color = (p.foodIcon % 2 == 0 ? Colors.green[700]! : Colors.orange[800]!)
+          .withOpacity(0.7)
+      ..style = PaintingStyle.fill;
+
+    final path = Path()
+      ..moveTo(0, -p.size)
+      ..quadraticBezierTo(p.size * 0.5, 0, 0, p.size)
+      ..quadraticBezierTo(-p.size * 0.5, 0, 0, -p.size);
+    canvas.drawPath(path, paint);
+    canvas.restore();
+  }
+
+  void _drawPetal(Canvas canvas, Offset pos, _Particle p) {
+    canvas.save();
+    canvas.translate(pos.dx, pos.dy);
+    canvas.rotate(p.rotation);
+
+    final paint = Paint()
+      ..color = Colors.pink[100]!.withOpacity(0.8)
+      ..style = PaintingStyle.fill;
+
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset.zero, width: p.size, height: p.size * 1.5),
+      paint,
+    );
+    canvas.restore();
+  }
+
+  void _drawButterfly(Canvas canvas, Offset pos, _Particle p) {
+    canvas.save();
+    canvas.translate(pos.dx, pos.dy);
+    // Butterfly "flapping" by scaling X
+    final flap = 0.5 + 0.5 * sin(DateTime.now().millisecondsSinceEpoch * 0.02);
+    canvas.scale(flap, 1.0);
+    canvas.rotate(p.rotation);
+
+    final paint = Paint()
+      ..color = Colors.orangeAccent.withOpacity(0.9)
+      ..style = PaintingStyle.fill;
+
+    canvas.drawCircle(Offset(-p.size * 0.4, 0), p.size * 0.6, paint);
+    canvas.drawCircle(Offset(p.size * 0.4, 0), p.size * 0.6, paint);
+
+    paint.color = Colors.black;
+    canvas.drawRect(
+      Rect.fromCenter(center: Offset.zero, width: p.size * 0.2, height: p.size),
+      paint,
+    );
+    canvas.restore();
+  }
+
+  void _drawDust(Canvas canvas, Offset pos, _Particle p) {
+    final paint = Paint()
+      ..color = Colors.white.withOpacity(p.opacity * 0.3)
+      ..style = PaintingStyle.fill;
 
     canvas.drawCircle(pos, p.size, paint);
   }

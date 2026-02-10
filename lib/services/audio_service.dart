@@ -1,5 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
+import '../models/staff_event.dart';
 import 'settings_service.dart';
 
 class AudioService {
@@ -97,19 +98,37 @@ class AudioService {
   Future<void> playBGM(int level) async {
     if (_isMuted) return;
 
-    String bgmFile = 'music_bayou.mp3';
+    String bgmFile = 'music_bayou_1.mp3';
     switch (level) {
+      case 1:
+        bgmFile = 'music_bayou_1.mp3';
+        break;
       case 2:
-        bgmFile = 'music_hallway.mp3';
+        bgmFile = 'music_bayou_2.mp3';
         break;
       case 3:
-        bgmFile = 'music_lab.mp3';
+        bgmFile = 'music_bayou_3.mp3';
         break;
       case 4:
-        bgmFile = 'music_cafeteria.mp3';
+        bgmFile = 'music_bayou_4.mp3';
         break;
       case 5:
-        bgmFile = 'music_carpool.mp3';
+        bgmFile = 'music_bayou_5.mp3';
+        break;
+      case 6:
+        bgmFile = 'music_bayou_6.mp3';
+        break;
+      case 7:
+        bgmFile = 'music_garden.mp3';
+        break;
+      case 8:
+        bgmFile = 'music_medow.mp3';
+        break;
+      case 9:
+        bgmFile = 'music_playground.mp3';
+        break;
+      case 10:
+        bgmFile = 'music_cafeteria.mp3';
         break;
     }
 
@@ -174,33 +193,31 @@ class AudioService {
   void playCoin() => playSFX('ding.mp3');
   void playPowerup() => playSFX('powerup.mp3');
 
-  void playStaffSound(String staffType) {
+  void playStaffSound(StaffEventType staffType) {
     // Map staff type to sound file
     String? soundFile;
     switch (staffType) {
-      case 'coach':
-        soundFile = 'staff_coach.mp3'; // Actual voice
+      case StaffEventType.coachWhistle:
+        soundFile = 'staff_coach.mp3';
         break;
-      case 'librarian':
+      case StaffEventType.librarianShush:
         soundFile = 'staff_librarian.mp3';
         break;
-      case 'dean':
+      case StaffEventType.deanGlare:
         soundFile = 'staff_dean.mp3';
         break;
-      case 'science':
+      case StaffEventType.scienceSplat:
         soundFile = 'staff_science.mp3';
         break;
-      case 'head':
+      case StaffEventType.shoeTie:
         soundFile = 'staff_head.mp3';
         break;
-      case 'pe':
+      case StaffEventType.peDrill:
         soundFile = 'staff_pe.mp3';
         break;
     }
 
-    if (soundFile != null) {
-      playVoice(soundFile);
-    }
+    playVoice(soundFile);
   }
 
   Future<void> dispose() async {

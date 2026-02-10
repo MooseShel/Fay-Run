@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../models/staff_event.dart';
 import '../models/challenge.dart';
 import '../services/supabase_service.dart';
+import '../services/audio_service.dart';
 
 enum GameStatus { menu, playing, paused, levelComplete, gameOver }
 
@@ -10,7 +11,7 @@ class GameState extends ChangeNotifier {
   List<Map<String, dynamic>> _students = [];
   Map<String, dynamic>? _currentStudent;
   bool _isLoading = false;
-  int _maxLevel = 1;
+  int _maxLevel = kDebugMode ? 10 : 1;
   List<Map<String, dynamic>> _leaderboard = [];
 
   // Player Data (Legacy/Fallback)
@@ -111,7 +112,7 @@ class GameState extends ChangeNotifier {
 
   void selectStudent(Map<String, dynamic> student) {
     _currentStudent = student;
-    _maxLevel = (student['max_level'] as int?) ?? 1;
+    _maxLevel = kDebugMode ? 10 : ((student['max_level'] as int?) ?? 1);
     _score = 0; // Reset session score
     notifyListeners();
   }
@@ -181,24 +182,15 @@ class GameState extends ChangeNotifier {
   }
 
   void _resetLevelPhysics() {
-    // Progressive speed increases - 10% per level for smooth difficulty curve
-    switch (_currentLevel) {
-      case 1:
-        _runSpeed = 2.5; // Base speed
-        break;
-      case 2:
-        _runSpeed = 2.75; // +10% (2.5 * 1.1)
-        break;
-      case 3:
-        _runSpeed = 3.03; // +10% (2.75 * 1.1)
-        break;
-      case 4:
-        _runSpeed = 3.33; // +10% (3.03 * 1.1)
-        break;
-      case 5:
-        _runSpeed = 3.66; // +10% (3.33 * 1.1)
-        break;
-    }
+    // Progressive speed increases - approx 5-8% per level for smooth curve
+    // Base speed at Level 1 = 2.5
+    // Level 10 speed target ~4.5 to 5.0
+    final double baseSpeed = 2.5;
+    final double increment = 0.25; // Linear increment for predictability
+
+    _runSpeed = baseSpeed + ((_currentLevel - 1) * increment);
+
+    debugPrint('Level $_currentLevel Physics Reset: Speed = $_runSpeed');
   }
 
   void pauseGame() {
@@ -239,14 +231,33 @@ class GameState extends ChangeNotifier {
 
   void triggerStaffEvent(StaffEventType type) {
     // Staff events now only show visual notification and play sound
-    // No gameplay effects (speed, jump power, etc.)
     _activeStaffEvent = StaffEvent.getEvent(type);
+    AudioService().playStaffSound(type); // Play staff voice
     notifyListeners();
 
-    // Auto-clear event after duration (for visual notification)
+    // Auto-clear event after duration
     Future.delayed(_activeStaffEvent!.duration, () {
       _clearStaffEvent();
     });
+  }
+
+  Future<void> triggerStaffChaos() async {
+    // Trigger a sequence of 3 different staff events for real chaos
+    final types = StaffEventType.values.toList()..shuffle();
+    final sequence = types.take(3).toList();
+
+    for (var type in sequence) {
+      if (_status != GameStatus.playing) break;
+
+      triggerStaffEvent(type);
+      // Play sound immediately when triggered via this method manually
+      // though GameLoopScreen also calls it. To avoid double sound,
+      // let's rely on GameLoopScreen for individual calls and
+      // triggerStaffEvent for the visual.
+
+      await Future.delayed(
+          const Duration(milliseconds: 2500)); // wait for duration + buffer
+    }
   }
 
   void _clearStaffEvent() {
@@ -309,8 +320,8 @@ class GameState extends ChangeNotifier {
 
     // Unlock level + 1
     final nextLevel = _maxLevel + 1;
-    if (nextLevel <= 5) {
-      // Cap at 5
+    if (nextLevel <= 10) {
+      // Cap at 10 levels
       _maxLevel = nextLevel;
       notifyListeners(); // Immediate UI update
 
@@ -327,7 +338,7 @@ class GameState extends ChangeNotifier {
   final Set<String> _answeredQuestions = {};
 
   Future<void> startNextLevel() async {
-    if (_currentLevel < 5) {
+    if (_currentLevel < 10) {
       // Unlock next level logic
       if (_currentLevel >= _maxLevel) {
         unlockNextLevel();
