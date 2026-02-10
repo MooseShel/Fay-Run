@@ -17,7 +17,16 @@ class _StudentSetupScreenState extends State<StudentSetupScreen> {
   bool _isSaving = false;
 
   String _selectedGrade = '1st';
-  final List<String> _grades = ['K', '1st', '2nd', '3rd', '4th', '5th'];
+  final List<String> _grades = [
+    'Pre-K (3yo)',
+    'Pre-K (4yo)',
+    'Kindergarten',
+    '1st',
+    '2nd',
+    '3rd',
+    '4th',
+    '5th'
+  ];
 
   final List<String> _adjectives = [
     "Swampy",
@@ -47,10 +56,10 @@ class _StudentSetupScreenState extends State<StudentSetupScreen> {
     try {
       // Register Student via GameState
       await context.read<GameState>().registerStudent(
-        _nameController.text,
-        _nickname,
-        _selectedGrade,
-      );
+            _nameController.text,
+            _nickname,
+            _selectedGrade,
+          );
 
       if (!mounted) return;
 
@@ -131,9 +140,9 @@ class _StudentSetupScreenState extends State<StudentSetupScreen> {
                 child: Text(
                   _nickname,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: FayColors.navy,
-                    fontWeight: FontWeight.bold,
-                  ),
+                        color: FayColors.navy,
+                        fontWeight: FontWeight.bold,
+                      ),
                   textAlign: TextAlign.center,
                 ),
               ),

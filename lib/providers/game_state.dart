@@ -39,15 +39,15 @@ class GameState extends ChangeNotifier {
   String get studentName => _currentStudent?['first_name'] ?? _studentName;
   String get generatedNickname =>
       _currentStudent?['nickname'] ?? _generatedNickname;
-  int get currentGrade => _currentStudent?['grade'] != null
-      ? int.tryParse(
-              _currentStudent!['grade'].toString().replaceAll(
-                RegExp(r'[^0-9]'),
-                '',
-              ),
-            ) ??
-            1
-      : 1; // Default to 1st grade if parse fails
+  int get currentGrade {
+    final gradeStr = _currentStudent?['grade']?.toString() ?? '1st';
+
+    if (gradeStr == 'Pre-K (3yo)') return -2;
+    if (gradeStr == 'Pre-K (4yo)') return -1;
+    if (gradeStr == 'Kindergarten' || gradeStr == 'K') return 0;
+
+    return int.tryParse(gradeStr.replaceAll(RegExp(r'[^0-9]'), '')) ?? 1;
+  }
 
   // ... existing getters ...
   int get score => _score;
@@ -372,9 +372,8 @@ class GameState extends ChangeNotifier {
 
     if (available.isEmpty) {
       _answeredQuestions.clear(); // Reset if all answered
-      final question =
-          _currentChallenge!.questions[DateTime.now().microsecond %
-              _currentChallenge!.questions.length];
+      final question = _currentChallenge!.questions[
+          DateTime.now().microsecond % _currentChallenge!.questions.length];
       _answeredQuestions.add(question.questionText);
       return question;
     }

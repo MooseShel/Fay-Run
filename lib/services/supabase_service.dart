@@ -46,8 +46,49 @@ class SupabaseService {
     int? weekNumber,
     String? topic,
   }) async {
-    debugPrint('Supabase: getCurrentChallenge mock');
-    return null;
+    debugPrint('Supabase: getCurrentChallenge mock (Grade $gradeLevel, Week $weekNumber)');
+
+    // Mock Response Generator (Pre-K to 5th)
+    if (gradeLevel <= 0) {
+      // Pre-K and K Mock
+      return Challenge(
+        id: 'mock_prek_k',
+        topic: 'Math',
+        season: 'Spring 2025',
+        weekNumber: 1,
+        gradeLevel: gradeLevel,
+        questions: [
+          QuizQuestion(
+            questionText: 'What color is the sun?',
+            correctOptionIndex: 0,
+            options: ['Yellow', 'Blue', 'Green'],
+          ),
+          QuizQuestion(
+            questionText: 'Count: ⭐️ ⭐️',
+            correctOptionIndex: 0,
+            options: ['2', '1', '3'],
+          ),
+        ],
+      );
+    }
+      id: 'mock_g4_w1',
+      topic: 'Math',
+      season: 'Spring 2025',
+      weekNumber: 1,
+      gradeLevel: 4,
+      questions: [
+        QuizQuestion(
+          questionText: '500 + 500 = ?',
+          correctOptionIndex: 0,
+          options: ['1000', '500', '2000'],
+        ),
+        QuizQuestion(
+          questionText: '12 x 2 = ?',
+          correctOptionIndex: 0,
+          options: ['24', '14', '22'],
+        ),
+      ],
+    );
   }
 
   Future<void> submitQuizResult({
