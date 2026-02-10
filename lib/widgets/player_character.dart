@@ -7,12 +7,15 @@ class PlayerCharacter extends StatelessWidget {
   final bool isCrashed;
   final int runFrame;
 
+  final double size;
+
   const PlayerCharacter({
     super.key,
     required this.isJumping,
     required this.isInvincible,
     this.isCrashed = false,
     this.runFrame = 0,
+    this.size = 210.0,
   });
 
   @override
@@ -33,8 +36,8 @@ class PlayerCharacter extends StatelessWidget {
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 100),
-      width: 210, // 1.5x size (140 * 1.5)
-      height: 210,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         // Glow effect only when invincible
         boxShadow: isInvincible

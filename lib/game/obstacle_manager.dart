@@ -160,7 +160,8 @@ class ObstacleManager {
     if (level >= 4 && type != ObstacleType.goldenBook) {
       if (_random.nextBool()) {
         // 50% chance to spawn from Left
-        startX = -0.1;
+        // Start further back (-0.5) to give reaction time since player is at 0.3
+        startX = -0.5;
         direction = 1.0; // Move Right
       }
     }

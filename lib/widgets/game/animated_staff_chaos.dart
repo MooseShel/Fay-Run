@@ -95,6 +95,8 @@ class _AnimatedStaffChaosState extends State<AnimatedStaffChaos>
 
   @override
   Widget build(BuildContext context) {
+    final double imageSize = MediaQuery.sizeOf(context).height * 0.25;
+
     return Align(
       alignment:
           const Alignment(0.0, -0.8), // Move to top to avoid blocking player
@@ -138,23 +140,21 @@ class _AnimatedStaffChaosState extends State<AnimatedStaffChaos>
                     borderRadius: BorderRadius.circular(10),
                     child: Image.asset(
                       'assets/images/${_getStaffImagePath()}',
-                      width: 200,
-                      height: 200,
+                      width: imageSize,
+                      height: imageSize,
                       fit: BoxFit.cover,
                       errorBuilder: (c, e, s) => Container(
-                        width: 200,
-                        height: 200,
+                        width: imageSize,
+                        height: imageSize,
                         color: FayColors.navy,
                         child: const Icon(
                           Icons.person,
-                          size: 120,
+                          size: 120, // Keep icon large or adjust if needed
                           color: Colors.white,
                         ),
                       ),
                     ),
                   ),
-                  // Title removed as per request
-                  // const SizedBox(height: 8),
                   // Message
                   Text(
                     widget.event.message,

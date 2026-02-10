@@ -186,27 +186,31 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         double obsBottom = obs.y + obsPaddingY;
         double obsTop = obs.y + obs.height - obsPaddingY;
 
-        // Player Hitbox (Relative)
-        // Player Visual size is now ~210px (1.5x).
-        // Hitbox set to 75x150 (1.5x of original 50x100).
-        double playerVisualWidth = 75.0 / screenSize.width;
+        // Player Hitbox (Responsive)
+        // Player Size: 18% of Screen Height (Square)
+        // Player X: 25% of Screen Width
+
+        // Width in relative screen coordinates
+        double playerPixelSize = screenSize.height * 0.18;
+        double playerVisualWidth = playerPixelSize / screenSize.width;
         double playerPadding = playerVisualWidth * 0.4; // 40% padding
 
-        // Player horizontal position (40% of screen width)
-        double playerBaseX = screenSize.width * 0.4;
+        // Player horizontal position (30% of screen width)
+        double playerBaseX = screenSize.width * 0.30;
 
         double playerLeft = (playerBaseX / screenSize.width) + playerPadding;
         double playerRight =
-            ((playerBaseX + 75.0) / screenSize.width) - playerPadding;
+            ((playerBaseX + playerPixelSize) / screenSize.width) -
+                playerPadding;
 
-        // Player Height
-        double playerVisualHeight = 150.0 / screenSize.height;
+        // Player Height in relative screen coordinates
+        double playerVisualHeight = 0.18; // 18% of height
         double playerHeightPadding = playerVisualHeight * 0.3; // 30% padding
 
         double playerBottom =
             (_playerY / screenSize.height) + playerHeightPadding;
-        double playerTop =
-            ((_playerY + 150.0) / screenSize.height) - playerHeightPadding;
+        double playerTop = ((_playerY + playerPixelSize) / screenSize.height) -
+            playerHeightPadding;
 
         // X overlap
         bool xOverlap = (obsLeft < playerRight) && (obsRight > playerLeft);
@@ -353,13 +357,14 @@ class _GameLoopScreenState extends State<GameLoopScreen>
             ),
 
             Positioned(
-              left: screenSize.width * 0.4,
+              left: screenSize.width * 0.30,
               bottom: _groundHeight + _playerY,
               child: PlayerCharacter(
                 isJumping: _isJumping,
                 isInvincible: gameState.isInvincible,
                 isCrashed: _isCrashed,
                 runFrame: _runFrame,
+                size: screenSize.height * 0.18, // Responsive size
               ),
             ),
 
