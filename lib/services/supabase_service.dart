@@ -46,7 +46,8 @@ class SupabaseService {
     int? weekNumber,
     String? topic,
   }) async {
-    debugPrint('Supabase: getCurrentChallenge mock (Grade $gradeLevel, Week $weekNumber)');
+    debugPrint(
+        'Supabase: getCurrentChallenge mock (Grade $gradeLevel, Week $weekNumber)');
 
     // Mock Response Generator (Pre-K to 5th)
     if (gradeLevel <= 0) {
@@ -55,26 +56,14 @@ class SupabaseService {
         id: 'mock_prek_k',
         topic: 'Math',
         season: 'Spring 2025',
-        weekNumber: 1,
-        gradeLevel: gradeLevel,
-        questions: [
-          QuizQuestion(
-            questionText: 'What color is the sun?',
-            correctOptionIndex: 0,
-            options: ['Yellow', 'Blue', 'Green'],
-          ),
-          QuizQuestion(
-            questionText: 'Count: ⭐️ ⭐️',
-            correctOptionIndex: 0,
-            options: ['2', '1', '3'],
-          ),
-        ],
       );
     }
+
+    // Default Mock (Grade 4)
+    return Challenge(
       id: 'mock_g4_w1',
       topic: 'Math',
-      season: 'Spring 2025',
-      weekNumber: 1,
+      // season and weekNumber are not in the Client Model yet
       gradeLevel: 4,
       questions: [
         QuizQuestion(
