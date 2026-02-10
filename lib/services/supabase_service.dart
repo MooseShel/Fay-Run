@@ -55,7 +55,19 @@ class SupabaseService {
       return Challenge(
         id: 'mock_prek_k',
         topic: 'Math',
-        season: 'Spring 2025',
+        gradeLevel: gradeLevel,
+        questions: [
+          QuizQuestion(
+            questionText: 'What color is the sun?',
+            correctOptionIndex: 0,
+            options: ['Yellow', 'Blue', 'Green'],
+          ),
+          QuizQuestion(
+            questionText: 'Count: ⭐️ ⭐️',
+            correctOptionIndex: 0,
+            options: ['2', '1', '3'],
+          ),
+        ],
       );
     }
 
