@@ -90,8 +90,8 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
         // We use a manual tiling logic
         return Stack(
           children: List.generate(3, (index) {
-            // Overlap amount (fixed small overlap to prevent landmark ghosting)
-            final double overlap = 10.0;
+            // Overlap amount increased to cover the fade area exactly
+            final double overlap = 50.0;
             final double tileWidth = width; // Base width is screen width
 
             // Position calculation:
@@ -157,19 +157,23 @@ class _ShadowTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ShaderMask(
       shaderCallback: (bounds) {
+        // Calculate the ratio of the overlap to the total width
+        // This ensures the fade width exactly matches the overlap width
+        final double fadeRatio = overlap / bounds.width;
+
         return LinearGradient(
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
           colors: const [
             Colors.transparent,
-            Colors.black,
-            Colors.black,
+            Colors.white,
+            Colors.white,
             Colors.transparent,
           ],
           stops: [
             0.0,
-            overlap / bounds.width,
-            1.0 - (overlap / bounds.width),
+            fadeRatio,
+            1.0 - fadeRatio,
             1.0,
           ],
         ).createShader(bounds);

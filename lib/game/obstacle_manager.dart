@@ -319,10 +319,16 @@ class ObstacleManager {
     // All obstacles spawn at ground level for consistent gameplay
     double y = 0.0;
 
+    if (type == ObstacleType.goldenBook ||
+        type == ObstacleType.apple ||
+        type == ObstacleType.banana ||
+        type == ObstacleType.burger) {
+      y = 0.25; // In the air (Floating Reward)
+      // Keep dimensions as defined in switch above
+    }
+
     if (type == ObstacleType.goldenBook) {
-      y = 0.25; // In the air
-      width = 0.18; // 0.12 * 1.5
-      height = 0.18; // 0.12 * 1.5
+      // Specific override if needed, but dimensions are handled above now
     }
 
     // Determine spawn side and direction
