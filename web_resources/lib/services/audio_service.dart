@@ -111,9 +111,9 @@ class AudioService {
   void playStaffSound(String staffType) {
     String asset = '';
     // Map staff event types to audio files
-    if (staffType.contains('shoeTie'))
+    if (staffType.contains('shoeTie')) {
       asset = 'audio/staff_head.mp3';
-    else if (staffType.contains('coachWhistle'))
+    } else if (staffType.contains('coachWhistle'))
       asset = 'audio/staff_coach.mp3';
     else if (staffType.contains('librarianShush'))
       asset = 'audio/staff_librarian.mp3';

@@ -32,6 +32,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   final double _jumpForce = 13.0; // Balanced
   final double _groundHeight =
       50.0; // Adjusted from 40.0 for better visual alignment on ground
+  final double _playerBaseX = 100.0; // Player horizontal position
 
   bool _isJumping = false;
   int _jumpCount = 0;
@@ -193,8 +194,9 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         double playerPadding =
             playerVisualWidth * 0.4; // 40% padding (increased from 30%)
 
-        double playerLeft = (50.0 / screenSize.width) + playerPadding;
-        double playerRight = ((50.0 + 40.0) / screenSize.width) - playerPadding;
+        double playerLeft = (_playerBaseX / screenSize.width) + playerPadding;
+        double playerRight =
+            ((_playerBaseX + 40.0) / screenSize.width) - playerPadding;
 
         // Player Height
         double playerVisualHeight = 100.0 / screenSize.height;
@@ -351,7 +353,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
             ),
 
             Positioned(
-              left: 50,
+              left: _playerBaseX,
               bottom: _groundHeight + _playerY,
               child: PlayerCharacter(
                 isJumping: _isJumping,

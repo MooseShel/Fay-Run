@@ -30,14 +30,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
           lastName: _lastNameController.text.trim(),
         );
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Account Created! Please check your email to confirm.',
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => AlertDialog(
+              title: const Text('Sign Up Successful'),
+              content: const Text(
+                'Thanks for signing up! You can now log in using your information.',
               ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context); // Close dialog
+                    Navigator.pop(context); // Go back to Login
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
             ),
           );
-          Navigator.pop(context); // Go back to Login
         }
       } catch (e) {
         if (mounted) {
@@ -107,8 +118,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 ),
                                 validator: (value) =>
                                     value == null || value.isEmpty
-                                    ? 'Required'
-                                    : null,
+                                        ? 'Required'
+                                        : null,
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -122,8 +133,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 ),
                                 validator: (value) =>
                                     value == null || value.isEmpty
-                                    ? 'Required'
-                                    : null,
+                                        ? 'Required'
+                                        : null,
                               ),
                             ),
                           ],
@@ -138,11 +149,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                           validator: (value) =>
                               value == null || !value.contains('@')
-                              ? 'Enter a valid email'
-                              : null,
+                                  ? 'Enter a valid email'
+                                  : null,
                         ),
                         const SizedBox(height: 16),
-
                         TextFormField(
                           controller: _passwordController,
                           obscureText: true,
@@ -153,11 +163,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                           validator: (value) =>
                               value == null || value.length < 6
-                              ? 'Password must be 6+ chars'
-                              : null,
+                                  ? 'Password must be 6+ chars'
+                                  : null,
                         ),
                         const SizedBox(height: 24),
-
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
