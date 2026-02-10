@@ -87,35 +87,36 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
         final screenWidth = constraints.maxWidth;
         final screenHeight = constraints.maxHeight;
 
-        // Calculate rendered width based on image aspect ratio to avoid clipping.
-        // Assuming portrait images range from 9:16 (~0.56) to 9:20.
-        // If we use fitHeight, the width = height * aspect.
-        // Using a fixed aspect ratio estimate (e.g., 1080/1920 = 0.5625)
-        // This ensures that we tile based on the *actual* visible width.
-        // Even if the asset is different, fitHeight ensures no vertical cropping.
-        // The key is that the tile width matches the rendered image width.
+        // Tiling Strategy: Overlap & Natural Width
+        // The user states images are "very wide" and have transparent backgrounds.
+        // We use BoxFit.fitHeight to scale them correctly to viewport height.
+        // We do NOT constrain the width, letting the image be as wide as it naturally is.
+        // We define a "vertical" tile width (scrollWidth) that determines when the *next* tile starts.
+        // If imageWidth > scrollWidth, they overlap.
 
-        final double imageAspectRatio = 0.5625; // 9:16 standard portrait
-        final double imageWidth = screenHeight * imageAspectRatio;
+        // Assume a loop period roughly equal to 16:9 (1.77) to ensure regular tiling
+        // even if the image is wider (overlap) or narrower (gap - unlikely given "very wide")
+        final double scrollWidth = screenHeight * 1.77;
 
         final totalScroll = _scrollOffset * speedMultiplier;
-        final double xPos = -(totalScroll % imageWidth);
+        final double xPos = -(totalScroll % scrollWidth);
 
         // We need enough tiles to cover screenWidth.
-        final int tileCount = (screenWidth / imageWidth).ceil() + 1;
+        final int tileCount = (screenWidth / scrollWidth).ceil() + 1;
 
         return Stack(
           children: [
             for (int i = 0; i <= tileCount; i++)
               Positioned(
-                left: xPos + (imageWidth * i),
+                left: xPos + (scrollWidth * i),
                 top: 0,
                 bottom: 0,
-                width: imageWidth + 1, // Slight overlap to prevent lines
+                // NO width constraint -> allows image to be wider than scrollWidth
                 child: Image.asset(
                   assetPath,
                   fit: BoxFit.fitHeight,
-                  alignment: Alignment.center,
+                  alignment:
+                      Alignment.centerLeft, // Anchor left so overlap goes right
                 ),
               ),
           ],

@@ -55,22 +55,22 @@ class ObstacleManager {
     double spawnInterval;
     switch (level) {
       case 1:
-        spawnInterval = 4.5; // Slightly faster start - engaging from level 1
+        spawnInterval = 3.5; // Faster start
         break;
       case 2:
-        spawnInterval = 3.8; // Moderate challenge
+        spawnInterval = 3.0;
         break;
       case 3:
-        spawnInterval = 3.2; // Steady ramp up
+        spawnInterval = 2.5;
         break;
       case 4:
-        spawnInterval = 2.7; // Challenging but not sudden jump
+        spawnInterval = 2.0;
         break;
       case 5:
-        spawnInterval = 2.2; // Very hard - intense finale
+        spawnInterval = 1.5; // Intense
         break;
       default:
-        spawnInterval = 4.5;
+        spawnInterval = 3.5;
     }
 
     if (_spawnTimer > spawnInterval) {
@@ -95,9 +95,9 @@ class ObstacleManager {
       // Player Box: x: 0.1 to 0.25, y: 0.0 to 0.15 (jumping affects y)
       // We check collision in GameLoopScreen really, but here for cleanup.
 
-      if (obs.x < -0.2 || obs.x > 1.2) {
-        // Remove off-screen obstacles instead of recycling
-        // This prevents accumulation and keeps obstacle count manageable
+      // Cleanup: Use wide bounds to support bidirectional movement (Left spawn starts at -0.6)
+      if (obs.x < -1.5 || obs.x > 2.5) {
+        // Remove off-screen obstacles
         obstacles.removeAt(i);
       }
     }
