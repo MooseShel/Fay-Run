@@ -219,9 +219,7 @@ class AudioService {
         break;
     }
 
-    if (soundFile != null) {
-      playVoice(soundFile);
-    }
+    playVoice(soundFile);
   }
 
   Future<void> dispose() async {

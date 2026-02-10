@@ -10,6 +10,7 @@ class Assets {
   static const String staffFirstG = 'staff_firstg.png';
   static const String staffPrek2 = 'staff_prek2.png';
   static const String ernie = 'ernie.png';
+  static const String itemGoldenBook = 'obstacles/item_golden_book.png';
 
   // Audio - Background Music
   static const String musicBayou1 = 'audio/music_bayou_1.mp3';

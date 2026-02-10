@@ -12,6 +12,7 @@ import '../../widgets/game/quiz_overlay.dart';
 import '../../widgets/game/animated_staff_chaos.dart';
 import '../../game/obstacle_manager.dart';
 import '../../services/audio_service.dart';
+import '../../core/assets.dart';
 
 class GameLoopScreen extends StatefulWidget {
   const GameLoopScreen({super.key});
@@ -124,8 +125,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
               const AssetImage('assets/images/obstacles/obstacle_burger_2.png'),
               context),
           precacheImage(
-              const AssetImage('assets/images/obstacles/item_golden_book.png'),
-              context),
+              AssetImage('assets/images/${Assets.itemGoldenBook}'), context),
         ]);
 
         // 2. Precache 10 Backgrounds
@@ -852,7 +852,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         break;
       case ObstacleType.goldenBook:
         return Image.asset(
-          'assets/images/item_golden_book.png',
+          'assets/images/${Assets.itemGoldenBook}',
           fit: BoxFit.contain,
           alignment: Alignment.bottomCenter,
         );
