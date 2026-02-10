@@ -362,8 +362,10 @@ class _GameLoopScreenState extends State<GameLoopScreen>
             ..._obstacleManager.obstacles.map(
               (obs) => Positioned(
                 left: obs.x * screenSize.width,
-                bottom:
-                    _groundHeight + (obs.y * screenSize.height), // Use obs.y
+                bottom: _groundHeight +
+                    (obs.y * screenSize.height) -
+                    (screenSize.height *
+                        0.025), // Visual correction to prevent floating
                 width: obs.width * screenSize.width,
                 height: obs.height * screenSize.height,
                 child: _buildObstacleWidget(obs),
