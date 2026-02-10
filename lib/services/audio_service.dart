@@ -77,22 +77,21 @@ class AudioService {
   Future<void> playBGM(int level) async {
     if (_isMuted) return;
 
-    String bgmFile = 'bgm_bayou.mp3';
+    String bgmFile = 'music_bayou.mp3';
     switch (level) {
       case 2:
+        bgmFile = 'music_hallway.mp3';
+        break;
       case 3:
-        bgmFile = 'bgm_school.mp3';
+        bgmFile = 'music_lab.mp3';
         break;
       case 4:
-        bgmFile = 'bgm_cafeteria.mp3'; // Hypothetical
+        bgmFile = 'music_cafeteria.mp3';
         break;
       case 5:
-        bgmFile = 'bgm_chase.mp3'; // Hypothetical
+        bgmFile = 'music_carpool.mp3';
         break;
     }
-    // Fallback to bayou if missing
-    // check existence not easy in assets without loading.
-    // Assuming bgm_bayou exists.
 
     try {
       await _bgmPlayer.setReleaseMode(ReleaseMode.loop);
@@ -120,27 +119,16 @@ class AudioService {
   Future<void> playSFX(String sfxName) async {
     if (_isMuted) return;
     try {
-      // Create a *new* player for SFX to allow overlap?
-      // Or use the shared one? Shared one cuts off previous sound.
-      // For Jump, we want overlap.
-      // Let's use a temporary player for fire-and-forget SFX.
-      // AudioPlayer().play(...) automatically disposes when done in some versions,
-      // but safest to let it finish.
       final player = AudioPlayer();
       await player.play(AssetSource('audio/$sfxName'));
-      // We don't await completion here, just let it play.
-      // It will be GC'd eventually or we can track it.
-      // AudioPlay v6: "The player will apply the release mode... default ReleaseMode.release"
-      // So it should be fine.
     } catch (e) {
-      // debugPrint('Error playing SFX: $e');
+      debugPrint('Error playing SFX: $e');
     }
   }
 
-  void playJump() => playSFX(
-      'jump.wav'); // Usually wav for sfx? Or mp3? Using mp3 per file list
+  void playJump() => playSFX('jump.mp3');
   void playBonk() => playSFX('bonk.mp3');
-  void playCoin() => playSFX('coin.mp3');
+  void playCoin() => playSFX('ding.mp3'); // Was coin.mp3, likely ding.mp3
   void playPowerup() => playSFX('powerup.mp3');
   void playStaffSound(String staffType) {
     // Map staff type to sound
