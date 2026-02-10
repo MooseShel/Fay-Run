@@ -34,7 +34,7 @@ workflows:
     environment:
       ios_signing:
         provisioning_profiles:
-          - FayRunAppStore
+          - FayRun_App_Store_Prov_Profile
       vars:
         XCODE_WORKSPACE: "Runner.xcworkspace"
         XCODE_SCHEME: "Runner"
