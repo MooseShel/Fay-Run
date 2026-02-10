@@ -215,7 +215,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                   children: [
                     const Text(
                       'Welcome Back,',
-                      style: TextStyle(color: Colors.white70, fontSize: 20),
+                      style: TextStyle(color: Colors.white70, fontSize: 16),
                     ),
                     Text(
                       gameState.generatedNickname.isNotEmpty
@@ -223,15 +223,54 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                           : 'Future Gator',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 32,
+                        fontSize: 28,
                         fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Top Score
+                    Text(
+                      'Top Score: ${student?['high_score'] ?? 0}',
+                      style: const TextStyle(
+                        color: FayColors.gold,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Reminder Note
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.1),
+                        ),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.info_outline,
+                              color: Colors.white70, size: 16),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Remember: Finish the level for your score to count!',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 24),
 
               // Level Selector Title
               const Padding(
@@ -240,78 +279,102 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                   'Select Level',
                   style: TextStyle(
                     color: FayColors.gold,
-                    fontSize: 24,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
 
-              // Level List
-              SizedBox(
-                height: 220,
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 10, // 10 Levels
+              // Responsive Level Grid
+              Expanded(
+                child: GridView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 280, // Wider cards
+                    mainAxisSpacing: 20,
+                    crossAxisSpacing: 20,
+                    childAspectRatio: 1.6, // Landscape ratio
+                  ),
+                  itemCount: 10,
                   itemBuilder: (context, index) {
                     final level = index + 1;
                     final isUnlocked = level <= gameState.maxLevel;
+                    final String extension = level == 2 ? 'jpg' : 'png';
+                    final String assetPath =
+                        'assets/images/bgs/bg_fay_$level.$extension';
 
-                    return Container(
-                      width: 160,
-                      margin: const EdgeInsets.symmetric(horizontal: 8),
-                      decoration: BoxDecoration(
-                        color: isUnlocked
-                            ? Colors.white.withOpacity(0.1)
-                            : Colors.black26,
-                        borderRadius: BorderRadius.circular(20),
-                        border: isUnlocked
-                            ? Border.all(color: FayColors.gold, width: 2)
-                            : null,
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            isUnlocked ? Icons.lock_open : Icons.lock,
-                            size: 40,
-                            color: isUnlocked ? FayColors.gold : Colors.white24,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Level $level',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
+                    return InkWell(
+                      onTap: isUnlocked
+                          ? () {
+                              context.read<GameState>().startGame(level: level);
+                              Navigator.pushNamed(context, '/game');
+                            }
+                          : null,
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          image: DecorationImage(
+                            image: AssetImage(assetPath),
+                            fit: BoxFit.cover,
+                            colorFilter: ColorFilter.mode(
+                              isUnlocked
+                                  ? Colors.black.withOpacity(0.4)
+                                  : Colors.black.withOpacity(0.8),
+                              BlendMode.darken,
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          if (isUnlocked)
-                            ElevatedButton(
-                              onPressed: () {
-                                context.read<GameState>().startGame(
-                                      level: level,
-                                    );
-                                Navigator.pushNamed(context, '/game');
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: FayColors.gold,
-                                foregroundColor: FayColors.navy,
-                                shape: const StadiumBorder(),
+                          border: isUnlocked
+                              ? Border.all(color: FayColors.gold, width: 2)
+                              : null,
+                        ),
+                        child: Stack(
+                          children: [
+                            Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    isUnlocked
+                                        ? Icons.play_circle_fill
+                                        : Icons.lock,
+                                    size: 48,
+                                    color: isUnlocked
+                                        ? FayColors.gold
+                                        : Colors.white24,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Level $level',
+                                    style: TextStyle(
+                                      color: isUnlocked
+                                          ? Colors.white
+                                          : Colors.white38,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              child: const Text('Play'),
                             ),
-                        ],
+                            if (!isUnlocked)
+                              Positioned.fill(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.black26,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     );
                   },
                 ),
               ),
-
-              const Spacer(),
 
               // Leaderboard Button
               Padding(

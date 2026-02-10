@@ -161,16 +161,6 @@ class _AnimatedStaffChaosState extends State<AnimatedStaffChaos>
                       ),
                     ),
                   ),
-                  // Message
-                  Text(
-                    widget.event.message,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
                 ],
               ),
             ),

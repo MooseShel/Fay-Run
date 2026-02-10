@@ -1,14 +1,14 @@
 class Assets {
   // Images
-  static const String staffHead = 'staff_head.jpg';
-  static const String staffCoach = 'staff_coach.jpg';
-  static const String staffLibrarian = 'staff_librarian.jpg';
-  static const String staffScience = 'staff_science.jpg';
-  static const String staffDean = 'staff_dean.jpg';
+  static const String staffHead = 'staff_head.png';
+  static const String staffCoach = 'staff_coach.png';
+  static const String staffLibrarian = 'staff_librarian.png';
+  static const String staffScience = 'staff_science.png';
+  static const String staffDean = 'staff_dean.png';
   static const String staffPe = 'staff_pe.png';
-  static const String staffEnglish = 'staff_english.jpg';
-  static const String staffFirstG = 'staff_firstg.jpg';
-  static const String staffPrek2 = 'staff_prek2.jpg';
+  static const String staffEnglish = 'staff_english.png';
+  static const String staffFirstG = 'staff_firstg.png';
+  static const String staffPrek2 = 'staff_prek2.png';
   static const String ernie = 'ernie.png';
 
   // Audio - Background Music

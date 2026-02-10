@@ -82,62 +82,79 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   }
 
   Future<void> _loadAssets() async {
-    // Precache Sprites for smooth start
-    await Future.wait([
-      precacheImage(const AssetImage('assets/images/ernie_run.png'), context),
-      precacheImage(const AssetImage('assets/images/ernie_run_2.png'), context),
-      precacheImage(const AssetImage('assets/images/ernie_run_3.png'), context),
-      precacheImage(const AssetImage('assets/images/ernie_jump.png'), context),
-      precacheImage(const AssetImage('assets/images/ernie_crash.png'), context),
-      // Common Obstacles
-      precacheImage(
-          const AssetImage('assets/images/obstacles/obstacle_log.png'),
-          context),
-      precacheImage(
-          const AssetImage('assets/images/obstacles/obstacle_rock.png'),
-          context),
-      // Backpacks
-      precacheImage(
-          const AssetImage('assets/images/obstacles/obstacle_backpack.png'),
-          context),
-      precacheImage(
-          const AssetImage('assets/images/obstacles/obstacle_backpack_2.png'),
-          context),
-      // Food
-      precacheImage(
-          const AssetImage('assets/images/obstacles/obstacle_apple.png'),
-          context),
-      precacheImage(
-          const AssetImage('assets/images/obstacles/obstacle_banana.png'),
-          context),
-      precacheImage(
-          const AssetImage('assets/images/obstacles/obstacle_burger_1.png'),
-          context),
-      precacheImage(
-          const AssetImage('assets/images/obstacles/obstacle_burger_2.png'),
-          context),
-      precacheImage(
-          const AssetImage('assets/images/obstacles/item_golden_book.png'),
-          context),
-    ]);
+    final startTime = DateTime.now();
+    debugPrint('🎬 Starting asset loading...');
 
-    // Precache 10 Backgrounds
-    for (int i = 1; i <= 10; i++) {
-      final ext = i == 2 ? 'jpg' : 'png';
-      await precacheImage(
-          AssetImage('assets/images/bgs/bg_fay_$i.$ext'), context);
-    }
+    try {
+      // Create a timeout future (3 seconds)
+      final timeoutFuture = Future.delayed(const Duration(seconds: 3));
 
-    // Audio Preloading
-    // Note: AudioService().init() handles most sfx, but we ensure BGM is ready
-    final state = context.read<GameState>();
-    await state.loadChallenge();
-    await AudioService().playBGM(state.currentLevel);
+      // Actual loading process
+      final loadFuture = () async {
+        // 1. Precache Sprites
+        await Future.wait([
+          precacheImage(
+              const AssetImage('assets/images/ernie_run.png'), context),
+          precacheImage(
+              const AssetImage('assets/images/ernie_run_2.png'), context),
+          precacheImage(
+              const AssetImage('assets/images/ernie_run_3.png'), context),
+          precacheImage(
+              const AssetImage('assets/images/ernie_jump.png'), context),
+          precacheImage(
+              const AssetImage('assets/images/ernie_crash.png'), context),
+          // Common Obstacles
+          precacheImage(
+              const AssetImage('assets/images/obstacles/obstacle_log.png'),
+              context),
+          precacheImage(
+              const AssetImage('assets/images/obstacles/obstacle_rock.png'),
+              context),
+          // Food
+          precacheImage(
+              const AssetImage('assets/images/obstacles/obstacle_apple.png'),
+              context),
+          precacheImage(
+              const AssetImage('assets/images/obstacles/obstacle_banana.png'),
+              context),
+          precacheImage(
+              const AssetImage('assets/images/obstacles/obstacle_burger_1.png'),
+              context),
+          precacheImage(
+              const AssetImage('assets/images/obstacles/obstacle_burger_2.png'),
+              context),
+          precacheImage(
+              const AssetImage('assets/images/obstacles/item_golden_book.png'),
+              context),
+        ]);
 
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
+        // 2. Precache 10 Backgrounds
+        for (int i = 1; i <= 10; i++) {
+          final ext = i == 2 ? 'jpg' : 'png';
+          await precacheImage(
+              AssetImage('assets/images/bgs/bg_fay_$i.$ext'), context);
+        }
+
+        // 3. Audio & Data
+        final state = context.read<GameState>();
+        await state.loadChallenge();
+        // Don't await BGM to prevent hangs if audio context is blocked
+        AudioService().playBGM(state.currentLevel);
+      }();
+
+      // Race the loader against the 3s timeout
+      await Future.any([loadFuture, timeoutFuture]);
+
+      final elapsed = DateTime.now().difference(startTime).inMilliseconds;
+      debugPrint('🏁 Loading finished in ${elapsed}ms');
+    } catch (e) {
+      debugPrint('⚠️ Error during loading: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -207,7 +224,9 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
     // Random Staff Appearances (Every 10-15s for fun sounds/visuals only)
     // Reduce timer for debug/testing to see it more often
-    if (_chaosTimer > (kDebugMode ? 5 : 10) + _random.nextInt(5)) {
+    // Random Staff Appearances (Reduced frequency by 100% / Half)
+    // threshold increased from 10+random(5) to 20+random(10)
+    if (_chaosTimer > (kDebugMode ? 10 : 20) + _random.nextInt(10)) {
       _chaosTimer = 0;
 
       // Only trigger if no staff event is currently active
@@ -216,9 +235,10 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       }
     }
 
-    // 1. Physics Update
-    if (_isJumping || _playerY > 0) {
-      setState(() {
+    // Performance Optimization: Consolidate state updates into one setState call
+    setState(() {
+      // 1. Physics Update
+      if (_isJumping || _playerY > 0) {
         _playerY += _verticalVelocity;
         _verticalVelocity += _gravity;
 
@@ -228,69 +248,63 @@ class _GameLoopScreenState extends State<GameLoopScreen>
           _isJumping = false;
           _jumpCount = 0; // Reset jumps
         }
-      });
-    }
+      }
 
-    // 2. Obstacle Update
-    // dt = 0.016s roughly
-    final screenSize = MediaQuery.of(context).size;
-
-    setState(() {
+      // 2. Obstacle Update
       _obstacleManager.update(
         0.016,
         gameState.runSpeed,
         gameState.currentLevel,
-        (obs) {
-          // Collision Callback (Not used directly yet, manual check below)
-        },
+        (obs) {},
       );
-
-      for (var obs in _obstacleManager.obstacles) {
-        bool isGoldenBook = obs.type == ObstacleType.goldenBook;
-
-        // Convert relative coordinates to pixels for accurate collision
-        // All dimensions (width/height) are now relative to Screen Height
-        double obsPixelWidth = obs.width * screenSize.height;
-        double obsPixelHeight = obs.height * screenSize.height;
-        double obsPixelX = obs.x * screenSize.width;
-        double obsPixelY = obs.y * screenSize.height;
-
-        double verticalOffset =
-            _getObstacleVerticalOffset(obs, screenSize.height);
-
-        double obsPaddingX =
-            isGoldenBook ? obsPixelWidth * 0.10 : obsPixelWidth * 0.20;
-        double obsPaddingY =
-            isGoldenBook ? obsPixelHeight * 0.10 : obsPixelHeight * 0.20;
-
-        double obsLeft = obsPixelX + obsPaddingX;
-        double obsRight = obsPixelX + obsPixelWidth - obsPaddingX;
-        double obsBottom = obsPixelY - verticalOffset + obsPaddingY;
-        double obsTop =
-            obsPixelY - verticalOffset + obsPixelHeight - obsPaddingY;
-
-        // Player Hitbox (Responsive)
-        double playerPixelSize = screenSize.height * 0.18;
-        double playerPadding = playerPixelSize * 0.4;
-        double playerBaseX = screenSize.width * 0.30;
-
-        double playerLeft = playerBaseX + playerPadding;
-        double playerRight = playerBaseX + playerPixelSize - playerPadding;
-
-        double playerBottom = _playerY + (playerPixelSize * 0.3); // 30% padding
-        double playerTop = _playerY + playerPixelSize - (playerPixelSize * 0.3);
-
-        // X overlap
-        bool xOverlap = (obsLeft < playerRight) && (obsRight > playerLeft);
-
-        // Y overlap
-        bool yOverlap = (playerBottom < obsTop) && (playerTop > obsBottom);
-
-        if (xOverlap && yOverlap && !obs.isCollected) {
-          _handleCollision(obs, gameState);
-        }
-      }
     });
+
+    final screenSize = MediaQuery.sizeOf(context);
+
+    for (var obs in _obstacleManager.obstacles) {
+      bool isGoldenBook = obs.type == ObstacleType.goldenBook;
+
+      // Convert relative coordinates to pixels for accurate collision
+      // All dimensions (width/height) are now relative to Screen Height
+      double obsPixelWidth = obs.width * screenSize.height;
+      double obsPixelHeight = obs.height * screenSize.height;
+      double obsPixelX = obs.x * screenSize.width;
+      double obsPixelY = obs.y * screenSize.height;
+
+      double verticalOffset =
+          _getObstacleVerticalOffset(obs, screenSize.height);
+
+      double obsPaddingX =
+          isGoldenBook ? obsPixelWidth * 0.10 : obsPixelWidth * 0.20;
+      double obsPaddingY =
+          isGoldenBook ? obsPixelHeight * 0.10 : obsPixelHeight * 0.20;
+
+      double obsLeft = obsPixelX + obsPaddingX;
+      double obsRight = obsPixelX + obsPixelWidth - obsPaddingX;
+      double obsBottom = obsPixelY - verticalOffset + obsPaddingY;
+      double obsTop = obsPixelY - verticalOffset + obsPixelHeight - obsPaddingY;
+
+      // Player Hitbox (Responsive)
+      double playerPixelSize = screenSize.height * 0.18;
+      double playerPadding = playerPixelSize * 0.4;
+      double playerBaseX = screenSize.width * 0.30;
+
+      double playerLeft = playerBaseX + playerPadding;
+      double playerRight = playerBaseX + playerPixelSize - playerPadding;
+
+      double playerBottom = _playerY + (playerPixelSize * 0.3); // 30% padding
+      double playerTop = _playerY + playerPixelSize - (playerPixelSize * 0.3);
+
+      // X overlap
+      bool xOverlap = (obsLeft < playerRight) && (obsRight > playerLeft);
+
+      // Y overlap
+      bool yOverlap = (playerBottom < obsTop) && (playerTop > obsBottom);
+
+      if (xOverlap && yOverlap && !obs.isCollected) {
+        _handleCollision(obs, gameState);
+      }
+    }
   }
 
   void _handleCollision(Obstacle obs, GameState gameState) {
@@ -418,252 +432,324 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     final gameState = context.watch<GameState>();
     final screenSize = MediaQuery.sizeOf(context);
 
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(
+                'assets/images/ernie_run.png',
+                width: 120,
+                height: 120,
+              ),
+              const SizedBox(height: 32),
+              const SizedBox(
+                width: 200,
+                child: LinearProgressIndicator(
+                  color: Colors.blue,
+                  backgroundColor: Color(0xFFE3F2FD),
+                  minHeight: 6,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                "PREPARING LEVEL...",
+                style: TextStyle(
+                  fontFamily: 'BubblegumSans',
+                  color: Colors.blue,
+                  fontSize: 18,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
-      body: _isLoading
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const CircularProgressIndicator(
-                    color: Color(0xFFFFD700), // FayColors.gold
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    "Loading...",
+      body: GestureDetector(
+        onTap: _jump,
+        child: Stack(
+          children: [
+            ParallaxBackground(
+              runSpeed: gameState.runSpeed,
+              isPaused: gameState.status != GameStatus.playing,
+              level: gameState.currentLevel,
+            ),
+
+            // 4. Ambient Effects (Level-specific particles)
+            AmbientEffects(level: gameState.currentLevel),
+
+            ..._obstacleManager.obstacles.map(
+              (obs) {
+                // Background perspective correction
+                // Road lanes require objects to be slightly lower to look grounded
+                double verticalOffset =
+                    _getObstacleVerticalOffset(obs, screenSize.height);
+
+                return Positioned(
+                  left: obs.x * screenSize.width,
+                  bottom: _groundHeight +
+                      (obs.y * screenSize.height) -
+                      verticalOffset,
+                  width: obs.width * screenSize.height, // Use Height as base
+                  height: obs.height * screenSize.height,
+                  child: _buildObstacleWidget(obs),
+                );
+              },
+            ),
+
+            Positioned(
+              left: screenSize.width * 0.30,
+              bottom: _groundHeight + _playerY,
+              child: PlayerCharacter(
+                isJumping: _isJumping,
+                isInvincible: gameState.isInvincible,
+                isCrashed: _isCrashed,
+                runFrame: _runFrame,
+                size: screenSize.height * 0.18, // Responsive size
+              ),
+            ),
+
+            // Floating Scores
+            ..._floatingScores.map((fs) => Positioned(
+                  left: fs.x,
+                  bottom: fs.y + (fs.animationTime * 100), // Float up
+                  child: Text(
+                    '+${fs.amount}',
                     style: TextStyle(
                       fontFamily: 'BubblegumSans',
-                      color: Colors.white,
-                      fontSize: 24,
+                      fontSize: 40,
+                      fontWeight: FontWeight.bold,
+                      color: FayColors.gold,
+                      shadows: [
+                        Shadow(
+                          blurRadius: 10.0,
+                          color: Colors.black,
+                          offset: Offset(2.0, 2.0),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            )
-          : GestureDetector(
-              onTap: _jump,
-              child: Stack(
+                )),
+
+            // Staff Chaos - Animated center screen appearance
+            if (gameState.activeStaffEvent != null)
+              AnimatedStaffChaos(event: gameState.activeStaffEvent!),
+
+            // Level Progress Bar
+            Positioned(
+              top: 50,
+              left: screenSize.width * 0.25,
+              right: screenSize.width * 0.25,
+              child: Column(
                 children: [
-                  ParallaxBackground(
-                    runSpeed: gameState.runSpeed,
-                    isPaused: gameState.status != GameStatus.playing,
-                    level: gameState.currentLevel,
-                  ),
-
-                  // 4. Ambient Effects (Level-specific particles)
-                  AmbientEffects(level: gameState.currentLevel),
-
-                  ..._obstacleManager.obstacles.map(
-                    (obs) {
-                      // Background perspective correction
-                      // Road lanes require objects to be slightly lower to look grounded
-                      double verticalOffset =
-                          _getObstacleVerticalOffset(obs, screenSize.height);
-
-                      return Positioned(
-                        left: obs.x * screenSize.width,
-                        bottom: _groundHeight +
-                            (obs.y * screenSize.height) -
-                            verticalOffset,
-                        width:
-                            obs.width * screenSize.height, // Use Height as base
-                        height: obs.height * screenSize.height,
-                        child: _buildObstacleWidget(obs),
-                      );
-                    },
-                  ),
-
-                  Positioned(
-                    left: screenSize.width * 0.30,
-                    bottom: _groundHeight + _playerY,
-                    child: PlayerCharacter(
-                      isJumping: _isJumping,
-                      isInvincible: gameState.isInvincible,
-                      isCrashed: _isCrashed,
-                      runFrame: _runFrame,
-                      size: screenSize.height * 0.18, // Responsive size
+                  Container(
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: FayColors.navy.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.2),
+                        width: 1,
+                      ),
                     ),
-                  ),
-
-                  // Floating Scores
-                  ..._floatingScores.map((fs) => Positioned(
-                        left: fs.x,
-                        bottom: fs.y + (fs.animationTime * 100), // Float up
-                        child: Text(
-                          '+${fs.amount}',
-                          style: TextStyle(
-                            fontFamily: 'BubblegumSans',
-                            fontSize: 40,
-                            fontWeight: FontWeight.bold,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: Stack(
+                        children: [
+                          LinearProgressIndicator(
+                            value: (_distanceRun / (gameState.runSpeed * 600))
+                                .clamp(0.0, 1.0),
+                            backgroundColor: Colors.transparent,
                             color: FayColors.gold,
-                            shadows: [
-                              Shadow(
-                                blurRadius: 10.0,
-                                color: Colors.black,
-                                offset: Offset(2.0, 2.0),
-                              ),
-                            ],
+                            minHeight: 12,
                           ),
-                        ),
-                      )),
-
-                  // Staff Chaos - Animated center screen appearance
-                  if (gameState.activeStaffEvent != null)
-                    AnimatedStaffChaos(event: gameState.activeStaffEvent!),
-
-                  Positioned(top: 40, left: 20, child: _buildHUD(gameState)),
-
-                  // Pause Button
-                  if (gameState.status == GameStatus.playing)
-                    Positioned(
-                      top: 40,
-                      right: 20,
-                      child: IconButton(
-                        icon: const Icon(
-                          Icons.pause,
-                          color: FayColors.navy,
-                          size: 32,
-                        ),
-                        onPressed: () => context.read<GameState>().pauseGame(),
-                        style: IconButton.styleFrom(
-                          backgroundColor: Colors.white.withOpacity(0.5),
-                        ),
+                          // Subtle Gloss Effect
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.white.withOpacity(0.2),
+                                  Colors.transparent,
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-
-                  // 6. Pause/Menu Overlay
-                  if (gameState.status == GameStatus.paused)
-                    Container(
-                      color: Colors.black54,
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text(
-                              'PAUSED',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 40,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            ElevatedButton(
-                              onPressed: () =>
-                                  context.read<GameState>().resumeGame(),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: FayColors.gold,
-                                foregroundColor: FayColors.navy,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 32,
-                                  vertical: 12,
-                                ),
-                              ),
-                              child: const Text('RESUME'),
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: () {
-                                // Stop music
-                                AudioService().stopBGM();
-                                // Forfeit score and return to menu
-                                context.read<GameState>().forfeitGame();
-                                Navigator.pop(context);
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red[400],
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 32,
-                                  vertical: 12,
-                                ),
-                              ),
-                              child: const Text('EXIT LEVEL'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                  // 7. Level Complete Overlay
-                  if (gameState.status == GameStatus.levelComplete)
-                    Container(
-                      color: FayColors.navy.withOpacity(0.9),
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.school, size: 80, color: FayColors.gold),
-                            const SizedBox(height: 20),
-                            Text(
-                              'Level ${gameState.currentLevel - 1} Complete!',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const Text(
-                              'Class Dismissed!',
-                              style: TextStyle(
-                                  color: Colors.white70, fontSize: 20),
-                            ),
-                            const SizedBox(height: 40),
-                            ElevatedButton.icon(
-                              onPressed: () {
-                                _obstacleManager.clear();
-                                final nextLevel =
-                                    context.read<GameState>().currentLevel + 1;
-                                context.read<GameState>().startNextLevel();
-                                // Start music for next level
-                                AudioService().playBGM(nextLevel);
-                              },
-                              icon: const Icon(Icons.arrow_forward),
-                              label: const Text('GO TO NEXT CLASS'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: FayColors.gold,
-                                foregroundColor: FayColors.navy,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 32,
-                                  vertical: 16,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                  // 8. Game Over Overlay
-                  if (gameState.status == GameStatus.gameOver)
-                    Container(
-                      color: Colors.black87,
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text(
-                              'GAME OVER',
-                              style: TextStyle(
-                                color: Colors.red,
-                                fontSize: 50,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            ElevatedButton(
-                              onPressed: () {
-                                // Stop music when returning to menu
-                                AudioService().stopBGM();
-                                Navigator.pop(context); // Go back to menu
-                              },
-                              child: const Text('RETURN TO MENU'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Icon(Icons.directions_run,
+                          size: 14, color: FayColors.gold),
+                      Icon(Icons.flag, size: 14, color: FayColors.gold),
+                    ],
+                  ),
                 ],
               ),
             ),
+
+            Positioned(top: 40, left: 20, child: _buildHUD(gameState)),
+
+            // Pause Button
+            if (gameState.status == GameStatus.playing)
+              Positioned(
+                top: 40,
+                right: 20,
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.pause,
+                    color: FayColors.navy,
+                    size: 32,
+                  ),
+                  onPressed: () => context.read<GameState>().pauseGame(),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white.withOpacity(0.5),
+                  ),
+                ),
+              ),
+
+            // 6. Pause/Menu Overlay
+            if (gameState.status == GameStatus.paused)
+              Container(
+                color: Colors.black54,
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'PAUSED',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 40,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => context.read<GameState>().resumeGame(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: FayColors.gold,
+                          foregroundColor: FayColors.navy,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 32,
+                            vertical: 12,
+                          ),
+                        ),
+                        child: const Text('RESUME'),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          // Stop music
+                          AudioService().stopBGM();
+                          // Forfeit score and return to menu
+                          context.read<GameState>().forfeitGame();
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red[400],
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 32,
+                            vertical: 12,
+                          ),
+                        ),
+                        child: const Text('EXIT LEVEL'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+            // 7. Level Complete Overlay
+            if (gameState.status == GameStatus.levelComplete)
+              Container(
+                color: FayColors.navy.withOpacity(0.9),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.school, size: 80, color: FayColors.gold),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Level ${gameState.currentLevel - 1} Complete!',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Text(
+                        'Class Dismissed!',
+                        style: TextStyle(color: Colors.white70, fontSize: 20),
+                      ),
+                      const SizedBox(height: 40),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          _obstacleManager.clear();
+                          final nextLevel =
+                              context.read<GameState>().currentLevel + 1;
+                          context.read<GameState>().startNextLevel();
+                          // Start music for next level
+                          AudioService().playBGM(nextLevel);
+                        },
+                        icon: const Icon(Icons.arrow_forward),
+                        label: const Text('GO TO NEXT CLASS'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: FayColors.gold,
+                          foregroundColor: FayColors.navy,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 32,
+                            vertical: 16,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+            // 8. Game Over Overlay
+            if (gameState.status == GameStatus.gameOver)
+              Container(
+                color: Colors.black87,
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'GAME OVER',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 50,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () {
+                          // Stop music when returning to menu
+                          AudioService().stopBGM();
+                          Navigator.pop(context); // Go back to menu
+                        },
+                        child: const Text('RETURN TO MENU'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 

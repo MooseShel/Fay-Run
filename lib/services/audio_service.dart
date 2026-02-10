@@ -98,8 +98,11 @@ class AudioService {
 
   // ... (BGM methods)
 
+  String? _currentBgmFile;
+  bool _isChangingBgm = false;
+
   Future<void> playBGM(int level) async {
-    if (_isMuted) return;
+    if (_isMuted || _isChangingBgm) return;
 
     String bgmFile = 'music_bayou_1.mp3';
     switch (level) {
@@ -135,12 +138,23 @@ class AudioService {
         break;
     }
 
+    // Don't restart if already playing the same file
+    if (_currentBgmFile == bgmFile && _bgmPlayer.state == PlayerState.playing) {
+      return;
+    }
+
+    _isChangingBgm = true;
     try {
+      _currentBgmFile = bgmFile;
+      await _bgmPlayer.stop();
       await _bgmPlayer.setReleaseMode(ReleaseMode.loop);
-      await _bgmPlayer.play(AssetSource('audio/$bgmFile'));
       await _bgmPlayer.setVolume(_isMuted ? 0 : 0.5);
+      await _bgmPlayer.play(AssetSource('audio/$bgmFile'));
     } catch (e) {
       debugPrint('Error playing BGM: $e');
+      _currentBgmFile = null;
+    } finally {
+      _isChangingBgm = false;
     }
   }
 

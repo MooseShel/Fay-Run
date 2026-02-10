@@ -75,46 +75,40 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
     return LayoutBuilder(
       builder: (context, constraints) {
         final double width = constraints.maxWidth;
-
-        // One image tile should be at least as wide as the screen
-        // We calculate how many widths we've scrolled
         final double totalScroll = _scrollOffset * speedMultiplier;
 
-        // Determine image aspect ratio to maintain fitHeight
-        // Note: We don't have the image dimensions here, but BoxFit.fitHeight
-        // will scale the image to the layout height.
-        // We'll assume the image is roughly 16:9 or wider.
-        // For Gradient Overlap, we want 3 tiles to ensure screen is always covered
-        // with room for the cross-fade overlap.
-
-        // We use a manual tiling logic
+        // Use 3 tiles to ensure the screen is always covered
         return Stack(
           children: List.generate(3, (index) {
-            // Overlap amount increased to cover the fade area exactly
-            final double overlap = 50.0;
-            final double tileWidth = width; // Base width is screen width
+            final double tileWidth = width;
 
-            // Position calculation:
-            // Each tile is placed at [index * (tileWidth - overlap)]
-            // Then shifted by - (totalScroll % (tileWidth - overlap))
-            final double effectiveWidth = tileWidth - overlap;
-            double xPos =
-                (index * effectiveWidth) - (totalScroll % (effectiveWidth * 3));
+            // Position calculation (Simple tiling with no overlap)
+            double xPos = (index * tileWidth) - (totalScroll % (tileWidth * 3));
 
-            // Wrap around logic for infinite scrolling
-            // If the tile is completely off-screen to the left, move it to the far right
+            // Wrap around logic
             if (xPos < -tileWidth) {
-              xPos += effectiveWidth * 3;
+              xPos += tileWidth * 3;
             }
+
+            // Mirror Tiling: Flip every other tile horizontally
+            // This ensures the edges always match perfectly
+            final bool isFlipped = index % 2 == 1;
 
             return Positioned(
               left: xPos,
               top: 0,
               bottom: 0,
-              width: tileWidth,
-              child: _ShadowTile(
-                assetPath: assetPath,
-                overlap: overlap,
+              width:
+                  tileWidth + 0.5, // Tiny 0.5px bleed to prevent subpixel gaps
+              child: Transform(
+                alignment: Alignment.center,
+                transform: Matrix4.identity()
+                  ..scale(isFlipped ? -1.0 : 1.0, 1.0),
+                child: Image.asset(
+                  assetPath,
+                  fit: BoxFit.fitHeight,
+                  alignment: Alignment.center,
+                ),
               ),
             );
           }),
@@ -142,47 +136,6 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
             );
           },
         ),
-      ),
-    );
-  }
-}
-
-class _ShadowTile extends StatelessWidget {
-  final String assetPath;
-  final double overlap;
-
-  const _ShadowTile({required this.assetPath, required this.overlap});
-
-  @override
-  Widget build(BuildContext context) {
-    return ShaderMask(
-      shaderCallback: (bounds) {
-        // Calculate the ratio of the overlap to the total width
-        // This ensures the fade width exactly matches the overlap width
-        final double fadeRatio = overlap / bounds.width;
-
-        return LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: const [
-            Colors.transparent,
-            Colors.white,
-            Colors.white,
-            Colors.transparent,
-          ],
-          stops: [
-            0.0,
-            fadeRatio,
-            1.0 - fadeRatio,
-            1.0,
-          ],
-        ).createShader(bounds);
-      },
-      blendMode: BlendMode.dstIn,
-      child: Image.asset(
-        assetPath,
-        fit: BoxFit.fitHeight,
-        alignment: Alignment.center,
       ),
     );
   }
