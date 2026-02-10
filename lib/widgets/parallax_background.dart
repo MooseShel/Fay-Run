@@ -85,45 +85,39 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = constraints.maxWidth;
-        // Use a fixed virtual width for the background image to ensure aspect ratio is maintained
-        // or just use screenWidth if we want it to stretch but cover.
-        // Better: Use screenHeight * AspectRatio of image?
-        // Simpler: Just make the image width = screenHeight * (imageWidth / imageHeight).
-        // Since we don't know image aspect ratio without loading, let's assume square or wide.
-        // Let's just use screenWidth and BoxFit.cover.
-        // To tile seamlessly with BoxFit.cover, we need to ensure the tiling offset matches the visual width.
-        // If we use BoxFit.cover, the image might be clipped.
-        // For a scrolling background, we want it to fill height.
-        // So `fitHeight` was actually correct for filling height, BUT it left gaps if width < screenWidth.
-        // The issue "cut off" usually means it wasn't wide enough to cover the screen.
-        // We should force the width to be at least screenWidth.
+        final screenHeight = constraints.maxHeight;
 
-        final double imageWidth = screenWidth;
+        // Calculate rendered width based on image aspect ratio to avoid clipping.
+        // Assuming portrait images range from 9:16 (~0.56) to 9:20.
+        // If we use fitHeight, the width = height * aspect.
+        // Using a fixed aspect ratio estimate (e.g., 1080/1920 = 0.5625)
+        // This ensures that we tile based on the *actual* visible width.
+        // Even if the asset is different, fitHeight ensures no vertical cropping.
+        // The key is that the tile width matches the rendered image width.
+
+        final double imageAspectRatio = 0.5625; // 9:16 standard portrait
+        final double imageWidth = screenHeight * imageAspectRatio;
+
         final totalScroll = _scrollOffset * speedMultiplier;
         final double xPos = -(totalScroll % imageWidth);
 
+        // We need enough tiles to cover screenWidth.
+        final int tileCount = (screenWidth / imageWidth).ceil() + 1;
+
         return Stack(
           children: [
-            Positioned(
-              left: xPos,
-              top: 0,
-              bottom: 0,
-              width: imageWidth + 2, // Overlap to prevent thin lines
-              child: Image.asset(
-                assetPath,
-                fit: BoxFit.cover,
+            for (int i = 0; i <= tileCount; i++)
+              Positioned(
+                left: xPos + (imageWidth * i),
+                top: 0,
+                bottom: 0,
+                width: imageWidth + 1, // Slight overlap to prevent lines
+                child: Image.asset(
+                  assetPath,
+                  fit: BoxFit.fitHeight,
+                  alignment: Alignment.center,
+                ),
               ),
-            ),
-            Positioned(
-              left: xPos + imageWidth,
-              top: 0,
-              bottom: 0,
-              width: imageWidth + 2,
-              child: Image.asset(
-                assetPath,
-                fit: BoxFit.cover,
-              ),
-            ),
           ],
         );
       },

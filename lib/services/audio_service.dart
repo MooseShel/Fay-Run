@@ -8,8 +8,9 @@ class AudioService {
   AudioService._internal();
 
   final AudioPlayer _bgmPlayer = AudioPlayer();
-  final AudioPlayer _sfxPlayer = AudioPlayer(); // Shared SFX player
-  // For rapid overlapping SFX (like coins), we might need a pool, but shared is okay for now.
+  final AudioPlayer _voicePlayer =
+      AudioPlayer(); // Dedicated player for Staff voices
+  // SFX pool or shared player
 
   bool _isMuted = false;
 
@@ -18,19 +19,17 @@ class AudioService {
       await SettingsService().init();
       _isMuted = SettingsService().isMuted;
 
-      // Configure AudioContext for iOS/Android if needed
+      // Configure AudioContext
       await AudioPlayer.global.setAudioContext(AudioContext(
         iOS: AudioContextIOS(
-          category: AVAudioSessionCategory.ambient, // Respect silent switch
+          category: AVAudioSessionCategory.ambient,
         ),
         android: AudioContextAndroid(
-          // audioMode: AudioMode.normal, // Removed invalid property
           usageType: AndroidUsageType.game,
           contentType: AndroidContentType.sonification,
         ),
       ));
 
-      // Preload critical assets
       await _preloadAssets();
     } catch (e) {
       debugPrint('Error initializing AudioService: $e');
@@ -38,14 +37,10 @@ class AudioService {
   }
 
   Future<void> _preloadAssets() async {
-    // List of critical SFX
     final sfx = [
-      'jump.mp3',
-      'bonk.mp3',
-      'coin.mp3',
-      'powerup.mp3',
-      'whistle.mp3',
-      'shush.mp3',
+      'jump.mp3', 'bonk.mp3', 'ding.mp3', 'powerup.mp3',
+      'whistle.mp3', 'shush.mp3',
+      'staff_coach.mp3', 'staff_librarian.mp3', // Preload voices too
     ];
 
     for (var s in sfx) {
@@ -60,19 +55,21 @@ class AudioService {
     }
   }
 
+  // ... (Toggle Mute, BGM methods same, just ensure _voicePlayer is handled)
+
   void toggleMute() {
     _isMuted = !_isMuted;
     SettingsService().setMute(_isMuted);
     if (_isMuted) {
       _bgmPlayer.setVolume(0);
-      _sfxPlayer.setVolume(0);
+      _voicePlayer.setVolume(0);
     } else {
-      _bgmPlayer.setVolume(0.5); // BGM lower volume
-      _sfxPlayer.setVolume(1.0);
+      _bgmPlayer.setVolume(0.5);
+      _voicePlayer.setVolume(1.0);
     }
   }
 
-  bool get isMuted => _isMuted;
+  // ... (BGM methods)
 
   Future<void> playBGM(int level) async {
     if (_isMuted) return;
@@ -119,6 +116,7 @@ class AudioService {
   Future<void> playSFX(String sfxName) async {
     if (_isMuted) return;
     try {
+      // Fire-and-forget for short SFX
       final player = AudioPlayer();
       await player.play(AssetSource('audio/$sfxName'));
     } catch (e) {
@@ -126,19 +124,53 @@ class AudioService {
     }
   }
 
+  Future<void> playVoice(String voiceFile) async {
+    if (_isMuted) return;
+    try {
+      // Stop previous voice to prevent overlapping chaos
+      await _voicePlayer.stop();
+      await _voicePlayer.play(AssetSource('audio/$voiceFile'));
+    } catch (e) {
+      debugPrint('Error playing Voice: $e');
+    }
+  }
+
   void playJump() => playSFX('jump.mp3');
   void playBonk() => playSFX('bonk.mp3');
-  void playCoin() => playSFX('ding.mp3'); // Was coin.mp3, likely ding.mp3
+  void playCoin() => playSFX('ding.mp3');
   void playPowerup() => playSFX('powerup.mp3');
+
   void playStaffSound(String staffType) {
-    // Map staff type to sound
-    if (staffType == 'coach')
-      playSFX('whistle.mp3');
-    else if (staffType == 'librarian') playSFX('shush.mp3');
+    // Map staff type to sound file
+    String? soundFile;
+    switch (staffType) {
+      case 'coach':
+        soundFile = 'staff_coach.mp3'; // Actual voice
+        break;
+      case 'librarian':
+        soundFile = 'staff_librarian.mp3';
+        break;
+      case 'dean':
+        soundFile = 'staff_dean.mp3';
+        break;
+      case 'science':
+        soundFile = 'staff_science.mp3';
+        break;
+      case 'head':
+        soundFile = 'staff_head.mp3';
+        break;
+      case 'pe':
+        soundFile = 'staff_pe.mp3';
+        break;
+    }
+
+    if (soundFile != null) {
+      playVoice(soundFile);
+    }
   }
 
   Future<void> dispose() async {
     await _bgmPlayer.dispose();
-    await _sfxPlayer.dispose();
+    await _voicePlayer.dispose();
   }
 }
