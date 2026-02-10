@@ -244,10 +244,7 @@ class ObstacleManager {
     // All obstacles spawn at ground level for consistent gameplay
     double y = 0.0;
 
-    // Chance for Golden Book (Quiz)
-    if (_random.nextDouble() < 0.2) {
-      // 20% chance
-      type = ObstacleType.goldenBook;
+    if (type == ObstacleType.goldenBook) {
       y = 0.25; // In the air
       width = 0.18; // 0.12 * 1.5
       height = 0.18; // 0.12 * 1.5

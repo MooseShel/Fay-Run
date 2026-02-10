@@ -20,6 +20,20 @@ class Assets {
   static const String musicPlayground = 'audio/music_playground.mp3';
   static const String musicCafeteria = 'audio/music_cafeteria.mp3';
 
+  // Images - Obstacles
+  static const String obsTrashCan1 = 'obstacles/obstacle_trash_can_1.png';
+  static const String obsTrashCan2 = 'obstacles/obstacle_trash_can_2.png';
+  static const String obsHydrant1 = 'obstacles/obstacle_hydrant_1.png';
+  static const String obsHydrant2 = 'obstacles/obstacle_hydrant_2.png';
+  static const String obsBench1 = 'obstacles/obstacle_bench_1.png';
+  static const String obsBench2 = 'obstacles/obstacle_bench_2.png';
+  static const String obsTire1 = 'obstacles/obstacle_tire_1.png';
+  static const String obsTire2 = 'obstacles/obstacle_tire_2.png';
+  static const String obsFlowerPot1 = 'obstacles/obstacle_flower_pot_1.png';
+  static const String obsFlowerPot2 = 'obstacles/obstacle_flower_pot_2.png';
+  static const String obsGnome1 = 'obstacles/obstacle_gnome_1.png';
+  static const String obsGnome2 = 'obstacles/obstacle_gnome_2.png';
+
   // Audio - SFX
   static const String sfxJump = 'audio/jump.mp3';
   static const String sfxBonk = 'audio/bonk.mp3';
