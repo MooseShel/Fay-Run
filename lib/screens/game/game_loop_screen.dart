@@ -582,7 +582,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         baseName = 'obstacle_books';
         break;
       case ObstacleType.beaker:
-        baseName = 'obstacle_beaker';
+        baseName = 'obstacle_bucket';
         break;
       case ObstacleType.flyingPizza:
       case ObstacleType.food:
