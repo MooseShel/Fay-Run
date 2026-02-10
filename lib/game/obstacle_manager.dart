@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart'; // For debugPrint
 
 enum ObstacleType {
   log, // Level 1 (Bayou)
@@ -161,8 +162,11 @@ class ObstacleManager {
       if (_random.nextBool()) {
         // 50% chance to spawn from Left
         // Start further back (-0.5) to give reaction time since player is at 0.3
-        startX = -0.5;
+        startX = -0.6; // Moved even further back to be safe
         direction = 1.0; // Move Right
+        debugPrint('SPAWN LEFT: Level $level, Type $type');
+      } else {
+        debugPrint('SPAWN RIGHT: Level $level, Type $type');
       }
     }
 

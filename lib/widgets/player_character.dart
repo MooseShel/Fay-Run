@@ -29,9 +29,13 @@ class PlayerCharacter extends StatelessWidget {
       assetName = 'assets/images/ernie_jump.png';
     } else {
       // Run animation
-      assetName = runFrame == 0
-          ? 'assets/images/ernie_run.png'
-          : 'assets/images/ernie_run_2.png';
+      if (runFrame == 0) {
+        assetName = 'assets/images/ernie_run.png';
+      } else if (runFrame == 1) {
+        assetName = 'assets/images/ernie_run_2.png';
+      } else {
+        assetName = 'assets/images/ernie_run_3.png';
+      }
     }
 
     return AnimatedContainer(

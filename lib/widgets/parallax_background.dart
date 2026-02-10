@@ -24,13 +24,12 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
   @override
   void initState() {
     super.initState();
-    _controller =
-        AnimationController(
-            vsync: this,
-            duration: const Duration(milliseconds: 16),
-          )
-          ..addListener(_updateScroll)
-          ..repeat();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 16),
+    )
+      ..addListener(_updateScroll)
+      ..repeat();
   }
 
   void _updateScroll() {
@@ -83,17 +82,24 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
   }
 
   Widget _buildScrollingImage(String assetPath, double speedMultiplier) {
-    // Basic infinite scroll using two images
-    // We assume the image width is roughly screen width or we tile it.
-    // For simplicity, we'll use a LayoutBuilder and tile 3 times to be safe.
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = constraints.maxWidth;
-        // Calculate offset based on scroll
+        // Use a fixed virtual width for the background image to ensure aspect ratio is maintained
+        // or just use screenWidth if we want it to stretch but cover.
+        // Better: Use screenHeight * AspectRatio of image?
+        // Simpler: Just make the image width = screenHeight * (imageWidth / imageHeight).
+        // Since we don't know image aspect ratio without loading, let's assume square or wide.
+        // Let's just use screenWidth and BoxFit.cover.
+        // To tile seamlessly with BoxFit.cover, we need to ensure the tiling offset matches the visual width.
+        // If we use BoxFit.cover, the image might be clipped.
+        // For a scrolling background, we want it to fill height.
+        // So `fitHeight` was actually correct for filling height, BUT it left gaps if width < screenWidth.
+        // The issue "cut off" usually means it wasn't wide enough to cover the screen.
+        // We should force the width to be at least screenWidth.
+
+        final double imageWidth = screenWidth;
         final totalScroll = _scrollOffset * speedMultiplier;
-        final imageWidth =
-            screenWidth; // Assuming image fits width, or we scale it
-        // We want: position = -(totalScroll % imageWidth)
         final double xPos = -(totalScroll % imageWidth);
 
         return Stack(
@@ -101,23 +107,21 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
             Positioned(
               left: xPos,
               top: 0,
-              bottom: 0, // Cover height
-              width: imageWidth + 2, // Slight overlap
+              bottom: 0,
+              width: imageWidth + 2, // Overlap to prevent thin lines
               child: Image.asset(
                 assetPath,
-                fit: BoxFit.fitHeight, // Prevents zooming/cropping
-                alignment: Alignment.bottomCenter, // Align to ground
+                fit: BoxFit.cover,
               ),
             ),
             Positioned(
-              left: xPos + imageWidth, // Next tile
+              left: xPos + imageWidth,
               top: 0,
               bottom: 0,
               width: imageWidth + 2,
               child: Image.asset(
                 assetPath,
-                fit: BoxFit.fitHeight,
-                alignment: Alignment.bottomCenter,
+                fit: BoxFit.cover,
               ),
             ),
           ],

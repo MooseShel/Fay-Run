@@ -13,9 +13,16 @@ import 'screens/game/game_loop_screen.dart';
 import 'services/audio_service.dart';
 import 'services/crash_report_service.dart';
 import 'services/supabase_service.dart';
+import 'package:flutter/services.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  // Lock to Portrait Mode
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
   runZonedGuarded(
     () async {
       // Initialize Services

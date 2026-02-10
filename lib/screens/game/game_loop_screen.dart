@@ -59,6 +59,18 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
     // Load challenge from Supabase
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Precache Sprites for smooth start
+      precacheImage(const AssetImage('assets/images/ernie_run.png'), context);
+      precacheImage(const AssetImage('assets/images/ernie_run_2.png'), context);
+      precacheImage(const AssetImage('assets/images/ernie_run_3.png'), context);
+      precacheImage(const AssetImage('assets/images/ernie_jump.png'), context);
+      precacheImage(const AssetImage('assets/images/ernie_crash.png'), context);
+      // Precache Common Obstacles
+      precacheImage(
+          const AssetImage('assets/images/obstacle_log.png'), context);
+      precacheImage(
+          const AssetImage('assets/images/obstacle_rock.png'), context);
+
       final state = context.read<GameState>();
       state.loadChallenge();
 
@@ -95,11 +107,13 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
     _chaosTimer += dt;
 
-    // Run Animation (Reduced speed: approx 5 frames per second)
+    // Run Animation (Slower speed: approx 6-7 fps for smoother look)
     _runAnimationTimer += dt;
-    if (_runAnimationTimer > 0.2) {
+    if (_runAnimationTimer > 0.15) {
+      // Increased frame time from ~0.1 to 0.15
       _runAnimationTimer = 0;
-      _runFrame = _runFrame == 0 ? 1 : 0;
+      // Cycle through 3 frames (0, 1, 2)
+      _runFrame = (_runFrame + 1) % 3;
     }
 
     // Level Completion (e.g., Target = Speed * 600 for ~60s playtime)
