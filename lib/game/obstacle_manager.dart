@@ -24,6 +24,7 @@ class Obstacle {
   double y; // Relative 0.0 (bottom) to 1.0 (top)
   double width;
   double height;
+  double direction; // -1.0 for Left (default), 1.0 for Right
   bool isCollected; // For Golden Book
 
   Obstacle({
@@ -33,6 +34,7 @@ class Obstacle {
     required this.y,
     required this.width,
     required this.height,
+    this.direction = -1.0,
     this.isCollected = false,
   });
 }
@@ -83,14 +85,14 @@ class ObstacleManager {
 
     for (var i = obstacles.length - 1; i >= 0; i--) {
       var obs = obstacles[i];
-      obs.x -= moveAmt;
+      obs.x += moveAmt * obs.direction;
 
       // Hit detection (Very simple AABB)
       // Player is @ Left 50px (~0.15), Bottom 100px.
       // Player Box: x: 0.1 to 0.25, y: 0.0 to 0.15 (jumping affects y)
       // We check collision in GameLoopScreen really, but here for cleanup.
 
-      if (obs.x < -0.2) {
+      if (obs.x < -0.2 || obs.x > 1.2) {
         // Remove off-screen obstacles instead of recycling
         // This prevents accumulation and keeps obstacle count manageable
         obstacles.removeAt(i);
@@ -148,14 +150,28 @@ class ObstacleManager {
       height = 0.15;
     }
 
+    // Determine spawn side and direction
+    double startX = 1.1; // Default right off-screen
+    double direction = -1.0; // Default move left
+
+    // Levels 4 & 5: Bi-directional traffic
+    if (level >= 4 && type != ObstacleType.goldenBook) {
+      if (_random.nextBool()) {
+        // 50% chance to spawn from Left
+        startX = -0.1;
+        direction = 1.0; // Move Right
+      }
+    }
+
     obstacles.add(
       Obstacle(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         type: type,
-        x: 1.1, // Start off-screen right
+        x: startX, // Start off-screen
         y: y,
         width: width,
         height: height,
+        direction: direction,
       ),
     );
   }
