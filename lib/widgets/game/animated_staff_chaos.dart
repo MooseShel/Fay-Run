@@ -56,8 +56,8 @@ class _AnimatedStaffChaosState extends State<AnimatedStaffChaos>
     // Slide from bottom to center
     _slideAnimation =
         Tween<Offset>(begin: const Offset(0, 1.5), end: Offset.zero).animate(
-          CurvedAnimation(parent: _flyInController, curve: Curves.easeOutCubic),
-        );
+      CurvedAnimation(parent: _flyInController, curve: Curves.easeOutCubic),
+    );
 
     // Start animations
     _flyInController.forward();
@@ -95,7 +95,9 @@ class _AnimatedStaffChaosState extends State<AnimatedStaffChaos>
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return Align(
+      alignment:
+          const Alignment(0.0, -0.8), // Move to top to avoid blocking player
       child: SlideTransition(
         position: _slideAnimation,
         child: ScaleTransition(

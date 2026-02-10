@@ -187,9 +187,9 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         double obsTop = obs.y + obs.height - obsPaddingY;
 
         // Player Hitbox (Relative)
-        // Player Visual size is now ~280px (doubled).
-        // Hitbox increased to 100x200 (doubled from 50x100).
-        double playerVisualWidth = 100.0 / screenSize.width;
+        // Player Visual size is now ~210px (1.5x).
+        // Hitbox set to 75x150 (1.5x of original 50x100).
+        double playerVisualWidth = 75.0 / screenSize.width;
         double playerPadding = playerVisualWidth * 0.4; // 40% padding
 
         // Player horizontal position (40% of screen width)
@@ -197,16 +197,16 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
         double playerLeft = (playerBaseX / screenSize.width) + playerPadding;
         double playerRight =
-            ((playerBaseX + 100.0) / screenSize.width) - playerPadding;
+            ((playerBaseX + 75.0) / screenSize.width) - playerPadding;
 
         // Player Height
-        double playerVisualHeight = 200.0 / screenSize.height;
+        double playerVisualHeight = 150.0 / screenSize.height;
         double playerHeightPadding = playerVisualHeight * 0.3; // 30% padding
 
         double playerBottom =
             (_playerY / screenSize.height) + playerHeightPadding;
         double playerTop =
-            ((_playerY + 200.0) / screenSize.height) - playerHeightPadding;
+            ((_playerY + 150.0) / screenSize.height) - playerHeightPadding;
 
         // X overlap
         bool xOverlap = (obsLeft < playerRight) && (obsRight > playerLeft);
