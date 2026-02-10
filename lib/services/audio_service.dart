@@ -10,7 +10,10 @@ class AudioService {
   final AudioPlayer _bgmPlayer = AudioPlayer();
   final AudioPlayer _voicePlayer =
       AudioPlayer(); // Dedicated player for Staff voices
-  // SFX pool or shared player
+
+  // SFX Pool
+  final List<AudioPlayer> _sfxPool = [];
+  final int _poolSize = 5;
 
   bool _isMuted = false;
 
@@ -29,6 +32,13 @@ class AudioService {
           contentType: AndroidContentType.sonification,
         ),
       ));
+
+      // Initialize SFX Pool
+      for (int i = 0; i < _poolSize; i++) {
+        final player = AudioPlayer();
+        await player.setReleaseMode(ReleaseMode.stop);
+        _sfxPool.add(player);
+      }
 
       await _preloadAssets();
     } catch (e) {
@@ -63,9 +73,11 @@ class AudioService {
     if (_isMuted) {
       _bgmPlayer.setVolume(0);
       _voicePlayer.setVolume(0);
+      for (var p in _sfxPool) p.setVolume(0);
     } else {
       _bgmPlayer.setVolume(0.5);
       _voicePlayer.setVolume(1.0);
+      for (var p in _sfxPool) p.setVolume(1.0);
     }
   }
 
@@ -116,8 +128,19 @@ class AudioService {
   Future<void> playSFX(String sfxName) async {
     if (_isMuted) return;
     try {
-      // Fire-and-forget for short SFX
-      final player = AudioPlayer();
+      // Find an idle player in the pool
+      AudioPlayer? player;
+      for (var p in _sfxPool) {
+        if (p.state != PlayerState.playing) {
+          player = p;
+          break;
+        }
+      }
+
+      // If all busy, reuse the first one
+      player ??= _sfxPool.first;
+
+      await player.stop();
       await player.play(AssetSource('audio/$sfxName'));
     } catch (e) {
       debugPrint('Error playing SFX: $e');
@@ -172,5 +195,6 @@ class AudioService {
   Future<void> dispose() async {
     await _bgmPlayer.dispose();
     await _voicePlayer.dispose();
+    for (var p in _sfxPool) await p.dispose();
   }
 }
