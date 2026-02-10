@@ -187,28 +187,26 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         double obsTop = obs.y + obs.height - obsPaddingY;
 
         // Player Hitbox (Relative)
-        // Player Width ~50px. Visual is wider.
-        // Make the hurtbox very central for fair gameplay.
-        double playerVisualWidth = 50.0 / screenSize.width;
-        double playerPadding =
-            playerVisualWidth * 0.4; // 40% padding (increased from 30%)
+        // Player Visual size is now ~280px (doubled).
+        // Hitbox increased to 100x200 (doubled from 50x100).
+        double playerVisualWidth = 100.0 / screenSize.width;
+        double playerPadding = playerVisualWidth * 0.4; // 40% padding
 
         // Player horizontal position (40% of screen width)
         double playerBaseX = screenSize.width * 0.4;
 
         double playerLeft = (playerBaseX / screenSize.width) + playerPadding;
         double playerRight =
-            ((playerBaseX + 40.0) / screenSize.width) - playerPadding;
+            ((playerBaseX + 100.0) / screenSize.width) - playerPadding;
 
         // Player Height
-        double playerVisualHeight = 100.0 / screenSize.height;
-        double playerHeightPadding =
-            playerVisualHeight * 0.3; // 30% padding (increased from 20%)
+        double playerVisualHeight = 200.0 / screenSize.height;
+        double playerHeightPadding = playerVisualHeight * 0.3; // 30% padding
 
         double playerBottom =
             (_playerY / screenSize.height) + playerHeightPadding;
         double playerTop =
-            ((_playerY + 100.0) / screenSize.height) - playerHeightPadding;
+            ((_playerY + 200.0) / screenSize.height) - playerHeightPadding;
 
         // X overlap
         bool xOverlap = (obsLeft < playerRight) && (obsRight > playerLeft);
@@ -526,36 +524,48 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
   Widget _buildObstacleWidget(Obstacle obs) {
     String assetName = '';
+    String suffix = obs.variant == 2 ? '_2' : '';
 
     switch (obs.type) {
       case ObstacleType.log:
-        assetName = 'assets/images/obstacle_log.png';
+        assetName = 'assets/images/obstacle_log$suffix.png';
         break;
       case ObstacleType.puddle:
-        assetName = 'assets/images/obstacle_puddle.png';
+        assetName = 'assets/images/obstacle_puddle$suffix.png';
         break;
       case ObstacleType.rock:
-        assetName = 'assets/images/obstacle_rock.png';
+        assetName = 'assets/images/obstacle_rock$suffix.png';
         break;
       case ObstacleType.janitorBucket:
-        assetName = 'assets/images/obstacle_bucket.png';
+        assetName = 'assets/images/obstacle_bucket$suffix.png';
         break;
       case ObstacleType.books:
-        assetName = 'assets/images/obstacle_books.png';
+        assetName = 'assets/images/obstacle_books$suffix.png';
         break;
       case ObstacleType.beaker:
+        // No variant 2 for beaker known, fallback to original if needed or assume exists
+        // Checking file list: no beaker_2. Just bucket_2.
+        // Let's use bucket for now as per original code, or just keep original.
         assetName = 'assets/images/obstacle_bucket.png';
         break;
       case ObstacleType.flyingPizza:
-        assetName = 'assets/images/obstacle_food.png';
+        assetName = 'assets/images/obstacle_food$suffix.png';
         break;
       case ObstacleType.food:
-        assetName = 'assets/images/obstacle_food.png';
+        assetName = 'assets/images/obstacle_food$suffix.png';
         break;
       case ObstacleType.car:
-        assetName = 'assets/images/obstacle_suv.png';
+        // Custom logic for cars based on direction (Level 5)
+        if (obs.direction == 1.0) {
+          // Moving Right (Left-to-Right) -> New Variant (Suv 2)
+          assetName = 'assets/images/obstacle_suv_2.png';
+        } else {
+          // Moving Left (Right-to-Left) -> Original (Suv)
+          assetName = 'assets/images/obstacle_suv.png';
+        }
         break;
       case ObstacleType.cone:
+        // No cone_2 in file list. Use original.
         assetName = 'assets/images/obstacle_cone.png';
         break;
       case ObstacleType.goldenBook:
@@ -569,12 +579,11 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       assetName,
       fit: BoxFit.contain,
       errorBuilder: (context, error, stackTrace) {
-        return Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.red),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.error, color: Colors.red),
+        // Fallback to original if variant missing
+        return Image.asset(
+          assetName.replaceFirst('_2', ''),
+          fit: BoxFit.contain,
+          errorBuilder: (c, e, s) => const SizedBox(),
         );
       },
     );

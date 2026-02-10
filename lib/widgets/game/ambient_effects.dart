@@ -122,15 +122,15 @@ class _AmbientEffectsState extends State<AmbientEffects>
   double _getSize(ParticleType type) {
     switch (type) {
       case ParticleType.firefly:
-        return 6.0;
+        return 4.5;
       case ParticleType.paper:
-        return 16.0 + _random.nextDouble() * 8.0;
+        return 12.0 + _random.nextDouble() * 6.0;
       case ParticleType.bubble:
-        return 8.0 + _random.nextDouble() * 8.0;
+        return 6.0 + _random.nextDouble() * 6.0;
       case ParticleType.food:
-        return 20.0 + _random.nextDouble() * 10.0;
+        return 15.0 + _random.nextDouble() * 7.5;
       case ParticleType.exhaust:
-        return 12.0 + _random.nextDouble() * 12.0;
+        return 9.0 + _random.nextDouble() * 9.0;
     }
   }
 

@@ -25,6 +25,7 @@ class Obstacle {
   double width;
   double height;
   double direction; // -1.0 for Left (default), 1.0 for Right
+  int variant; // 1 or 2
   bool isCollected; // For Golden Book
 
   Obstacle({
@@ -35,6 +36,7 @@ class Obstacle {
     required this.width,
     required this.height,
     this.direction = -1.0,
+    this.variant = 1,
     this.isCollected = false,
   });
 }
@@ -163,6 +165,9 @@ class ObstacleManager {
       }
     }
 
+    // Randomize obstacle variant (1 or 2)
+    int variant = _random.nextBool() ? 1 : 2;
+
     obstacles.add(
       Obstacle(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -172,6 +177,7 @@ class ObstacleManager {
         width: width,
         height: height,
         direction: direction,
+        variant: variant,
       ),
     );
   }

@@ -33,8 +33,8 @@ class PlayerCharacter extends StatelessWidget {
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 100),
-      width: 140, // Doubled size
-      height: 140,
+      width: 280, // Doubled size
+      height: 280,
       decoration: BoxDecoration(
         // Glow effect only when invincible
         boxShadow: isInvincible
