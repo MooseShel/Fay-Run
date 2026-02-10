@@ -149,8 +149,8 @@ class ObstacleManager {
       // Player jumps ~170px. Screen height ~800?
       // 0.2 * 800 = 160. So 0.2 is high.
       y = 0.25; // In the air
-      width = 0.15; // Keep books smaller/normal
-      height = 0.15;
+      width = 0.22; // Increased from 0.15 to be more prevalent
+      height = 0.22;
     }
 
     // Determine spawn side and direction
