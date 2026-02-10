@@ -134,14 +134,15 @@ class ObstacleManager {
     // Randomly select obstacle type from pool
     ObstacleType type = obstaclePool[_random.nextInt(obstaclePool.length)];
 
-    // Double size for visibility (Default)
-    double width = 0.30; // Was 0.15
-    double height = 0.20; // Was 0.1
+    // Normalized size based on screen Height (to match character scaling)
+    // Values recalculated from previous Width-relative ones (iPhone base)
+    double width = 0.17;
+    double height = 0.20;
 
     // Special sizing for SUV (Level 5) to force Double Jump
     if (type == ObstacleType.car) {
-      width = 0.45; // Wide collision box
-      height = 0.28; // Taller than single jump
+      width = 0.25; // Balanced for Double Jump look
+      height = 0.28;
     }
 
     // All obstacles spawn at ground level for consistent gameplay
@@ -151,12 +152,9 @@ class ObstacleManager {
     if (_random.nextDouble() < 0.2) {
       // 20% chance
       type = ObstacleType.goldenBook;
-      // Golden Book spawns in the air (Mario Coin style)
-      // Player jumps ~170px. Screen height ~800?
-      // 0.2 * 800 = 160. So 0.2 is high.
       y = 0.25; // In the air
-      width = 0.22; // Increased from 0.15 to be more prevalent
-      height = 0.22;
+      width = 0.12;
+      height = 0.12;
     }
 
     // Determine spawn side and direction

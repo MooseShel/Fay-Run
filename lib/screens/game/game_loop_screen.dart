@@ -184,47 +184,35 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       );
 
       for (var obs in _obstacleManager.obstacles) {
-        // Special collision handling for Golden Books (collectibles)
-        // Use tighter padding for better collection detection
         bool isGoldenBook = obs.type == ObstacleType.goldenBook;
 
-        // AABB Collision with tightened hitbox for more precise detection
-        // Golden Books: 15% padding (easier to collect)
-        // Obstacles: 35% padding (more forgiving)
-        double obsPaddingX = isGoldenBook ? obs.width * 0.15 : obs.width * 0.35;
-        double obsPaddingY =
-            isGoldenBook ? obs.height * 0.15 : obs.height * 0.35;
+        // Convert relative coordinates to pixels for accurate collision
+        // All dimensions (width/height) are now relative to Screen Height
+        double obsPixelWidth = obs.width * screenSize.height;
+        double obsPixelHeight = obs.height * screenSize.height;
+        double obsPixelX = obs.x * screenSize.width;
+        double obsPixelY = obs.y * screenSize.height;
 
-        double obsLeft = obs.x + obsPaddingX;
-        double obsRight = obs.x + obs.width - obsPaddingX;
-        double obsBottom = obs.y + obsPaddingY;
-        double obsTop = obs.y + obs.height - obsPaddingY;
+        double obsPaddingX =
+            isGoldenBook ? obsPixelWidth * 0.15 : obsPixelWidth * 0.35;
+        double obsPaddingY =
+            isGoldenBook ? obsPixelHeight * 0.15 : obsPixelHeight * 0.35;
+
+        double obsLeft = obsPixelX + obsPaddingX;
+        double obsRight = obsPixelX + obsPixelWidth - obsPaddingX;
+        double obsBottom = obsPixelY + obsPaddingY;
+        double obsTop = obsPixelY + obsPixelHeight - obsPaddingY;
 
         // Player Hitbox (Responsive)
-        // Player Size: 18% of Screen Height (Square)
-        // Player X: 25% of Screen Width
-
-        // Width in relative screen coordinates
         double playerPixelSize = screenSize.height * 0.18;
-        double playerVisualWidth = playerPixelSize / screenSize.width;
-        double playerPadding = playerVisualWidth * 0.4; // 40% padding
-
-        // Player horizontal position (30% of screen width)
+        double playerPadding = playerPixelSize * 0.4;
         double playerBaseX = screenSize.width * 0.30;
 
-        double playerLeft = (playerBaseX / screenSize.width) + playerPadding;
-        double playerRight =
-            ((playerBaseX + playerPixelSize) / screenSize.width) -
-                playerPadding;
+        double playerLeft = playerBaseX + playerPadding;
+        double playerRight = playerBaseX + playerPixelSize - playerPadding;
 
-        // Player Height in relative screen coordinates
-        double playerVisualHeight = 0.18; // 18% of height
-        double playerHeightPadding = playerVisualHeight * 0.3; // 30% padding
-
-        double playerBottom =
-            (_playerY / screenSize.height) + playerHeightPadding;
-        double playerTop = ((_playerY + playerPixelSize) / screenSize.height) -
-            playerHeightPadding;
+        double playerBottom = _playerY + (playerPixelSize * 0.3); // 30% padding
+        double playerTop = _playerY + playerPixelSize - (playerPixelSize * 0.3);
 
         // X overlap
         bool xOverlap = (obsLeft < playerRight) && (obsRight > playerLeft);
@@ -358,7 +346,6 @@ class _GameLoopScreenState extends State<GameLoopScreen>
             // 4. Ambient Effects (Level-specific particles)
             AmbientEffects(level: gameState.currentLevel),
 
-            // Obstacles
             ..._obstacleManager.obstacles.map(
               (obs) {
                 // Special visual correction for Left-to-Right SUV which seems to float
@@ -374,7 +361,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                       (obs.y * screenSize.height) -
                       (screenSize.height * 0.025) - // Standard correction
                       extraOffset, // Specific correction
-                  width: obs.width * screenSize.width,
+                  width: obs.width * screenSize.height, // Use Height as base
                   height: obs.height * screenSize.height,
                   child: _buildObstacleWidget(obs),
                 );
