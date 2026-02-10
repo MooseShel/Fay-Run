@@ -338,8 +338,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   }
 
   double _getObstacleVerticalOffset(Obstacle obs, double screenHeight) {
-    // Standard 2% drop for perspective
-    double offset = screenHeight * 0.02;
+    // Regular obstacles should sit exactly on the ground line
+    double offset = 0.0;
 
     if (obs.type == ObstacleType.car && obs.direction == 1.0) {
       // Left-to-Right cars are in the nearer lane (closer to camera), need more drop
@@ -619,6 +619,34 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         break;
       case ObstacleType.gnome:
         baseName = 'obstacle_gnome';
+        useNumericVariant = true;
+        break;
+      case ObstacleType.basketBall:
+        baseName = 'obstacle_basket_ball';
+        useNumericVariant = true;
+        break;
+      case ObstacleType.soccerBall:
+        baseName = 'obstacle_soccer_ball';
+        useNumericVariant = true;
+        break;
+      case ObstacleType.gymMat:
+        baseName = 'obstacle_gym_mat';
+        useNumericVariant = true;
+        break;
+      case ObstacleType.burger:
+        baseName = 'obstacle_burger';
+        useNumericVariant = true;
+        break;
+      case ObstacleType.lunchTray:
+        baseName = 'obstacle_lunch_tray';
+        useNumericVariant = true;
+        break;
+      case ObstacleType.milkCarton:
+        baseName = 'obstacle_milk_cart';
+        useNumericVariant = true;
+        break;
+      case ObstacleType.wildFlowers:
+        baseName = 'obstacle_wild_flowers';
         useNumericVariant = true;
         break;
       case ObstacleType.goldenBook:

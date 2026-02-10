@@ -90,6 +90,12 @@ class _AnimatedStaffChaosState extends State<AnimatedStaffChaos>
         return Assets.staffDean;
       case StaffEventType.peDrill:
         return Assets.staffPe;
+      case StaffEventType.englishTeacher:
+        return Assets.staffEnglish;
+      case StaffEventType.firstGradeTeacher:
+        return Assets.staffFirstG;
+      case StaffEventType.prekTeacher:
+        return Assets.staffPrek2;
     }
   }
 

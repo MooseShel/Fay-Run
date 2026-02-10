@@ -19,6 +19,13 @@ enum ObstacleType {
   tire, // New Playground
   flowerPot, // New Garden
   gnome, // New Garden
+  basketBall, // New Gym
+  soccerBall, // New Gym
+  gymMat, // New Gym
+  burger, // New Cafeteria
+  lunchTray, // New Cafeteria
+  milkCarton, // New Cafeteria
+  wildFlowers, // New Meadow
   goldenBook, // Quiz Gate (Special)
 }
 
@@ -142,7 +149,11 @@ class ObstacleManager {
         ];
         break;
       case 6: // Playground
-        obstaclePool = [ObstacleType.tire, ObstacleType.cone];
+        obstaclePool = [
+          ObstacleType.tire,
+          ObstacleType.cone,
+          ObstacleType.backpack
+        ];
         break;
       case 7: // Garden
         obstaclePool = [
@@ -153,13 +164,29 @@ class ObstacleManager {
         ];
         break;
       case 8: // Meadow
-        obstaclePool = [ObstacleType.log, ObstacleType.rock];
+        obstaclePool = [
+          ObstacleType.wildFlowers,
+          ObstacleType.log,
+          ObstacleType.rock
+        ];
         break;
       case 9: // Gym
-        obstaclePool = [ObstacleType.janitorBucket, ObstacleType.cone];
+        obstaclePool = [
+          ObstacleType.basketBall,
+          ObstacleType.soccerBall,
+          ObstacleType.gymMat,
+          ObstacleType.janitorBucket,
+          ObstacleType.cone,
+        ];
         break;
       case 10: // Cafeteria
-        obstaclePool = [ObstacleType.flyingPizza, ObstacleType.food];
+        obstaclePool = [
+          ObstacleType.lunchTray,
+          ObstacleType.milkCarton,
+          ObstacleType.burger,
+          ObstacleType.flyingPizza,
+          ObstacleType.food,
+        ];
         break;
       default:
         obstaclePool = [ObstacleType.log];
@@ -225,6 +252,31 @@ class ObstacleManager {
         break;
       case ObstacleType.gnome:
         width = 0.12;
+        height = 0.15;
+        break;
+      case ObstacleType.basketBall:
+      case ObstacleType.soccerBall:
+        width = 0.08;
+        height = 0.08;
+        break;
+      case ObstacleType.gymMat:
+        width = 0.25;
+        height = 0.08;
+        break;
+      case ObstacleType.burger:
+        width = 0.07;
+        height = 0.07;
+        break;
+      case ObstacleType.lunchTray:
+        width = 0.18;
+        height = 0.10;
+        break;
+      case ObstacleType.milkCarton:
+        width = 0.08;
+        height = 0.10;
+        break;
+      case ObstacleType.wildFlowers:
+        width = 0.15;
         height = 0.15;
         break;
       case ObstacleType.car:

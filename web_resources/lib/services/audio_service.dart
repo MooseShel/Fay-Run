@@ -59,6 +59,9 @@ class AudioService {
       'staff_head.mp3',
       'staff_pe.mp3',
       'staff_science.mp3',
+      'staff_english.mp3',
+      'staff_firstg.mp3',
+      'staff_prek2.mp3',
     ];
 
     for (var s in sfx) {
@@ -204,6 +207,15 @@ class AudioService {
         break;
       case StaffEventType.peDrill:
         soundFile = 'staff_pe.mp3';
+        break;
+      case StaffEventType.englishTeacher:
+        soundFile = 'staff_english.mp3';
+        break;
+      case StaffEventType.firstGradeTeacher:
+        soundFile = 'staff_firstg.mp3';
+        break;
+      case StaffEventType.prekTeacher:
+        soundFile = 'staff_prek2.mp3';
         break;
     }
 

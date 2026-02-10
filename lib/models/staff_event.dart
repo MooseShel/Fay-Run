@@ -5,6 +5,9 @@ enum StaffEventType {
   scienceSplat, // Science Teacher: Ink Splat
   deanGlare, // Dean: Slow Motion
   peDrill, // PE Staff: Super Jump
+  englishTeacher, // English: Voice Line
+  firstGradeTeacher, // 1st Grade: Voice Line
+  prekTeacher, // Pre-K: Voice Line
 }
 
 class StaffEvent {
@@ -62,6 +65,27 @@ class StaffEvent {
           type: type,
           title: 'PE Staff',
           message: 'Drill Time!',
+          duration: const Duration(seconds: 2),
+        );
+      case StaffEventType.englishTeacher:
+        return StaffEvent(
+          type: type,
+          title: 'English Teacher',
+          message: 'On to the Races!',
+          duration: const Duration(seconds: 2),
+        );
+      case StaffEventType.firstGradeTeacher:
+        return StaffEvent(
+          type: type,
+          title: '1st Grade Teacher',
+          message: 'Great job!',
+          duration: const Duration(seconds: 2),
+        );
+      case StaffEventType.prekTeacher:
+        return StaffEvent(
+          type: type,
+          title: 'Pre-K Teacher',
+          message: 'Eyes on me!',
           duration: const Duration(seconds: 2),
         );
     }
