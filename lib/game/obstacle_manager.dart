@@ -170,8 +170,8 @@ class ObstacleManager {
         height = 0.15; // 0.10 * 1.5
         break;
       case ObstacleType.car:
-        width = 0.675; // 0.45 * 1.5
-        height = 0.45; // 0.30 * 1.5
+        width = 0.50; // More proportional (down from 0.675)
+        height = 0.25; // More proportional (down from 0.45)
         break;
       case ObstacleType.goldenBook:
         width = 0.18; // 0.12 * 1.5

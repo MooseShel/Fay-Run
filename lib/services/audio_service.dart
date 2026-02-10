@@ -48,9 +48,16 @@ class AudioService {
 
   Future<void> _preloadAssets() async {
     final sfx = [
-      'jump.mp3', 'bonk.mp3', 'ding.mp3', 'powerup.mp3',
-      'whistle.mp3', 'shush.mp3',
-      'staff_coach.mp3', 'staff_librarian.mp3', // Preload voices too
+      'jump.mp3',
+      'bonk.mp3',
+      'ding.mp3',
+      'powerup.mp3',
+      'staff_coach.mp3',
+      'staff_librarian.mp3',
+      'staff_dean.mp3',
+      'staff_head.mp3',
+      'staff_pe.mp3',
+      'staff_science.mp3',
     ];
 
     for (var s in sfx) {

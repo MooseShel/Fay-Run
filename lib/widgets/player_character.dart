@@ -57,6 +57,7 @@ class PlayerCharacter extends StatelessWidget {
       child: Image.asset(
         assetName,
         fit: BoxFit.contain,
+        alignment: Alignment.bottomCenter,
         errorBuilder: (context, error, stackTrace) {
           // Fallback if image fails - keeping the old green box look as backup
           return Container(

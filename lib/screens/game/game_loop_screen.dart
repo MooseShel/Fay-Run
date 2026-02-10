@@ -348,9 +348,21 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
             ..._obstacleManager.obstacles.map(
               (obs) {
+                // Background perspective correction
+                // Road lanes require objects to be slightly lower to look grounded
+                double verticalOffset =
+                    screenSize.height * 0.02; // Standard 2% drop
+
+                if (obs.type == ObstacleType.car && obs.direction == 1.0) {
+                  // Left-to-Right cars are in the nearer lane, need more drop
+                  verticalOffset = screenSize.height * 0.06;
+                }
+
                 return Positioned(
                   left: obs.x * screenSize.width,
-                  bottom: _groundHeight + (obs.y * screenSize.height),
+                  bottom: _groundHeight +
+                      (obs.y * screenSize.height) -
+                      verticalOffset,
                   width: obs.width * screenSize.height, // Use Height as base
                   height: obs.height * screenSize.height,
                   child: _buildObstacleWidget(obs),
