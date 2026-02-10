@@ -134,9 +134,15 @@ class ObstacleManager {
     // Randomly select obstacle type from pool
     ObstacleType type = obstaclePool[_random.nextInt(obstaclePool.length)];
 
-    // Double size for visibility
+    // Double size for visibility (Default)
     double width = 0.30; // Was 0.15
     double height = 0.20; // Was 0.1
+
+    // Special sizing for SUV (Level 5) to force Double Jump
+    if (type == ObstacleType.car) {
+      width = 0.45; // Wide collision box
+      height = 0.28; // Taller than single jump
+    }
 
     // All obstacles spawn at ground level for consistent gameplay
     double y = 0.0;

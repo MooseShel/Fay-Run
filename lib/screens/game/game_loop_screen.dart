@@ -598,11 +598,13 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     return Image.asset(
       assetName,
       fit: BoxFit.contain,
+      alignment: Alignment.bottomCenter, // Ensure sprite sits at bottom of box
       errorBuilder: (context, error, stackTrace) {
         // Fallback to original if variant missing
         return Image.asset(
           assetName.replaceFirst('_2', ''),
           fit: BoxFit.contain,
+          alignment: Alignment.bottomCenter,
           errorBuilder: (c, e, s) => const SizedBox(),
         );
       },
