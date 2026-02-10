@@ -12,12 +12,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   // Pre-fill for easier testing in Debug mode
-  final _emailController = TextEditingController(
-    text: kDebugMode ? 'Hussein.Shel@outlook.com' : '',
-  );
-  final _passwordController = TextEditingController(
-    text: kDebugMode ? '!EmmaNasma1981' : '',
-  );
+  final _emailController = TextEditingController(text: '');
+  final _passwordController = TextEditingController(text: '');
   final _formKey = GlobalKey<FormState>();
 
   final _supabaseService = SupabaseService();
