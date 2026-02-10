@@ -74,21 +74,50 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
   Widget _buildScrollingImage(String assetPath, double speedMultiplier) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final double scrollPos = _scrollOffset * speedMultiplier;
+        final double width = constraints.maxWidth;
 
+        // One image tile should be at least as wide as the screen
+        // We calculate how many widths we've scrolled
+        final double totalScroll = _scrollOffset * speedMultiplier;
+
+        // Determine image aspect ratio to maintain fitHeight
+        // Note: We don't have the image dimensions here, but BoxFit.fitHeight
+        // will scale the image to the layout height.
+        // We'll assume the image is roughly 16:9 or wider.
+        // For Gradient Overlap, we want 3 tiles to ensure screen is always covered
+        // with room for the cross-fade overlap.
+
+        // We use a manual tiling logic
         return Stack(
-          children: [
-            Positioned.fill(
-              left: -scrollPos,
-              right: -constraints.maxWidth, // Allow overflow for tiling
-              child: Image.asset(
-                assetPath,
-                repeat: ImageRepeat.repeatX,
-                fit: BoxFit.fitHeight,
-                alignment: Alignment.centerLeft,
+          children: List.generate(3, (index) {
+            // Overlap amount (fixed small overlap to prevent landmark ghosting)
+            final double overlap = 10.0;
+            final double tileWidth = width; // Base width is screen width
+
+            // Position calculation:
+            // Each tile is placed at [index * (tileWidth - overlap)]
+            // Then shifted by - (totalScroll % (tileWidth - overlap))
+            final double effectiveWidth = tileWidth - overlap;
+            double xPos =
+                (index * effectiveWidth) - (totalScroll % (effectiveWidth * 3));
+
+            // Wrap around logic for infinite scrolling
+            // If the tile is completely off-screen to the left, move it to the far right
+            if (xPos < -tileWidth) {
+              xPos += effectiveWidth * 3;
+            }
+
+            return Positioned(
+              left: xPos,
+              top: 0,
+              bottom: 0,
+              width: tileWidth,
+              child: _ShadowTile(
+                assetPath: assetPath,
+                overlap: overlap,
               ),
-            ),
-          ],
+            );
+          }),
         );
       },
     );
@@ -113,6 +142,43 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
             );
           },
         ),
+      ),
+    );
+  }
+}
+
+class _ShadowTile extends StatelessWidget {
+  final String assetPath;
+  final double overlap;
+
+  const _ShadowTile({required this.assetPath, required this.overlap});
+
+  @override
+  Widget build(BuildContext context) {
+    return ShaderMask(
+      shaderCallback: (bounds) {
+        return LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: const [
+            Colors.transparent,
+            Colors.black,
+            Colors.black,
+            Colors.transparent,
+          ],
+          stops: [
+            0.0,
+            overlap / bounds.width,
+            1.0 - (overlap / bounds.width),
+            1.0,
+          ],
+        ).createShader(bounds);
+      },
+      blendMode: BlendMode.dstIn,
+      child: Image.asset(
+        assetPath,
+        fit: BoxFit.fitHeight,
+        alignment: Alignment.center,
       ),
     );
   }

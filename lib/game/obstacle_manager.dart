@@ -27,6 +27,8 @@ enum ObstacleType {
   milkCarton, // New Cafeteria
   wildFlowers, // New Meadow
   goldenBook, // Quiz Gate (Special)
+  apple,
+  banana,
 }
 
 class Obstacle {
@@ -192,8 +194,27 @@ class ObstacleManager {
         obstaclePool = [ObstacleType.log];
     }
 
-    // Randomly select obstacle type from pool
-    ObstacleType type = obstaclePool[_random.nextInt(obstaclePool.length)];
+    // Determine if we should spawn a Global Reward instead of a local obstacle
+    // 15% Chance for a Reward Spawn
+    ObstacleType type;
+    if (_random.nextDouble() < 0.15) {
+      // Pick a reward
+      // Golden Book is rarer (20% of rewards), others are common (80%)
+      if (_random.nextDouble() < 0.20) {
+        type = ObstacleType.goldenBook;
+      } else {
+        // Equal chance for Burger, Apple, Banana
+        List<ObstacleType> commonRewards = [
+          ObstacleType.burger,
+          ObstacleType.apple,
+          ObstacleType.banana
+        ];
+        type = commonRewards[_random.nextInt(commonRewards.length)];
+      }
+    } else {
+      // Standard Level Obstacle
+      type = obstaclePool[_random.nextInt(obstaclePool.length)];
+    }
 
     // Realistic sizing based on screen Height
     double width = 0.1;
@@ -263,6 +284,8 @@ class ObstacleManager {
         width = 0.25;
         height = 0.08;
         break;
+      case ObstacleType.apple:
+      case ObstacleType.banana:
       case ObstacleType.burger:
         width = 0.07;
         height = 0.07;

@@ -15,15 +15,15 @@ import 'services/crash_report_service.dart';
 import 'services/supabase_service.dart';
 import 'package:flutter/services.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  // Lock to Portrait Mode (Up only)
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-  ]);
-
+void main() {
   runZonedGuarded(
     () async {
+      WidgetsFlutterBinding.ensureInitialized();
+      // Lock to Portrait Mode (Up only)
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+      ]);
+
       // Initialize Services
       await SupabaseService().init();
       await AudioService().init(); // Audio stub (no native code)

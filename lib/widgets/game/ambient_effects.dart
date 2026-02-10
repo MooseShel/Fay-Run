@@ -54,14 +54,14 @@ class _AmbientEffectsState extends State<AmbientEffects>
     ParticleType type;
     switch (widget.level) {
       case 1:
-      case 2:
       case 3:
-      case 4:
       case 5:
-        type = ParticleType.leaf; // Campus Landscape
+        type = ParticleType.leaf; // Campus Landscape Outside
         break;
+      case 2:
+      case 4:
       case 6: // Playground
-        type = ParticleType.paper;
+        type = ParticleType.firefly; // Indoor & Playground
         break;
       case 7: // Garden
         type = ParticleType.petal;
@@ -80,7 +80,11 @@ class _AmbientEffectsState extends State<AmbientEffects>
     }
 
     // Create particles
-    int count = type == ParticleType.food ? 10 : 20; // Fewer food items
+    int count = 20;
+    if (type == ParticleType.food) count = 10;
+    if (type == ParticleType.firefly) count = 15;
+    if (type == ParticleType.dust) count = 30; // More dust for visibility
+
     for (int i = 0; i < count; i++) {
       _particles.add(
         _Particle(
@@ -165,7 +169,7 @@ class _AmbientEffectsState extends State<AmbientEffects>
       case ParticleType.butterfly:
         return 10.0 + _random.nextDouble() * 5.0;
       case ParticleType.dust:
-        return 2.0 + _random.nextDouble() * 2.0;
+        return 3.0 + _random.nextDouble() * 3.0; // Slightly larger
     }
   }
 
@@ -506,7 +510,7 @@ class _ParticlePainter extends CustomPainter {
 
   void _drawDust(Canvas canvas, Offset pos, _Particle p) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(p.opacity * 0.3)
+      ..color = Colors.white.withOpacity(p.opacity * 0.6) // More opaque
       ..style = PaintingStyle.fill;
 
     canvas.drawCircle(pos, p.size, paint);

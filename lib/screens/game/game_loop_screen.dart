@@ -47,6 +47,22 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   int _runFrame = 0;
   double _runAnimationTimer = 0;
 
+  // Floating Score Logic
+  final List<FloatingScore> _floatingScores = [];
+
+  void _spawnFloatingScore(int amount) {
+    if (!mounted) return;
+    setState(() {
+      _floatingScores.add(
+        FloatingScore(
+          amount: amount,
+          x: MediaQuery.sizeOf(context).width * 0.35, // Near player
+          y: MediaQuery.sizeOf(context).height * 0.4, // Mid-screen
+        ),
+      );
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -115,6 +131,12 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     // Maybe too fast? Let's add (runSpeed / 10).round()
     if (gameState.status == GameStatus.playing) {
       gameState.addScore(1);
+
+      // Update Floating Scores
+      for (var fs in _floatingScores) {
+        fs.animationTime += dt * 2; // Speed of animation
+      }
+      _floatingScores.removeWhere((fs) => fs.animationTime >= 1.0);
     }
 
     _chaosTimer += dt;
@@ -242,7 +264,12 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
     if (obs.type == ObstacleType.goldenBook) {
       gameState.pauseGame();
-      _showQuiz(gameState);
+      _showQuiz(gameState, reward: 200); // Double Reward
+    } else if (obs.type == ObstacleType.burger ||
+        obs.type == ObstacleType.apple ||
+        obs.type == ObstacleType.banana) {
+      gameState.pauseGame();
+      _showQuiz(gameState, reward: 100); // Standard Reward
     } else {
       if (!gameState.isInvincible) {
         AudioService().playBonk();
@@ -265,7 +292,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     }
   }
 
-  void _showQuiz(GameState gameState) {
+  void _showQuiz(GameState gameState, {int reward = 100}) {
     // Use loaded challenge or fallback to a default one
     final challenge = gameState.currentChallenge ??
         Challenge(
@@ -305,8 +332,11 @@ class _GameLoopScreenState extends State<GameLoopScreen>
           Navigator.pop(context); // Close dialog
           if (isCorrect) {
             AudioService().playPowerup();
-            gameState.addScore(100);
+            gameState.addScore(reward);
             gameState.setInvincible(true);
+
+            // Spawn Floating Text
+            _spawnFloatingScore(reward);
           } else {
             AudioService().playBonk();
             gameState.takeDamage();
@@ -398,6 +428,28 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                 size: screenSize.height * 0.18, // Responsive size
               ),
             ),
+
+            // Floating Scores
+            ..._floatingScores.map((fs) => Positioned(
+                  left: fs.x,
+                  bottom: fs.y + (fs.animationTime * 100), // Float up
+                  child: Text(
+                    '+${fs.amount}',
+                    style: TextStyle(
+                      fontFamily: 'BubblegumSans',
+                      fontSize: 40,
+                      fontWeight: FontWeight.bold,
+                      color: FayColors.gold,
+                      shadows: [
+                        Shadow(
+                          blurRadius: 10.0,
+                          color: Colors.black,
+                          offset: Offset(2.0, 2.0),
+                        ),
+                      ],
+                    ),
+                  ),
+                )),
 
             // Staff Chaos - Animated center screen appearance
             if (gameState.activeStaffEvent != null)
@@ -633,6 +685,12 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         baseName = 'obstacle_gym_mat';
         useNumericVariant = true;
         break;
+      case ObstacleType.apple:
+        baseName = 'obstacle_apple';
+        break;
+      case ObstacleType.banana:
+        baseName = 'obstacle_banana';
+        break;
       case ObstacleType.burger:
         baseName = 'obstacle_burger';
         useNumericVariant = true;
@@ -666,20 +724,21 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       variantSuffix = '_2';
     }
 
+    // Try current themed folder first
     assetName = 'assets/images/obstacles/$baseName$variantSuffix.png';
 
     return Image.asset(
       assetName,
       fit: BoxFit.contain,
-      alignment: Alignment.bottomCenter, // Ensure sprite sits at bottom of box
+      alignment: Alignment.bottomCenter,
       errorBuilder: (context, error, stackTrace) {
-        // Fallback: try without variant if it fails
+        // Fallback 1: try without variant
         return Image.asset(
           'assets/images/obstacles/$baseName.png',
           fit: BoxFit.contain,
           alignment: Alignment.bottomCenter,
           errorBuilder: (c, e, s) {
-            // Last resort: try base folder if it hasn't moved yet or naming differs
+            // Fallback 2: try base images folder
             return Image.asset(
               'assets/images/$baseName.png',
               fit: BoxFit.contain,
@@ -742,4 +801,13 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       ],
     );
   }
+}
+
+class FloatingScore {
+  final int amount;
+  final double x;
+  final double y;
+  double animationTime = 0; // 0.0 to 1.0
+
+  FloatingScore({required this.amount, required this.x, required this.y});
 }
