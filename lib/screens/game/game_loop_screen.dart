@@ -565,8 +565,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         }
         break;
       case ObstacleType.cone:
-        // No cone_2 in file list. Use original.
-        assetName = 'assets/images/obstacle_cone.png';
+        assetName = 'assets/images/obstacle_cone$suffix.png';
         break;
       case ObstacleType.goldenBook:
         assetName = 'assets/images/item_golden_book.png';
