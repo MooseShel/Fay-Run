@@ -15,12 +15,11 @@ import 'services/crash_report_service.dart';
 import 'services/supabase_service.dart';
 import 'package:flutter/services.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Lock to Portrait Mode
-  SystemChrome.setPreferredOrientations([
+  // Lock to Portrait Mode (Up only)
+  await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
   ]);
 
   runZonedGuarded(

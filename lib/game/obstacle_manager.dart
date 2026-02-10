@@ -134,15 +134,49 @@ class ObstacleManager {
     // Randomly select obstacle type from pool
     ObstacleType type = obstaclePool[_random.nextInt(obstaclePool.length)];
 
-    // Normalized size based on screen Height (to match character scaling)
-    // Values recalculated from previous Width-relative ones (iPhone base)
-    double width = 0.17;
-    double height = 0.20;
+    // Realistic sizing based on screen Height
+    double width = 0.1;
+    double height = 0.1;
 
-    // Special sizing for SUV (Level 5) to force Double Jump
-    if (type == ObstacleType.car) {
-      width = 0.25; // Balanced for Double Jump look
-      height = 0.28;
+    switch (type) {
+      case ObstacleType.log:
+        width = 0.18;
+        height = 0.08;
+        break;
+      case ObstacleType.puddle:
+        width = 0.12;
+        height = 0.05;
+        break;
+      case ObstacleType.rock:
+        width = 0.10;
+        height = 0.08;
+        break;
+      case ObstacleType.janitorBucket:
+      case ObstacleType.beaker:
+        width = 0.10;
+        height = 0.12;
+        break;
+      case ObstacleType.books:
+        width = 0.12;
+        height = 0.10;
+        break;
+      case ObstacleType.flyingPizza:
+      case ObstacleType.food:
+        width = 0.08;
+        height = 0.08;
+        break;
+      case ObstacleType.cone:
+        width = 0.08;
+        height = 0.10;
+        break;
+      case ObstacleType.car:
+        width = 0.45; // Wide SUV
+        height = 0.30; // Taller than gator (0.18) -> Double Jump
+        break;
+      case ObstacleType.goldenBook:
+        width = 0.12;
+        height = 0.12;
+        break;
     }
 
     // All obstacles spawn at ground level for consistent gameplay
