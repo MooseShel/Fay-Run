@@ -1,51 +1,136 @@
 ﻿import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
+import '../models/staff_event.dart';
+import 'settings_service.dart';
 
 class AudioService {
   static final AudioService _instance = AudioService._internal();
   factory AudioService() => _instance;
+  AudioService._internal();
 
   final AudioPlayer _bgmPlayer = AudioPlayer();
+  final AudioPlayer _voicePlayer =
+      AudioPlayer(); // Dedicated player for Staff voices
 
-  // Cache players for overlapping SFX if needed,
-  // but for simplicity we'll use a single SFX player or standard mode "low latency"
-  // actually AudioPlayer(playerId: 'sfx') might cut off previous.
-  // Ideally use a pool for SFX, but let's stick to simple first.
+  // SFX Pool
+  final List<AudioPlayer> _sfxPool = [];
+  final int _poolSize = 5;
 
   bool _isMuted = false;
 
-  AudioService._internal() {
-    _bgmPlayer.setReleaseMode(ReleaseMode.loop);
+  Future<void> init() async {
+    try {
+      await SettingsService().init();
+      _isMuted = SettingsService().isMuted;
+
+      // Configure AudioContext
+      await AudioPlayer.global.setAudioContext(AudioContext(
+        iOS: AudioContextIOS(
+          category: AVAudioSessionCategory.ambient,
+        ),
+        android: AudioContextAndroid(
+          usageType: AndroidUsageType.game,
+          contentType: AndroidContentType.sonification,
+        ),
+      ));
+
+      // Initialize SFX Pool
+      for (int i = 0; i < _poolSize; i++) {
+        final player = AudioPlayer();
+        await player.setReleaseMode(ReleaseMode.stop);
+        _sfxPool.add(player);
+      }
+
+      await _preloadAssets();
+    } catch (e) {
+      debugPrint('Error initializing AudioService: $e');
+    }
   }
 
-  Future<void> init() async {
-    // Initialize audio settings if needed
-    // For now, no-op or load settings
+  Future<void> _preloadAssets() async {
+    final sfx = [
+      'jump.mp3',
+      'bonk.mp3',
+      'ding.mp3',
+      'powerup.mp3',
+      'staff_coach.mp3',
+      'staff_librarian.mp3',
+      'staff_dean.mp3',
+      'staff_head.mp3',
+      'staff_pe.mp3',
+      'staff_science.mp3',
+    ];
+
+    for (var s in sfx) {
+      try {
+        final player = AudioPlayer();
+        await player.setSource(AssetSource('audio/$s'));
+        await player.dispose();
+      } catch (e) {
+        debugPrint('Error preloading $s: $e');
+      }
+    }
+  }
+
+  void toggleMute() {
+    _isMuted = !_isMuted;
+    SettingsService().setMute(_isMuted);
+    if (_isMuted) {
+      _bgmPlayer.setVolume(0);
+      _voicePlayer.setVolume(0);
+      for (var p in _sfxPool) {
+        p.setVolume(0);
+      }
+    } else {
+      _bgmPlayer.setVolume(0.5);
+      _voicePlayer.setVolume(1.0);
+      for (var p in _sfxPool) {
+        p.setVolume(1.0);
+      }
+    }
   }
 
   Future<void> playBGM(int level) async {
     if (_isMuted) return;
 
-    String musicAsset = 'audio/music_bayou.mp3'; // Default L1
+    String bgmFile = 'music_bayou_1.mp3';
     switch (level) {
+      case 1:
+        bgmFile = 'music_bayou_1.mp3';
+        break;
       case 2:
-        musicAsset = 'audio/music_hallway.mp3';
+        bgmFile = 'music_bayou_2.mp3';
         break;
       case 3:
-        musicAsset = 'audio/music_lab.mp3';
+        bgmFile = 'music_bayou_3.mp3';
         break;
       case 4:
-        musicAsset = 'audio/music_cafeteria.mp3';
+        bgmFile = 'music_bayou_4.mp3';
         break;
       case 5:
-        musicAsset = 'audio/music_carpool.mp3';
+        bgmFile = 'music_bayou_5.mp3';
+        break;
+      case 6:
+        bgmFile = 'music_bayou_6.mp3';
+        break;
+      case 7:
+        bgmFile = 'music_garden.mp3';
+        break;
+      case 8:
+        bgmFile = 'music_medow.mp3';
+        break;
+      case 9:
+        bgmFile = 'music_playground.mp3';
+        break;
+      case 10:
+        bgmFile = 'music_cafeteria.mp3';
         break;
     }
 
     try {
-      await _bgmPlayer.stop(); // Stop current
-      // AssetSource automatically adds 'assets/', so we just need 'audio/...'
-      await _bgmPlayer.play(AssetSource(musicAsset), volume: 0.4);
+      await _bgmPlayer.setReleaseMode(ReleaseMode.loop);
+      await _bgmPlayer.play(AssetSource('audio/$bgmFile'));
+      await _bgmPlayer.setVolume(_isMuted ? 0 : 0.5);
     } catch (e) {
       debugPrint('Error playing BGM: $e');
     }
@@ -60,79 +145,78 @@ class AudioService {
   }
 
   Future<void> resumeBGM() async {
-    await _bgmPlayer.resume();
+    if (!_isMuted) {
+      await _bgmPlayer.resume();
+    }
   }
 
   Future<void> playSFX(String sfxName) async {
     if (_isMuted) return;
-    // sfxName e.g. 'audio/jump.mp3'
     try {
-      // Create a temporary player for overlapping sounds
-      final player = AudioPlayer();
-      await player.play(AssetSource(sfxName), mode: PlayerMode.lowLatency);
-      // Auto dispose handled by fire-and-forget?
-      // AudioPlayers usually need disposal, but for short SFX in simple apps this is often okay
-      // or we let them finish. 'lowLatency' is good.
-      // Better pattern: keep a pool. But for now new instance per SFX is safest for overlap.
-      player.onPlayerComplete.listen((event) {
-        player.dispose();
-      });
+      AudioPlayer? player;
+      for (var p in _sfxPool) {
+        if (p.state != PlayerState.playing) {
+          player = p;
+          break;
+        }
+      }
+      player ??= _sfxPool.first;
+
+      await player.stop();
+      await player.play(AssetSource('audio/$sfxName'));
     } catch (e) {
       debugPrint('Error playing SFX: $e');
     }
   }
 
-  // Pre-defined SFX
-  // Pre-defined SFX - Remove .mp3 because we might have been adding it twice,
-  // OR the user said "bonk.mp3mp3".
-  // Let's check playSFX usage.
-  // The Strings in playJump etc ARE 'audio/jump.mp3'.
-  // playSFX does: await player.play(AssetSource(sfxName));
-  // AssetSource ADDS 'assets/'.
-  // So 'assets/audio/jump.mp3' is correct if the file is at 'assets/audio/jump.mp3'.
-  // Wait, if the error was "assets/assets/audio/bonk.mp3mp3", then:
-  // 1. AssetSource added 'assets/' -> 'assets/'
-  // 2. I passed 'assets/audio/bonk.mp3' ? No I passed 'audio/bonk.mp3'.
-  // 3. Where did the second .mp3 come from?
-  // User log: "GET /assets/assets/audio/bonk.mp3mp3"
-  // Maybe `AssetSource` doesn't need extension? No, it does.
-  // Ah, maybe I was doing something like `playSFX(current + '.mp3')` elsewhere?
-  // Checking `playStaffSound`: `asset = 'audio/staff_head.mp3'`.
-  // Checking `playSFX`: `AssetSource(sfxName)`.
-  // The log "bonk.mp3mp3" implies sfxName was "audio/bonk.mp3.mp3" or "bonk.mp3.mp3".
-  // Let's strictly define paths here.
-
-  void playJump() => playSFX('audio/jump.mp3');
-  void playBonk() => playSFX('audio/bonk.mp3'); // Collision
-  void playCoin() => playSFX('audio/ding.mp3'); // Score/Quiz Correct
-  void playPowerup() => playSFX('audio/powerup.mp3'); // Quiz Invincible
-
-  // Staff
-  void playStaffSound(String staffType) {
-    String asset = '';
-    // Map staff event types to audio files
-    if (staffType.contains('shoeTie')) {
-      asset = 'audio/staff_head.mp3';
-    } else if (staffType.contains('coachWhistle'))
-      asset = 'audio/staff_coach.mp3';
-    else if (staffType.contains('librarianShush'))
-      asset = 'audio/staff_librarian.mp3';
-    else if (staffType.contains('scienceSplat'))
-      asset = 'audio/staff_science.mp3';
-    else if (staffType.contains('deanGlare'))
-      asset = 'audio/staff_head.mp3'; // Dean uses head of school voice
-    else if (staffType.contains('peDrill'))
-      asset = 'audio/staff_coach.mp3'; // PE uses coach voice
-
-    if (asset.isNotEmpty) playSFX(asset);
+  Future<void> playVoice(String voiceFile) async {
+    if (_isMuted) return;
+    try {
+      await _voicePlayer.stop();
+      await _voicePlayer.play(AssetSource('audio/$voiceFile'));
+    } catch (e) {
+      debugPrint('Error playing Voice: $e');
+    }
   }
 
-  void toggleMute() {
-    _isMuted = !_isMuted;
-    if (_isMuted) {
-      _bgmPlayer.setVolume(0);
-    } else {
-      _bgmPlayer.setVolume(0.4);
+  void playJump() => playSFX('jump.mp3');
+  void playBonk() => playSFX('bonk.mp3');
+  void playCoin() => playSFX('ding.mp3');
+  void playPowerup() => playSFX('powerup.mp3');
+
+  void playStaffSound(StaffEventType staffType) {
+    String? soundFile;
+    switch (staffType) {
+      case StaffEventType.coachWhistle:
+        soundFile = 'staff_coach.mp3';
+        break;
+      case StaffEventType.librarianShush:
+        soundFile = 'staff_librarian.mp3';
+        break;
+      case StaffEventType.deanGlare:
+        soundFile = 'staff_dean.mp3';
+        break;
+      case StaffEventType.scienceSplat:
+        soundFile = 'staff_science.mp3';
+        break;
+      case StaffEventType.shoeTie:
+        soundFile = 'staff_head.mp3';
+        break;
+      case StaffEventType.peDrill:
+        soundFile = 'staff_pe.mp3';
+        break;
+    }
+
+    if (soundFile != null) {
+      playVoice(soundFile);
+    }
+  }
+
+  Future<void> dispose() async {
+    await _bgmPlayer.dispose();
+    await _voicePlayer.dispose();
+    for (var p in _sfxPool) {
+      await p.dispose();
     }
   }
 }
