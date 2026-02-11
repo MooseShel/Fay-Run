@@ -98,5 +98,6 @@ flutter:
 flutter_launcher_icons:
   android: false
   ios: true
+  web: true
   image_path: "assets/images/ernie.png"
   remove_alpha_ios: true
