@@ -8244,7 +8244,7 @@ _.e=b
 _.w=0
 _.x=5
 _.y=1
-_.z=3
+_.z=4
 _.Q=c
 _.as=null
 _.at=!1
@@ -45679,8 +45679,9 @@ s.ch=a
 s.CW=b
 s.Y()
 s.px()},
-I_(){this.z=3
-A.c8().$1("Level "+this.y+" Physics Reset: Speed = 3")},
+I_(){var s=this.y,r=4+s*0.2
+this.z=r
+A.c8().$1("Level "+s+" Physics Reset: Speed = "+A.j(r))},
 Mr(){if(this.Q===B.bR){this.Q=B.l4
 this.Y()}},
 a1i(){if(this.Q===B.l4){this.Q=B.bR
@@ -46410,14 +46411,14 @@ a8.z=0}}a8.ac(new A.aru(a8,q,s))
 b0=a8.c
 b0.toString
 l=A.bu(b0,B.cz,t.w).w.a
-for(b0=a8.e.a,p=b0.length,o=l.b,k=o*0.21,j=k*0.4,i=l.a,h=i*0.3,g=h+j,f=h+k-j,e=k*0.3,n=0;n<b0.length;b0.length===p||(0,A.K)(b0),++n){d=b0[n]
+for(b0=a8.e.a,p=b0.length,o=l.b,k=o*0.21,j=k*0.45,i=l.a,h=i*0.3,g=h+j,f=h+k-j,e=k*0.4,n=0;n<b0.length;b0.length===p||(0,A.K)(b0),++n){d=b0[n]
 c=d.b===B.dk
 b=d.e*o
 a=d.f*o
 a0=d.c*i
 a1=a8.RS(d,o)
-a2=c?b*0.1:b*0.2
-a3=c?a*0.1:a*0.2
+a2=c?b*0.15:b*0.35
+a3=c?a*0.15:a*0.35
 a4=d.d*o-a1
 a5=a8.r
 a6=a0+a2<f&&a0+b-a2>g
