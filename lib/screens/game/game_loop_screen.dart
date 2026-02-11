@@ -518,9 +518,11 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                     (screenSize.height * 0.01),
                 width: charSize,
                 height: charSize,
-                child: Image.asset(
-                  'assets/images/$assetName',
-                  fit: BoxFit.contain,
+                child: RepaintBoundary(
+                  child: Image.asset(
+                    'assets/images/$assetName',
+                    fit: BoxFit.contain,
+                  ),
                 ),
               );
             }),
@@ -542,7 +544,9 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                       verticalOffset,
                   width: obs.width * screenSize.height, // Use Height as base
                   height: obs.height * screenSize.height,
-                  child: _buildObstacleWidget(obs),
+                  child: RepaintBoundary(
+                    child: _buildObstacleWidget(obs),
+                  ),
                 );
               },
             ),

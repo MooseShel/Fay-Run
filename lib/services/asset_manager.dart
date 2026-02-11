@@ -16,68 +16,75 @@ class AssetManager {
 
     debugPrint('🚀 Precache Essential Assets Started...');
     try {
-      await Future.wait([
-        // Ernie Sprites
-        precacheImage(const AssetImage('assets/images/ernie_run.png'), context),
-        precacheImage(
-            const AssetImage('assets/images/ernie_run_2.png'), context),
-        precacheImage(AssetImage('assets/images/${Assets.ernieRun}'), context),
-        precacheImage(AssetImage('assets/images/${Assets.ernieRun2}'), context),
-        precacheImage(AssetImage('assets/images/${Assets.ernieRun3}'), context),
-        precacheImage(AssetImage('assets/images/${Assets.ernieJump}'), context),
-        precacheImage(
-            AssetImage('assets/images/${Assets.ernieCrash}'), context),
+      // Split into batches to avoid blocking UI thread on web with many large decodes
+      final ernieAssets = [
+        'assets/images/ernie_run.png',
+        'assets/images/ernie_run_2.png',
+        'assets/images/${Assets.ernieRun}',
+        'assets/images/${Assets.ernieRun2}',
+        'assets/images/${Assets.ernieRun3}',
+        'assets/images/${Assets.ernieJump}',
+        'assets/images/${Assets.ernieCrash}',
+      ];
 
-        // Common Obstacles
-        precacheImage(AssetImage('assets/images/${Assets.obsLog}'), context),
-        precacheImage(AssetImage('assets/images/${Assets.obsRock}'), context),
-        precacheImage(AssetImage('assets/images/${Assets.obsApple}'), context),
-        precacheImage(AssetImage('assets/images/${Assets.obsBanana}'), context),
-        precacheImage(
-            AssetImage('assets/images/${Assets.obsBurger1}'), context),
-        precacheImage(
-            AssetImage('assets/images/${Assets.obsBurger2}'), context),
-        precacheImage(
-            AssetImage('assets/images/${Assets.itemGoldenBook}'), context),
+      final obstacleAssets = [
+        'assets/images/${Assets.obsLog}',
+        'assets/images/${Assets.obsRock}',
+        'assets/images/${Assets.obsApple}',
+        'assets/images/${Assets.obsBanana}',
+        'assets/images/${Assets.obsBurger1}',
+        'assets/images/${Assets.obsBurger2}',
+        'assets/images/${Assets.itemGoldenBook}',
+      ];
 
-        // Staff Heads
-        precacheImage(AssetImage('assets/images/${Assets.staffHead}'), context),
-        precacheImage(
-            AssetImage('assets/images/${Assets.staffCoach}'), context),
-        precacheImage(
-            AssetImage('assets/images/${Assets.staffLibrarian}'), context),
-        precacheImage(
-            AssetImage('assets/images/${Assets.staffScience}'), context),
-        precacheImage(AssetImage('assets/images/${Assets.staffDean}'), context),
+      final staffAssets = [
+        'assets/images/${Assets.staffHead}',
+        'assets/images/${Assets.staffCoach}',
+        'assets/images/${Assets.staffLibrarian}',
+        'assets/images/${Assets.staffScience}',
+        'assets/images/${Assets.staffDean}',
+      ];
 
-        // Background Characters
+      debugPrint('🏃 Preloading Ernie...');
+      await _precacheBatch(ernieAssets, context);
+
+      debugPrint('🍎 Preloading Obstacles...');
+      await _precacheBatch(obstacleAssets, context);
+
+      debugPrint('🎓 Preloading Staff...');
+      await _precacheBatch(staffAssets, context);
+
+      // Background characters can be last and lazier
+      final otherAssets = [
         ...['boy', 'girl', 'janitor', 'butterfly'].expand((name) => [
-              precacheImage(
-                  AssetImage('assets/images/${Assets.bgCharacter(name, 1)}'),
-                  context),
-              precacheImage(
-                  AssetImage('assets/images/${Assets.bgCharacter(name, 2)}'),
-                  context),
+              'assets/images/${Assets.bgCharacter(name, 1)}',
+              'assets/images/${Assets.bgCharacter(name, 2)}',
             ]),
         ...['dog', 'squirrel'].expand((name) => [
-              precacheImage(
-                  AssetImage('assets/images/${Assets.bgCharacter(name, 1)}'),
-                  context),
-              precacheImage(
-                  AssetImage('assets/images/${Assets.bgCharacter(name, 2)}'),
-                  context),
-              precacheImage(
-                  AssetImage('assets/images/${Assets.bgCharacter(name, 3)}'),
-                  context),
-              precacheImage(
-                  AssetImage('assets/images/${Assets.bgCharacter(name, 4)}'),
-                  context),
+              'assets/images/${Assets.bgCharacter(name, 1)}',
+              'assets/images/${Assets.bgCharacter(name, 2)}',
+              'assets/images/${Assets.bgCharacter(name, 3)}',
+              'assets/images/${Assets.bgCharacter(name, 4)}',
             ]),
-      ]);
+      ];
+      await _precacheBatch(otherAssets, context);
+
       _essentialAssetsPrecached = true;
       debugPrint('✅ Precache Essential Assets Finished');
     } catch (e) {
       debugPrint('⚠️ Error precaching essential assets: $e');
+    }
+  }
+
+  Future<void> _precacheBatch(List<String> paths, BuildContext context) async {
+    for (final path in paths) {
+      try {
+        await precacheImage(AssetImage(path), context);
+      } catch (e) {
+        debugPrint('❌ Failed to precache: $path - $e');
+      }
+      // Tiny delay to let the event loop breathe, especially on web
+      await Future.delayed(const Duration(milliseconds: 10));
     }
   }
 

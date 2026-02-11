@@ -1,14 +1,14 @@
 class Assets {
   // Images
-  static const String staffHead = 'staff_head.png';
-  static const String staffCoach = 'staff_coach.png';
-  static const String staffLibrarian = 'staff_librarian.png';
-  static const String staffScience = 'staff_science.png';
-  static const String staffDean = 'staff_dean.png';
-  static const String staffPe = 'staff_pe.png';
-  static const String staffEnglish = 'staff_english.png';
-  static const String staffFirstG = 'staff_firstg.png';
-  static const String staffPrek2 = 'staff_prek2.png';
+  static const String staffHead = 'staff/staff_head.webp';
+  static const String staffCoach = 'staff/staff_coach.webp';
+  static const String staffLibrarian = 'staff/staff_librarian.webp';
+  static const String staffScience = 'staff/staff_science.webp';
+  static const String staffDean = 'staff/staff_dean.webp';
+  static const String staffPe = 'staff/staff_pe.webp';
+  static const String staffEnglish = 'staff/staff_english.webp';
+  static const String staffFirstG = 'staff/staff_firstg.webp';
+  static const String staffPrek2 = 'staff/staff_prek2.webp';
   static const String ernie = 'ernie.png';
   static const String ernieRun = 'ernie_run.png';
   static const String ernieRun2 = 'ernie_run_2.png';
@@ -17,7 +17,7 @@ class Assets {
   static const String ernieCrash = 'ernie_crash.png';
 
   static String background(int level) {
-    return 'bgs/bg_fay_$level.png';
+    return 'bgs/bg_fay_$level.webp';
   }
 
   static const String itemGoldenBook = 'obstacles/item_golden_book.png';
