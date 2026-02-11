@@ -1,11 +1,11 @@
 {
-    "name": "fay_gator_run",
-    "short_name": "fay_gator_run",
+    "name": "Fay Gator Run",
+    "short_name": "Fay Gator Run",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0D47A1",
+    "theme_color": "#1565C0",
+    "description": "Fay Gator Run - Educational Runner Game",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
