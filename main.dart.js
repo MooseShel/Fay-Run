@@ -45150,7 +45150,7 @@ A.ai_.prototype={
 ayo(a,b,c){var s,r,q,p,o,n=this
 n.c+=a
 s=n.b.c8()
-if(n.c>4+s*4){n.am4(c)
+if(n.c>3+s*3){n.am4(c)
 n.c=0}for(s=n.a,r=s.length-1,q=b*0.002;r>=0;--r){p=s[r]
 o=p.c-q*p.e
 p.c=o
