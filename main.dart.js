@@ -46149,7 +46149,7 @@ r.push(new A.ye(k.y,l))
 q=m.e.a
 B.b.P(r,new A.a3(q,new A.arm(m,j),A.X(q).i("a3<1,e>")))
 q=j.a
-r.push(A.hG(50+m.r,new A.Oz(m.Q,k.at,m.CW,m.cx,j.b*0.21,l),l,l,q*0.3,l,l,l))
+r.push(A.hG(20+m.r,new A.Oz(m.Q,k.at,m.CW,m.cx,j.b*0.21,l),l,l,q*0.3,l,l,l))
 p=m.db
 B.b.P(r,new A.a3(p,new A.arn(),A.X(p).i("a3<1,e>")))
 p=k.as
@@ -46331,11 +46331,11 @@ q=r.b
 p=q*0.16
 if(n===B.lQ||n===B.lR||n===B.lT)p=q*0.21
 n=a.c
-return A.hG(50+a.d*q+q*0.05,A.nt("assets/images/"+("bg_characters/"+m+"_"+s+".png"),B.S,o,B.dI,o,o),p,o,n*r.a,o,o,p)},
+return A.hG(20+a.d*q+q*0.01,A.nt("assets/images/"+("bg_characters/"+m+"_"+s+".png"),B.S,o,B.dI,o,o),p,o,n*r.a,o,o,p)},
 $S:415}
 A.arm.prototype={
 $1(a){var s=this.a,r=this.b,q=r.b,p=s.RD(a,q),o=a.c
-return A.hG(50+a.d*q-p,s.a9C(a),a.f*q,null,o*r.a,null,null,a.e*q)},
+return A.hG(20+a.d*q-p,s.a9C(a),a.f*q,null,o*r.a,null,null,a.e*q)},
 $S:414}
 A.arn.prototype={
 $1(a){var s=null
