@@ -281,7 +281,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       gameState.pauseGame();
       _showQuiz(gameState, obs, reward: 100); // Standard Reward
     } else {
-      obs.isCollected = true; // Disappear on hit
+      // obs.isCollected = true; // Regular obstacles no longer disappear on hit
       if (!gameState.isInvincible) {
         AudioService().playBonk();
         gameState.takeDamage();
