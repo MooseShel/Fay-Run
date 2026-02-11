@@ -64,10 +64,16 @@ class ObstacleManager {
   final List<Obstacle> obstacles = [];
   final Random _random = Random();
   double _spawnTimer = 0;
+  double _rewardTimer = 0; // Independent timer for academic rewards
+  double _rewardInterval = 0; // Dynamic interval for rewards
+
+  ObstacleManager() {
+    _rewardInterval = 8.0 + _random.nextDouble() * 4.0; // 8-12 seconds
+  }
 
   void update(double dt, double runSpeed, int level, bool isBonusRound,
       Function(Obstacle) onHit) {
-    // Spawn Logic
+    // 1. Regular Obstacle Spawn Logic
     _spawnTimer += dt;
 
     double spawnInterval;
@@ -109,58 +115,70 @@ class ObstacleManager {
     }
 
     if (_spawnTimer > spawnInterval) {
-      _spawnObstacle(level, isBonusRound);
+      _spawnObstacle(level, isBonusRound, isReward: false);
       _spawnTimer = 0;
+
+      // Stagger Logic: Ensure rewards don't clump with obstacles
+      // If a reward was about to spawn, push it back slightly to give breathing room
+      if (_rewardTimer > _rewardInterval - 1.5) {
+        _rewardTimer =
+            _rewardInterval - 2.5; // Reset to at least 2.5s remaining
+      }
     }
 
-    // Move & Cleanup
-    // Original moveAmt was (runSpeed * 0.002) per frame (at 60fps).
-    // To make it frame-rate independent: moveAmt = runSpeed * 0.002 * 60 * dt
-    // 0.002 * 60 = 0.12
+    // 2. Independent Reward Spawn Logic (Academic plenty)
+    if (!isBonusRound) {
+      _rewardTimer += dt;
+      if (_rewardTimer > _rewardInterval) {
+        _spawnObstacle(level, false, isReward: true);
+        _rewardTimer = 0;
+        _rewardInterval = 8.0 + _random.nextDouble() * 4.0; // Randomize next
+      }
+    }
+
+    // 3. Move & Cleanup
     double moveAmt = runSpeed * 0.12 * dt;
 
     for (var i = obstacles.length - 1; i >= 0; i--) {
       var obs = obstacles[i];
       obs.x += moveAmt * obs.direction;
 
-      // Cleanup: Use wide bounds to support bidirectional movement (Left spawn starts at -0.6)
       if (obs.x < -1.5 || obs.x > 2.5) {
-        // Remove off-screen obstacles
         obstacles.removeAt(i);
       }
     }
   }
 
-  void _spawnObstacle(int level, bool isBonusRound) {
-    // Obstacle pools for each level (2-3 types per level for variety)
+  void _spawnObstacle(int level, bool isBonusRound, {bool isReward = false}) {
     List<ObstacleType> obstaclePool = [];
 
     if (isBonusRound) {
-      // Bonus round themes
+      // Bonus round themes remains unchanged
       switch (level) {
-        case 3: // Honor Roll
+        case 3:
           obstaclePool = [ObstacleType.goldenBook, ObstacleType.books];
           break;
-        case 6: // Recess Rush
+        case 6:
           obstaclePool = [
             ObstacleType.burger,
             ObstacleType.banana,
             ObstacleType.apple
           ];
           break;
-        case 9: // Victory Lap
+        case 9:
           obstaclePool = [ObstacleType.goldenBook, ObstacleType.burger];
           break;
         default:
           obstaclePool = [ObstacleType.apple];
       }
     } else {
+      // Regular floor obstacle pools (All rewards removed from here)
       switch (level) {
         case 1:
         case 2:
         case 3:
         case 4:
-        case 5: // Campus Grounds
+        case 5:
           obstaclePool = [
             ObstacleType.log,
             ObstacleType.puddle,
@@ -171,14 +189,14 @@ class ObstacleManager {
             ObstacleType.cone,
           ];
           break;
-        case 6: // Playground
+        case 6:
           obstaclePool = [
             ObstacleType.tire,
             ObstacleType.cone,
             ObstacleType.backpack
           ];
           break;
-        case 7: // Garden
+        case 7:
           obstaclePool = [
             ObstacleType.flowerPot,
             ObstacleType.gnome,
@@ -186,14 +204,14 @@ class ObstacleManager {
             ObstacleType.rock
           ];
           break;
-        case 8: // Meadow
+        case 8:
           obstaclePool = [
             ObstacleType.wildFlowers,
             ObstacleType.log,
             ObstacleType.rock
           ];
           break;
-        case 9: // Gym
+        case 9:
           obstaclePool = [
             ObstacleType.basketBall,
             ObstacleType.soccerBall,
@@ -202,13 +220,11 @@ class ObstacleManager {
             ObstacleType.cone,
           ];
           break;
-        case 10: // Cafeteria
+        case 10:
           obstaclePool = [
             ObstacleType.lunchTray,
             ObstacleType.milkCarton,
-            ObstacleType.burger,
             ObstacleType.flyingPizza,
-            ObstacleType.food,
           ];
           break;
         default:
@@ -216,130 +232,127 @@ class ObstacleManager {
       }
     }
 
-    // Determine if we should spawn a Global Reward instead of a local obstacle
     ObstacleType type;
 
-    if (isBonusRound) {
-      type = obstaclePool[_random.nextInt(obstaclePool.length)];
-    } else if (_random.nextDouble() < 0.15) {
-      // Pick a reward
-      if (_random.nextDouble() < 0.20) {
+    if (isReward) {
+      // Pick a reward specifically
+      if (_random.nextDouble() < 0.25) {
         type = ObstacleType.goldenBook;
       } else {
-        List<ObstacleType> commonRewards = [
+        const rewards = [
           ObstacleType.burger,
           ObstacleType.apple,
           ObstacleType.banana
         ];
-        type = commonRewards[_random.nextInt(commonRewards.length)];
+        type = rewards[_random.nextInt(rewards.length)];
       }
     } else {
+      // Pick a floor obstacle
       type = obstaclePool[_random.nextInt(obstaclePool.length)];
     }
 
-    // Realistic sizing based on screen Height
+    // Realistic sizing logic remains same ...
     double width = 0.1;
     double height = 0.1;
 
     switch (type) {
       case ObstacleType.log:
-        width = 0.465; // 0.405 * 1.15
-        height = 0.207; // 0.18 * 1.15
+        width = 0.465;
+        height = 0.207;
         break;
       case ObstacleType.puddle:
-        width = 0.31; // 0.27 * 1.15
-        height = 0.13; // 0.1125 * 1.15
+        width = 0.31;
+        height = 0.13;
         break;
       case ObstacleType.rock:
-        width = 0.17; // 0.15 * 1.15
-        height = 0.14; // 0.12 * 1.15
+        width = 0.17;
+        height = 0.14;
         break;
       case ObstacleType.janitorBucket:
       case ObstacleType.beaker:
-        width = 0.17; // 0.15 * 1.15
-        height = 0.207; // 0.18 * 1.15
+        width = 0.17;
+        height = 0.207;
         break;
       case ObstacleType.books:
-        width = 0.207; // 0.18 * 1.15
-        height = 0.17; // 0.15 * 1.15
+        width = 0.207;
+        height = 0.17;
         break;
       case ObstacleType.flyingPizza:
       case ObstacleType.food:
-        width = 0.207; // 0.18 * 1.15
-        height = 0.207; // 0.18 * 1.15
+        width = 0.207;
+        height = 0.207;
         break;
       case ObstacleType.cone:
-        width = 0.207; // 0.18 * 1.15
-        height = 0.26; // 0.225 * 1.15
+        width = 0.207;
+        height = 0.26;
         break;
       case ObstacleType.trashCan:
-        width = 0.17; // 0.15 * 1.15
-        height = 0.23; // 0.20 * 1.15
+        width = 0.17;
+        height = 0.23;
         break;
       case ObstacleType.hydrant:
-        width = 0.207; // 0.18 * 1.15
-        height = 0.31; // 0.27 * 1.15
+        width = 0.207;
+        height = 0.31;
         break;
       case ObstacleType.bench:
-        width = 0.43; // 0.375 * 1.15
-        height = 0.26; // 0.225 * 1.15
+        width = 0.43;
+        height = 0.26;
         break;
       case ObstacleType.tire:
-        width = 0.26; // 0.225 * 1.15
-        height = 0.26; // 0.225 * 1.15
+        width = 0.26;
+        height = 0.26;
         break;
       case ObstacleType.flowerPot:
-        width = 0.26; // 0.225 * 1.15
-        height = 0.26; // 0.225 * 1.15
+        width = 0.26;
+        height = 0.26;
         break;
       case ObstacleType.gnome:
-        width = 0.207; // 0.18 * 1.15
-        height = 0.26; // 0.225 * 1.15
+        width = 0.207;
+        height = 0.26;
         break;
       case ObstacleType.basketBall:
       case ObstacleType.soccerBall:
-        width = 0.14; // 0.12 * 1.15
-        height = 0.14; // 0.12 * 1.15
+        width = 0.14;
+        height = 0.14;
         break;
       case ObstacleType.gymMat:
-        width = 0.43; // 0.375 * 1.15
-        height = 0.14; // 0.12 * 1.15
+        width = 0.43;
+        height = 0.14;
         break;
       case ObstacleType.apple:
       case ObstacleType.banana:
       case ObstacleType.burger:
-        width = 0.12; // 0.105 * 1.15
-        height = 0.12; // 0.105 * 1.15
+        width = 0.12;
+        height = 0.12;
         break;
       case ObstacleType.lunchTray:
-        width = 0.31; // 0.27 * 1.15
-        height = 0.17; // 0.15 * 1.15
+        width = 0.31;
+        height = 0.17;
         break;
       case ObstacleType.milkCarton:
-        width = 0.14; // 0.12 * 1.15
-        height = 0.17; // 0.15 * 1.15
+        width = 0.14;
+        height = 0.17;
         break;
       case ObstacleType.wildFlowers:
-        width = 0.17; // 0.15 * 1.15
-        height = 0.17; // 0.15 * 1.15
+        width = 0.17;
+        height = 0.17;
         break;
       case ObstacleType.car:
-        width = 0.575; // 0.50 * 1.15
-        height = 0.29; // 0.25 * 1.15
+        width = 0.575;
+        height = 0.29;
         break;
       case ObstacleType.backpack:
-        width = 0.17; // 0.15 * 1.15
-        height = 0.207; // 0.18 * 1.15
+        width = 0.17;
+        height = 0.207;
         break;
       case ObstacleType.goldenBook:
-        width = 0.207; // 0.18 * 1.15
-        height = 0.207; // 0.18 * 1.15
+        width = 0.207;
+        height = 0.207;
         break;
     }
 
     double y = 0.0;
     if (isBonusRound) {
-      // Randomize heights: 0.0 (ground), 0.25 (mid), 0.5 (high)
       final heights = [0.0, 0.25, 0.5];
       y = heights[_random.nextInt(heights.length)];
     } else if (type == ObstacleType.goldenBook ||

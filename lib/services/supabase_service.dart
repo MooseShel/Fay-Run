@@ -1,15 +1,58 @@
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/challenge.dart';
+import '../core/constants.dart';
 
-/// Stub SupabaseService - all network features disabled to avoid native plugin crashes on iOS 18.2
+/// SupabaseService - Handles diagnostic logging and mock data for offline stability
 class SupabaseService {
   static final SupabaseService _instance = SupabaseService._internal();
   factory SupabaseService() => _instance;
   SupabaseService._internal();
 
-  Future<void> init() async {}
+  SupabaseClient? _client;
 
-  // --- Auth ---
+  Future<void> init() async {
+    try {
+      await Supabase.initialize(
+        url: AppStrings.supabaseUrl,
+        anonKey: AppStrings.supabaseAnonKey,
+      );
+      _client = Supabase.instance.client;
+      debugPrint('Supabase: Initialized successfully');
+    } catch (e) {
+      debugPrint('Supabase: Init error: $e');
+    }
+  }
+
+  /// Logs diagnostic information or errors to the Supabase debug_log table
+  Future<void> logDebug({
+    required String message,
+    String level = 'error',
+    String? stackTrace,
+    String? context,
+  }) async {
+    if (_client == null) {
+      debugPrint('Supabase: Client not initialized. Log: $message');
+      return;
+    }
+
+    try {
+      await _client!.from('debug_log').insert({
+        'message': message,
+        'level': level,
+        'stack_trace': stackTrace,
+        'context': context,
+        'device_info': {
+          'platform': defaultTargetPlatform.toString(),
+          'isWeb': kIsWeb,
+        },
+      });
+    } catch (e) {
+      debugPrint('Supabase: Critical logging error: $e');
+    }
+  }
+
+  // --- Auth (Stubs for stability) ---
 
   Future<dynamic> signUp({
     required String email,
@@ -18,7 +61,7 @@ class SupabaseService {
     required String lastName,
   }) async {
     debugPrint('Supabase: signUp mock');
-    return null; // This might cause issues if caller expects a real AuthResponse
+    return null;
   }
 
   Future<dynamic> signIn({
@@ -39,7 +82,7 @@ class SupabaseService {
 
   dynamic get currentUser => null;
 
-  // --- Data ---
+  // --- Data & Progression ---
 
   Future<Challenge?> getCurrentChallenge({
     int gradeLevel = 4,

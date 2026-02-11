@@ -84,52 +84,60 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
   Widget _buildScrollingImage(String assetPath, double speedMultiplier) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final double width = constraints.maxWidth;
+        final double screenWidth = constraints.maxWidth;
+        final double screenHeight = constraints.maxHeight;
+        if (screenWidth <= 0 || screenHeight <= 0)
+          return const SizedBox.shrink();
+
+        // Calculate tile width based on image height (preserving aspect ratio)
+        // Here we assume backgrounds are 1920x1080 or similar.
+        // We'll use a heuristic or just fill the width if height is set.
+        // Actually, for a stripe, we want it to cover the screen.
+        final double tileWidth = screenWidth;
+
         final double totalScroll = _scrollOffset * speedMultiplier;
 
-        // Use 3 tiles to ensure the screen is always covered
+        // Infinite Carousel Logic:
+        // Instead of 3 fixed tiles, we calculate which 2 indices are currently visible.
+        final double exactIndex = totalScroll / tileWidth;
+        final int baseIndex = exactIndex.floor();
+        final double offsetInTile = totalScroll % tileWidth;
+
         return Stack(
-          children: List.generate(3, (index) {
-            final double tileWidth = width;
-
-            // Position calculation (Simple tiling with no overlap)
-            double xPos = (index * tileWidth) - (totalScroll % (tileWidth * 3));
-
-            // Wrap around logic
-            if (xPos < -tileWidth) {
-              xPos += tileWidth * 3;
-            }
-
-            // Mirror Tiling: Flip every other tile horizontally
-            // This ensures the edges always match perfectly
-            final bool isFlipped = index % 2 == 1;
-
-            return Positioned(
-              left: xPos,
-              top: 0,
-              bottom: 0,
-              width:
-                  tileWidth + 2.0, // Increased bleed to 2.0px to prevent gaps
-              child: RepaintBoundary(
-                child: Transform(
-                  alignment: Alignment.center,
-                  transform: Matrix4.diagonal3Values(
-                    isFlipped ? -1.0 : 1.0,
-                    1.0,
-                    1.0,
-                  ),
-                  child: Image.asset(
-                    assetPath,
-                    fit: BoxFit
-                        .fitHeight, // Changed from fill to fitHeight to prevent squishing
-                    alignment: Alignment.center,
-                  ),
-                ),
-              ),
-            );
-          }),
+          children: [
+            // Current / Left tile (Index)
+            _buildCarouselTile(assetPath, baseIndex, -offsetInTile, tileWidth),
+            // Next / Right tile (Index + 1)
+            _buildCarouselTile(
+                assetPath, baseIndex + 1, tileWidth - offsetInTile, tileWidth),
+          ],
         );
       },
+    );
+  }
+
+  Widget _buildCarouselTile(
+      String assetPath, int index, double xPos, double width) {
+    final bool isFlipped = index % 2 != 0; // Mirror every second tile
+
+    return Positioned(
+      left: xPos,
+      top: 0,
+      bottom: 0,
+      width: width + 1.0, // 1px bleed to prevent sub-pixel gaps
+      child: Transform(
+        alignment: Alignment.center,
+        transform: Matrix4.diagonal3Values(
+          isFlipped ? -1.0 : 1.0,
+          1.0,
+          1.0,
+        ),
+        child: Image.asset(
+          assetPath,
+          fit: BoxFit.fitHeight,
+          alignment: Alignment.center,
+        ),
+      ),
     );
   }
 

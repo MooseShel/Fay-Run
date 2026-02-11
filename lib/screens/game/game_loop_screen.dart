@@ -14,6 +14,7 @@ import '../../game/obstacle_manager.dart';
 import '../../game/scenery_manager.dart';
 import '../../services/audio_service.dart';
 import '../../services/asset_manager.dart';
+import '../../services/crash_report_service.dart';
 import '../../core/assets.dart';
 
 class GameLoopScreen extends StatefulWidget {
@@ -40,6 +41,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   final int _maxJumps = 2;
 
   // Progression & Chaos
+  int? _lastLevel;
   double _distanceRun = 0;
   double _chaosTimer = 0;
   final Random _random = Random();
@@ -131,158 +133,179 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   }
 
   void _gameLoop() {
-    final gameState = context.read<GameState>();
+    try {
+      final gameState = context.read<GameState>();
 
-    if (gameState.status != GameStatus.playing &&
-        gameState.status != GameStatus.bonusRound) {
-      _lastFrameTime = null; // Reset when not playing
-      return;
-    }
-
-    // 0. Timers & Progression - Calculate Delta Time
-    final now = DateTime.now();
-    final double dt = _lastFrameTime == null
-        ? 0.016
-        : now.difference(_lastFrameTime!).inMicroseconds / 1000000.0;
-    _lastFrameTime = now;
-
-    if (gameState.status == GameStatus.playing) {
-      _distanceRun += gameState.runSpeed * dt * 10; // Scale up
-    }
-
-    // Score based on distance
-    if (gameState.status == GameStatus.playing) {
-      // Add roughly 60 points per second if runSpeed is ~3.0
-      gameState.addScore(
-          ((gameState.runSpeed / 3.0) * 60 * dt).round().clamp(0, 10));
-
-      // Update Floating Scores
-      for (var fs in _floatingScores) {
-        fs.animationTime += dt * 2.0; // Speed of animation
+      // Level Transition Logic: Clear obstacles when the level changes
+      if (_lastLevel != null && _lastLevel != gameState.currentLevel) {
+        _obstacleManager.clear();
+        _sceneryManager.clear();
+        _distanceRun = 0;
       }
-      _floatingScores.removeWhere((fs) => fs.animationTime >= 1.0);
-    }
+      _lastLevel = gameState.currentLevel;
 
-    _chaosTimer += dt;
+      if (gameState.status != GameStatus.playing &&
+          gameState.status != GameStatus.bonusRound) {
+        _lastFrameTime = null; // Reset when not playing
+        return;
+      }
 
-    // Run Animation
-    _runAnimationTimer += dt;
-    if (_runAnimationTimer > 0.15) {
-      // Back to 0.15 for better feel at 3.0 speed
-      _runAnimationTimer = 0;
-      _runFrame = (_runFrame + 1) % 3;
-    }
+      // 0. Timers & Progression - Calculate Delta Time
+      final now = DateTime.now();
+      final double dt = _lastFrameTime == null
+          ? 0.016
+          : now.difference(_lastFrameTime!).inMicroseconds / 1000000.0;
+      _lastFrameTime = now;
 
-    // Level Completion
-    final targetDistance = gameState.runSpeed * 600;
+      if (gameState.status == GameStatus.playing) {
+        _distanceRun += gameState.runSpeed * dt * 10; // Scale up
+      }
 
-    if (_distanceRun > targetDistance) {
-      _distanceRun = 0;
-      gameState.completeLevel();
-      AudioService().stopBGM();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Level ${gameState.currentLevel} Complete!'),
-          duration: const Duration(seconds: 1),
-        ),
+      // Score based on distance
+      if (gameState.status == GameStatus.playing) {
+        // Add roughly 60 points per second if runSpeed is ~3.0
+        gameState.addScore(
+            ((gameState.runSpeed / 3.0) * 60 * dt).round().clamp(0, 10));
+
+        // Update Floating Scores
+        for (var fs in _floatingScores) {
+          fs.animationTime += dt * 2.0; // Speed of animation
+        }
+        _floatingScores.removeWhere((fs) => fs.animationTime >= 1.0);
+      }
+
+      _chaosTimer += dt;
+
+      // Run Animation
+      _runAnimationTimer += dt;
+      if (_runAnimationTimer > 0.15) {
+        // Back to 0.15 for better feel at 3.0 speed
+        _runAnimationTimer = 0;
+        _runFrame = (_runFrame + 1) % 3;
+      }
+
+      // Level Completion
+      final targetDistance = gameState.runSpeed * 600;
+
+      if (_distanceRun > targetDistance) {
+        _distanceRun = 0;
+        gameState.completeLevel();
+        AudioService().stopBGM();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Level ${gameState.currentLevel} Complete!'),
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+
+      // Chaos Threshold
+      final double chaosThreshold = kDebugMode
+          ? 10.0
+          : (gameState.currentLevel >= 6
+              ? 35.0 + _random.nextInt(15)
+              : 20.0 + _random.nextInt(10));
+
+      if (_chaosTimer > chaosThreshold) {
+        _chaosTimer = 0;
+        if (gameState.activeStaffEvent == null) {
+          gameState.triggerStaffChaos();
+        }
+      }
+
+      // 1. Physics Update (Applying dt to gravity and velocity)
+      if (_isJumping || _playerY > 0) {
+        // Scale movement and gravity by dt
+        // Base gravity was -0.5 per frame (at 60fps) -> -0.5 * 60^2 = -1800 per sec^2
+        const double gravityAccel = -1800.0;
+
+        _playerY += _verticalVelocity * dt;
+        _verticalVelocity += gravityAccel * dt;
+
+        if (_playerY <= 0) {
+          _playerY = 0;
+          _verticalVelocity = 0;
+          _isJumping = false;
+          _jumpCount = 0;
+        }
+      }
+
+      // Performance Optimization: Consolidate state updates into one setState call
+      setState(() {
+        // 2. Obstacle Update
+        _obstacleManager.update(
+          dt,
+          gameState.runSpeed,
+          gameState.currentLevel,
+          gameState.status == GameStatus.bonusRound,
+          (obs) {},
+        );
+
+        // 3. Scenery Update
+        _sceneryManager.update(
+          dt,
+          gameState.runSpeed,
+          gameState.currentLevel,
+        );
+      });
+
+      final screenSize = MediaQuery.sizeOf(context);
+
+      // Stability Fix: Prevent layout crashes if context/screen is not ready
+      if (screenSize.width <= 0 || screenSize.height <= 0) return;
+
+      for (var obs in _obstacleManager.obstacles) {
+        bool isGoldenBook = obs.type == ObstacleType.goldenBook;
+
+        // Convert relative coordinates to pixels for accurate collision
+        // All dimensions (width/height) are now relative to Screen Height
+        double obsPixelWidth = obs.width * screenSize.height;
+        double obsPixelHeight = obs.height * screenSize.height;
+        double obsPixelX = obs.x * screenSize.width;
+        double obsPixelY = obs.y * screenSize.height;
+
+        double verticalOffset =
+            _getObstacleVerticalOffset(obs, screenSize.height);
+
+        double obsPaddingX =
+            isGoldenBook ? obsPixelWidth * 0.15 : obsPixelWidth * 0.35;
+        double obsPaddingY =
+            isGoldenBook ? obsPixelHeight * 0.15 : obsPixelHeight * 0.35;
+
+        double obsLeft = obsPixelX + obsPaddingX;
+        double obsRight = obsPixelX + obsPixelWidth - obsPaddingX;
+        double obsBottom = obsPixelY - verticalOffset + obsPaddingY;
+        double obsTop =
+            obsPixelY - verticalOffset + obsPixelHeight - obsPaddingY;
+
+        // Player Hitbox (Responsive)
+        double playerPixelSize = screenSize.height * 0.21;
+        double playerPadding = playerPixelSize * 0.45;
+        double playerBaseX = screenSize.width * 0.30;
+
+        double playerLeft = playerBaseX + playerPadding;
+        double playerRight = playerBaseX + playerPixelSize - playerPadding;
+
+        double playerBottom = _playerY + (playerPixelSize * 0.4); // 40% padding
+        double playerTop = _playerY + playerPixelSize - (playerPixelSize * 0.4);
+
+        // X overlap
+        bool xOverlap = (obsLeft < playerRight) && (obsRight > playerLeft);
+
+        // Y overlap
+        bool yOverlap = (playerBottom < obsTop) && (playerTop > obsBottom);
+
+        if (xOverlap && yOverlap && !obs.hasEngaged) {
+          _handleCollision(obs, gameState);
+        }
+      }
+    } catch (e, stack) {
+      CrashReportService().logError(
+        message: 'GameLoopCrash: $e',
+        stackTrace: stack.toString(),
+        level: 'critical',
+        context: 'GameLoopScreen',
       );
-    }
-
-    // Chaos Threshold
-    final double chaosThreshold = kDebugMode
-        ? 10.0
-        : (gameState.currentLevel >= 6
-            ? 35.0 + _random.nextInt(15)
-            : 20.0 + _random.nextInt(10));
-
-    if (_chaosTimer > chaosThreshold) {
-      _chaosTimer = 0;
-      if (gameState.activeStaffEvent == null) {
-        gameState.triggerStaffChaos();
-      }
-    }
-
-    // 1. Physics Update (Applying dt to gravity and velocity)
-    if (_isJumping || _playerY > 0) {
-      // Scale movement and gravity by dt
-      // Base gravity was -0.5 per frame (at 60fps) -> -0.5 * 60^2 = -1800 per sec^2
-      const double gravityAccel = -1800.0;
-
-      _playerY += _verticalVelocity * dt;
-      _verticalVelocity += gravityAccel * dt;
-
-      if (_playerY <= 0) {
-        _playerY = 0;
-        _verticalVelocity = 0;
-        _isJumping = false;
-        _jumpCount = 0;
-      }
-    }
-
-    // Performance Optimization: Consolidate state updates into one setState call
-    setState(() {
-      // 2. Obstacle Update
-      _obstacleManager.update(
-        dt,
-        gameState.runSpeed,
-        gameState.currentLevel,
-        gameState.status == GameStatus.bonusRound,
-        (obs) {},
-      );
-
-      // 3. Scenery Update
-      _sceneryManager.update(
-        dt,
-        gameState.runSpeed,
-        gameState.currentLevel,
-      );
-    });
-
-    final screenSize = MediaQuery.sizeOf(context);
-
-    for (var obs in _obstacleManager.obstacles) {
-      bool isGoldenBook = obs.type == ObstacleType.goldenBook;
-
-      // Convert relative coordinates to pixels for accurate collision
-      // All dimensions (width/height) are now relative to Screen Height
-      double obsPixelWidth = obs.width * screenSize.height;
-      double obsPixelHeight = obs.height * screenSize.height;
-      double obsPixelX = obs.x * screenSize.width;
-      double obsPixelY = obs.y * screenSize.height;
-
-      double verticalOffset =
-          _getObstacleVerticalOffset(obs, screenSize.height);
-
-      double obsPaddingX =
-          isGoldenBook ? obsPixelWidth * 0.15 : obsPixelWidth * 0.35;
-      double obsPaddingY =
-          isGoldenBook ? obsPixelHeight * 0.15 : obsPixelHeight * 0.35;
-
-      double obsLeft = obsPixelX + obsPaddingX;
-      double obsRight = obsPixelX + obsPixelWidth - obsPaddingX;
-      double obsBottom = obsPixelY - verticalOffset + obsPaddingY;
-      double obsTop = obsPixelY - verticalOffset + obsPixelHeight - obsPaddingY;
-
-      // Player Hitbox (Responsive)
-      double playerPixelSize = screenSize.height * 0.21;
-      double playerPadding = playerPixelSize * 0.45;
-      double playerBaseX = screenSize.width * 0.30;
-
-      double playerLeft = playerBaseX + playerPadding;
-      double playerRight = playerBaseX + playerPixelSize - playerPadding;
-
-      double playerBottom = _playerY + (playerPixelSize * 0.4); // 40% padding
-      double playerTop = _playerY + playerPixelSize - (playerPixelSize * 0.4);
-
-      // X overlap
-      bool xOverlap = (obsLeft < playerRight) && (obsRight > playerLeft);
-
-      // Y overlap
-      bool yOverlap = (playerBottom < obsTop) && (playerTop > obsBottom);
-
-      if (xOverlap && yOverlap && !obs.hasEngaged) {
-        _handleCollision(obs, gameState);
-      }
     }
   }
 
