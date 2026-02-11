@@ -97,7 +97,7 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
               top: 0,
               bottom: 0,
               width:
-                  tileWidth + 0.5, // Tiny 0.5px bleed to prevent subpixel gaps
+                  tileWidth + 2.0, // Increased bleed to 2.0px to prevent gaps
               child: Transform(
                 alignment: Alignment.center,
                 transform: Matrix4.diagonal3Values(
@@ -107,7 +107,7 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
                 ),
                 child: Image.asset(
                   assetPath,
-                  fit: BoxFit.fitHeight,
+                  fit: BoxFit.fill, // Changed to fill to ensure full coverage
                   alignment: Alignment.center,
                 ),
               ),

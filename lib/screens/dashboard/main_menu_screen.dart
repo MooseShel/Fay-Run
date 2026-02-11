@@ -7,6 +7,7 @@ import '../../services/audio_service.dart';
 import '../../services/settings_service.dart';
 import '../../core/assets.dart';
 import 'leaderboard_screen.dart';
+import '../../services/asset_manager.dart';
 
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({super.key});
@@ -22,7 +23,16 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     super.initState();
     // Student should already be selected by Login/SelectScreen
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<GameState>().loadChallenge();
+      final state = context.read<GameState>();
+      state.loadChallenge();
+
+      // Background preload for current and next levels
+      for (int i = 0; i < 3; i++) {
+        final levelToPreload = state.maxLevel + i;
+        if (levelToPreload <= 10) {
+          AssetManager().precacheLevelAssets(context, levelToPreload);
+        }
+      }
     });
   }
 

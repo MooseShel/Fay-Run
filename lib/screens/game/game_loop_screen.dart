@@ -12,6 +12,7 @@ import '../../widgets/game/quiz_overlay.dart';
 import '../../widgets/game/animated_staff_chaos.dart';
 import '../../game/obstacle_manager.dart';
 import '../../services/audio_service.dart';
+import '../../services/asset_manager.dart';
 import '../../core/assets.dart';
 
 class GameLoopScreen extends StatefulWidget {
@@ -84,66 +85,30 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
   Future<void> _loadAssets() async {
     final startTime = DateTime.now();
-    debugPrint('🎬 Starting asset loading...');
+    debugPrint('🎬 Starting optimized level loading...');
 
     try {
-      // Create a timeout future (3 seconds)
-      final timeoutFuture = Future.delayed(const Duration(seconds: 3));
+      final state = context.read<GameState>();
+      final level = state.currentLevel;
 
-      // Actual loading process
-      final loadFuture = () async {
-        // 1. Precache Sprites
-        await Future.wait([
-          precacheImage(
-              const AssetImage('assets/images/ernie_run.png'), context),
-          precacheImage(
-              const AssetImage('assets/images/ernie_run_2.png'), context),
-          precacheImage(
-              AssetImage('assets/images/${Assets.ernieRun}'), context),
-          precacheImage(
-              AssetImage('assets/images/${Assets.ernieRun2}'), context),
-          precacheImage(
-              AssetImage('assets/images/${Assets.ernieRun3}'), context),
-          precacheImage(
-              AssetImage('assets/images/${Assets.ernieJump}'), context),
-          precacheImage(
-              AssetImage('assets/images/${Assets.ernieCrash}'), context),
-          // Common Obstacles
-          precacheImage(AssetImage('assets/images/${Assets.obsLog}'), context),
-          precacheImage(AssetImage('assets/images/${Assets.obsRock}'), context),
-          // Food
-          precacheImage(
-              AssetImage('assets/images/${Assets.obsApple}'), context),
-          precacheImage(
-              AssetImage('assets/images/${Assets.obsBanana}'), context),
-          precacheImage(
-              AssetImage('assets/images/${Assets.obsBurger1}'), context),
-          precacheImage(
-              AssetImage('assets/images/${Assets.obsBurger2}'), context),
-          precacheImage(
-              AssetImage('assets/images/${Assets.itemGoldenBook}'), context),
-        ]);
+      // UX goal: ~800ms "Preparing Level" screen
+      final minDelayFuture = Future.delayed(const Duration(milliseconds: 800));
 
-        // 2. Precache 10 Backgrounds
-        for (int i = 1; i <= 10; i++) {
-          if (!mounted) return;
-          await precacheImage(
-              AssetImage('assets/images/${Assets.background(i)}'), context);
-        }
+      // 1. Ensure essential assets are loaded (likely already done in StudentSelect)
+      final essentialPreload = AssetManager().precacheEssentialAssets(context);
 
-        // 3. Audio & Data
-        if (!mounted) return;
-        final state = context.read<GameState>();
-        await state.loadChallenge();
-        // Don't await BGM to prevent hangs if audio context is blocked
-        AudioService().playBGM(state.currentLevel);
-      }();
+      // 2. Precache current level background (others preloaded in MainMenu)
+      final bgPreload = AssetManager().precacheLevelAssets(context, level);
 
-      // Race the loader against the 3s timeout
-      await Future.any([loadFuture, timeoutFuture]);
+      // 3. Data & Music
+      await state.loadChallenge();
+      AudioService().playBGM(level);
+
+      // Wait for visuals to be ready and min delay
+      await Future.wait([minDelayFuture, essentialPreload, bgPreload]);
 
       final elapsed = DateTime.now().difference(startTime).inMilliseconds;
-      debugPrint('🏁 Loading finished in ${elapsed}ms');
+      debugPrint('🏁 Optimized loading finished in ${elapsed}ms');
     } catch (e) {
       debugPrint('⚠️ Error during loading: $e');
     } finally {
@@ -754,6 +719,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   }
 
   Widget _buildObstacleWidget(Obstacle obs) {
+    if (obs.isCollected) return const SizedBox.shrink();
     String assetName = '';
     // New assets have _1 and _2, old have nothing and _2.
     // We'll try to build a path and handle fallbacks in the errorBuilder.

@@ -4,6 +4,7 @@ import '../../core/constants.dart';
 import '../../providers/game_state.dart';
 import '../dashboard/leaderboard_screen.dart';
 import '../../services/supabase_service.dart';
+import '../../services/asset_manager.dart';
 
 class StudentSelectScreen extends StatefulWidget {
   const StudentSelectScreen({super.key});
@@ -19,6 +20,9 @@ class _StudentSelectScreenState extends State<StudentSelectScreen> {
     // Refresh students list on entry
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<GameState>().loadStudents();
+      // Start preloading assets while user chooses
+      AssetManager().precacheEssentialAssets(context);
+      AssetManager().preloadMusic();
     });
   }
 
