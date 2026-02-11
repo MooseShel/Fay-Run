@@ -11,6 +11,7 @@ import '../../widgets/game/ambient_effects.dart';
 import '../../widgets/game/quiz_overlay.dart';
 import '../../widgets/game/animated_staff_chaos.dart';
 import '../../game/obstacle_manager.dart';
+import '../../game/scenery_manager.dart';
 import '../../services/audio_service.dart';
 import '../../services/asset_manager.dart';
 import '../../core/assets.dart';
@@ -26,6 +27,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _gameLoopController;
   final ObstacleManager _obstacleManager = ObstacleManager();
+  final SceneryManager _sceneryManager = SceneryManager();
 
   // Game Physics State
   double _playerY = 0; // 0 = ground, positive = up
@@ -130,11 +132,14 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   void _gameLoop() {
     final gameState = context.read<GameState>();
 
-    if (gameState.status != GameStatus.playing) return;
+    if (gameState.status != GameStatus.playing &&
+        gameState.status != GameStatus.bonusRound) return;
 
     // 0. Timers & Progression
     const double dt = 0.016;
-    _distanceRun += gameState.runSpeed * dt * 10; // Scale up
+    if (gameState.status == GameStatus.playing) {
+      _distanceRun += gameState.runSpeed * dt * 10; // Scale up
+    }
 
     // Score based on distance (approx 1 point per unit run)
     // RunSpeed 3.0 * 0.016 * 10 = 0.48 units per frame.
@@ -217,7 +222,15 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         0.016,
         gameState.runSpeed,
         gameState.currentLevel,
+        gameState.status == GameStatus.bonusRound,
         (obs) {},
+      );
+
+      // 3. Scenery Update
+      _sceneryManager.update(
+        0.016,
+        gameState.runSpeed,
+        gameState.currentLevel,
       );
     });
 
@@ -445,6 +458,55 @@ class _GameLoopScreenState extends State<GameLoopScreen>
               level: gameState.currentLevel,
             ),
 
+            // Background Scenery
+            ..._sceneryManager.objects.map((obj) {
+              String assetName = '';
+              String baseName = '';
+              switch (obj.type) {
+                case SceneryType.boy:
+                  baseName = 'boy';
+                  break;
+                case SceneryType.girl:
+                  baseName = 'girl';
+                  break;
+                case SceneryType.dogSitting:
+                  baseName = 'dog';
+                  // dog_1 and dog_2 are sitting/blinking
+                  break;
+                case SceneryType.dogStanding:
+                  baseName = 'dog';
+                  // dog_3 and dog_4 are standing/blinking
+                  break;
+                case SceneryType.squirrel:
+                  baseName = 'squirrel';
+                  break;
+                case SceneryType.janitor:
+                  baseName = 'janitor';
+                  break;
+                case SceneryType.butterfly:
+                  baseName = 'butterfly';
+                  break;
+              }
+
+              int frame = obj.currentFrame;
+              if (obj.type == SceneryType.dogStanding) {
+                frame += 2; // dog_3, dog_4
+              }
+
+              assetName = Assets.bgCharacter(baseName, frame);
+
+              return Positioned(
+                left: obj.x * screenSize.width,
+                bottom: _groundHeight + (obj.y * screenSize.height),
+                width: screenSize.height * 0.12, // Standard scenery size
+                height: screenSize.height * 0.12,
+                child: Image.asset(
+                  'assets/images/$assetName',
+                  fit: BoxFit.contain,
+                ),
+              );
+            }),
+
             // 4. Ambient Effects (Level-specific particles)
             AmbientEffects(level: gameState.currentLevel),
 
@@ -658,32 +720,103 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                         style: TextStyle(color: Colors.white70, fontSize: 20),
                       ),
                       const SizedBox(height: 40),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          _obstacleManager.clear();
-                          final nextLevel =
-                              context.read<GameState>().currentLevel + 1;
-                          context.read<GameState>().startNextLevel();
-                          // Start music for next level
-                          AudioService().playBGM(nextLevel);
-                        },
-                        icon: const Icon(Icons.arrow_forward),
-                        label: const Text('GO TO NEXT CLASS'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: FayColors.gold,
-                          foregroundColor: FayColors.navy,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 32,
-                            vertical: 16,
+                      if (gameState.isBonusRoundEarned) ...[
+                        Text(
+                          'GOLDEN DASH UNLOCKED!',
+                          style: TextStyle(
+                            color: FayColors.gold,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 2,
                           ),
                         ),
-                      ),
+                        const SizedBox(height: 20),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            _obstacleManager.clear();
+                            _sceneryManager.clear();
+                            gameState.startBonusRound();
+                            // Optional: play special music?
+                          },
+                          icon: const Icon(Icons.flash_on),
+                          label: const Text('START GOLDEN DASH'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: FayColors.gold,
+                            foregroundColor: FayColors.navy,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 40,
+                              vertical: 20,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        TextButton(
+                          onPressed: () {
+                            _obstacleManager.clear();
+                            _sceneryManager.clear();
+                            gameState.startNextLevel();
+                          },
+                          child: const Text(
+                            'SKIP TO NEXT CLASS',
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                        ),
+                      ] else
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            _obstacleManager.clear();
+                            _sceneryManager.clear();
+                            gameState.startNextLevel();
+                          },
+                          icon: const Icon(Icons.arrow_forward),
+                          label: const Text('GO TO NEXT CLASS'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: FayColors.gold,
+                            foregroundColor: FayColors.navy,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 32,
+                              vertical: 16,
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
               ),
 
-            // 8. Game Over Overlay
+            // 8. Bonus Round Overlay (HUD)
+            if (gameState.status == GameStatus.bonusRound)
+              Positioned(
+                top: 40,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Column(
+                    children: [
+                      Text(
+                        'GOLDEN DASH',
+                        style: TextStyle(
+                          color: FayColors.gold,
+                          fontSize: 40,
+                          fontWeight: FontWeight.w900,
+                          fontStyle: FontStyle.italic,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black,
+                              offset: Offset(4, 4),
+                              blurRadius: 10,
+                            )
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // We can add a progress bar here for the 15s timer
+                    ],
+                  ),
+                ),
+              ),
+
+            // 9. Game Over Overlay (HUD)
             if (gameState.status == GameStatus.gameOver)
               Container(
                 color: Colors.black87,
@@ -907,6 +1040,20 @@ class _GameLoopScreenState extends State<GameLoopScreen>
             ],
           ),
         ),
+        if (state.comboCount >= 5)
+          Text(
+            'COMBO x${(state.comboCount ~/ 5) + 1}',
+            style: TextStyle(
+              fontSize: 18,
+              color: FayColors.gold,
+              fontWeight: FontWeight.w900,
+              fontStyle: FontStyle.italic,
+              shadows: const [
+                Shadow(
+                    offset: Offset(1, 1), blurRadius: 4, color: Colors.black),
+              ],
+            ),
+          ),
       ],
     );
   }

@@ -89,4 +89,9 @@ class Assets {
   static const String voiceScience = 'audio/staff_science.mp3';
   static const String voiceDean = 'audio/staff_dean.mp3';
   static const String voicePe = 'audio/staff_pe.mp3';
+
+  // Background Characters
+  static String bgCharacter(String name, int frame) {
+    return 'bg_characters/${name}_$frame.png';
+  }
 }

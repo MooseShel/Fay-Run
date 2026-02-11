@@ -4,7 +4,7 @@ import '../models/challenge.dart';
 import '../services/supabase_service.dart';
 import '../services/audio_service.dart';
 
-enum GameStatus { menu, playing, paused, levelComplete, gameOver }
+enum GameStatus { menu, playing, paused, levelComplete, gameOver, bonusRound }
 
 class GameState extends ChangeNotifier {
   // Multi-Student Data
@@ -28,6 +28,9 @@ class GameState extends ChangeNotifier {
   // Events
   StaffEvent? _activeStaffEvent;
   bool _isInvincible = false;
+  int _goldenBooksCollectedCurrentLevel = 0;
+  int _comboCount = 0;
+  int get comboCount => _comboCount;
 
   // Getters
   List<Map<String, dynamic>> get students => _students;
@@ -61,6 +64,16 @@ class GameState extends ChangeNotifier {
 
   Challenge? _currentChallenge;
   Challenge? get currentChallenge => _currentChallenge;
+
+  bool get isBonusRoundEarned {
+    // Disabled for now - assets pending
+    return false;
+    /*
+    bool isBonusLevel = [3, 6, 9].contains(_currentLevel);
+    bool hitThreshold = _goldenBooksCollectedCurrentLevel >= 5;
+    return isBonusLevel && hitThreshold;
+    */
+  }
 
   Future<void> loadChallenge() async {
     _isLoading = true;
@@ -175,6 +188,8 @@ class GameState extends ChangeNotifier {
     _score = 0;
     _lives = 5; // Increased from 3 based on user feedback
     _currentLevel = level;
+    _goldenBooksCollectedCurrentLevel = 0; // Reset counter
+    _comboCount = 0;
     _answeredQuestions.clear(); // Clear history
     _resetLevelPhysics();
     _status = GameStatus.playing;
@@ -225,7 +240,12 @@ class GameState extends ChangeNotifier {
   }
 
   void addScore(int points) {
-    _score += points;
+    if (_status != GameStatus.playing && _status != GameStatus.bonusRound)
+      return;
+    // Apply combo multiplier (max x5)
+    int multiplier = (_comboCount ~/ 5) + 1;
+    if (multiplier > 5) multiplier = 5;
+    _score += points * multiplier;
     notifyListeners();
   }
 
@@ -310,6 +330,17 @@ class GameState extends ChangeNotifier {
         challengeId: challengeId,
         score: correct ? 100 : 0,
       );
+
+      if (correct) {
+        if (challengeId.contains('golden')) {
+          _goldenBooksCollectedCurrentLevel++;
+        }
+        _comboCount++; // Increment combo on any correct answer
+        notifyListeners();
+      } else {
+        _comboCount = 0; // Reset combo on wrong answer
+        notifyListeners();
+      }
     } catch (e) {
       debugPrint('Error recording quiz result: $e');
     }
@@ -351,6 +382,7 @@ class GameState extends ChangeNotifier {
       await loadChallenge();
 
       _status = GameStatus.playing; // Directly set to playing
+      _goldenBooksCollectedCurrentLevel = 0; // Reset for next level
       notifyListeners();
     } else {
       _status = GameStatus.gameOver;
@@ -359,10 +391,29 @@ class GameState extends ChangeNotifier {
     }
   }
 
-  // Modified completeLevel to just set status
   void completeLevel() {
     _status = GameStatus.levelComplete;
     notifyListeners();
+  }
+
+  void startBonusRound() {
+    _status = GameStatus.bonusRound;
+    _isInvincible = true; // No damage in bonus round
+    notifyListeners();
+
+    // Bonus round lasts 15 seconds
+    Future.delayed(const Duration(seconds: 15), () {
+      endBonusRound();
+    });
+  }
+
+  void endBonusRound() {
+    if (_status == GameStatus.bonusRound) {
+      _isInvincible = false;
+      _status = GameStatus
+          .levelComplete; // Go back to level complete screen to proceed
+      notifyListeners();
+    }
   }
 
   // Helper to get random unique question

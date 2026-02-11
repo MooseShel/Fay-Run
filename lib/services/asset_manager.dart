@@ -49,6 +49,30 @@ class AssetManager {
         precacheImage(
             AssetImage('assets/images/${Assets.staffScience}'), context),
         precacheImage(AssetImage('assets/images/${Assets.staffDean}'), context),
+
+        // Background Characters
+        ...['boy', 'girl', 'janitor', 'butterfly'].expand((name) => [
+              precacheImage(
+                  AssetImage('assets/images/${Assets.bgCharacter(name, 1)}'),
+                  context),
+              precacheImage(
+                  AssetImage('assets/images/${Assets.bgCharacter(name, 2)}'),
+                  context),
+            ]),
+        ...['dog', 'squirrel'].expand((name) => [
+              precacheImage(
+                  AssetImage('assets/images/${Assets.bgCharacter(name, 1)}'),
+                  context),
+              precacheImage(
+                  AssetImage('assets/images/${Assets.bgCharacter(name, 2)}'),
+                  context),
+              precacheImage(
+                  AssetImage('assets/images/${Assets.bgCharacter(name, 3)}'),
+                  context),
+              precacheImage(
+                  AssetImage('assets/images/${Assets.bgCharacter(name, 4)}'),
+                  context),
+            ]),
       ]);
       _essentialAssetsPrecached = true;
       debugPrint('✅ Precache Essential Assets Finished');
