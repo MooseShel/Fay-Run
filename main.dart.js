@@ -45997,11 +45997,10 @@ a.y=!0
 s=a.b
 if(s===B.i2){b.Mi()
 r.V1(b,a,200)}else if(s===B.i1||s===B.lu||s===B.lv){b.Mi()
-r.V1(b,a,100)}else{a.x=!0
-if(!b.at){$.hn().nJ("bonk.mp3")
+r.V1(b,a,100)}else if(!b.at){$.hn().nJ("bonk.mp3")
 b.axW()
 r.ac(new A.ar8(r))
-A.ia(B.cE,new A.ar9(r),t.P)}}},
+A.ia(B.cE,new A.ar9(r),t.P)}},
 V1(a,b,c){var s,r,q=a.ax
 if(q==null){s=t.s
 q=new A.yW("fallback_math","Math",A.b([new A.hI("What is 5 + 5?",A.b(["10","12","8","20"],s),0),new A.hI("What is 10 - 3?",A.b(["7","6","5","4"],s),0),new A.hI("What is 3 x 3?",A.b(["9","6","12","15"],s),0)],t.hB))}r=a.a2b()
