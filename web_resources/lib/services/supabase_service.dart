@@ -94,6 +94,8 @@ class SupabaseService {
     int gradeLevel = 4,
     int? weekNumber,
     String? topic,
+    bool isExam = false,
+    int? difficultyLevel,
   }) async {
     try {
       // Use provided week or calculate current
