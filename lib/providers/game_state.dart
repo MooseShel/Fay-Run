@@ -29,6 +29,7 @@ class GameState extends ChangeNotifier {
   StaffEvent? _activeStaffEvent;
   bool _isInvincible = false;
   int _goldenBooksCollectedCurrentLevel = 0;
+  int get goldenBooksCollectedCurrentLevel => _goldenBooksCollectedCurrentLevel;
   int _comboCount = 0;
   int get comboCount => _comboCount;
 
@@ -252,8 +253,9 @@ class GameState extends ChangeNotifier {
   }
 
   void addScore(int points) {
-    if (_status != GameStatus.playing && _status != GameStatus.bonusRound)
+    if (_status != GameStatus.playing && _status != GameStatus.bonusRound) {
       return;
+    }
     // Apply combo multiplier (max x5)
     int multiplier = (_comboCount ~/ 5) + 1;
     if (multiplier > 5) multiplier = 5;

@@ -46,12 +46,15 @@ class AssetManager {
       ];
 
       debugPrint('🏃 Preloading Ernie...');
+      if (!context.mounted) return;
       await _precacheBatch(ernieAssets, context);
 
       debugPrint('🍎 Preloading Obstacles...');
+      if (!context.mounted) return;
       await _precacheBatch(obstacleAssets, context);
 
       debugPrint('🎓 Preloading Staff...');
+      if (!context.mounted) return;
       await _precacheBatch(staffAssets, context);
 
       // Background characters can be last and lazier
@@ -67,6 +70,7 @@ class AssetManager {
               'assets/images/${Assets.bgCharacter(name, 4)}',
             ]),
       ];
+      if (!context.mounted) return;
       await _precacheBatch(otherAssets, context);
 
       _essentialAssetsPrecached = true;
@@ -85,6 +89,7 @@ class AssetManager {
       }
       // Tiny delay to let the event loop breathe, especially on web
       await Future.delayed(const Duration(milliseconds: 10));
+      if (!context.mounted) return;
     }
   }
 
@@ -93,6 +98,7 @@ class AssetManager {
     if (_precachedLevels.contains(level)) return;
 
     debugPrint('🎨 Precache Level $level Assets Started...');
+    if (!context.mounted) return;
     try {
       await precacheImage(
         AssetImage('assets/images/${Assets.background(level)}'),

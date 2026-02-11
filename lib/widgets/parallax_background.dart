@@ -22,6 +22,8 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
   late AnimationController _controller;
   double _scrollOffset = 0;
   DateTime? _lastUpdate;
+  double? _aspectRatio;
+  String? _lastAssetPath;
 
   @override
   void initState() {
@@ -63,6 +65,11 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
     // Use the new naming convention: bg_fay_1.png through bg_fay_10.png
     final String assetPath = 'assets/images/${Assets.background(widget.level)}';
 
+    if (_lastAssetPath != assetPath) {
+      _lastAssetPath = assetPath;
+      _resolveAspectRatio(assetPath);
+    }
+
     return Stack(
       children: [
         // 1. Sky / Gradient Base
@@ -81,24 +88,37 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
     );
   }
 
+  void _resolveAspectRatio(String assetPath) {
+    final image = AssetImage(assetPath);
+    final stream = image.resolve(ImageConfiguration.empty);
+    stream.addListener(ImageStreamListener((info, synchronousCall) {
+      if (mounted) {
+        setState(() {
+          _aspectRatio = info.image.width / info.image.height;
+        });
+      }
+    }));
+  }
+
   Widget _buildScrollingImage(String assetPath, double speedMultiplier) {
+    if (_aspectRatio == null) {
+      return const SizedBox.shrink();
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final double screenWidth = constraints.maxWidth;
         final double screenHeight = constraints.maxHeight;
-        if (screenWidth <= 0 || screenHeight <= 0)
+        if (screenWidth <= 0 || screenHeight <= 0) {
           return const SizedBox.shrink();
+        }
 
-        // Calculate tile width based on image height (preserving aspect ratio)
-        // Here we assume backgrounds are 1920x1080 or similar.
-        // We'll use a heuristic or just fill the width if height is set.
-        // Actually, for a stripe, we want it to cover the screen.
-        final double tileWidth = screenWidth;
+        // Calculate tile width based on screen height and image aspect ratio
+        final double tileWidth = screenHeight * _aspectRatio!;
 
         final double totalScroll = _scrollOffset * speedMultiplier;
 
         // Infinite Carousel Logic:
-        // Instead of 3 fixed tiles, we calculate which 2 indices are currently visible.
         final double exactIndex = totalScroll / tileWidth;
         final int baseIndex = exactIndex.floor();
         final double offsetInTile = totalScroll % tileWidth;
@@ -110,6 +130,10 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
             // Next / Right tile (Index + 1)
             _buildCarouselTile(
                 assetPath, baseIndex + 1, tileWidth - offsetInTile, tileWidth),
+            // If the tile is narrower than half the screen, we might need a third tile
+            if (tileWidth - offsetInTile < screenWidth)
+              _buildCarouselTile(assetPath, baseIndex + 2,
+                  2 * tileWidth - offsetInTile, tileWidth),
           ],
         );
       },
@@ -118,25 +142,16 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
 
   Widget _buildCarouselTile(
       String assetPath, int index, double xPos, double width) {
-    final bool isFlipped = index % 2 != 0; // Mirror every second tile
-
+    // Mirroring logic removed as per user request
     return Positioned(
       left: xPos,
       top: 0,
       bottom: 0,
-      width: width + 1.0, // 1px bleed to prevent sub-pixel gaps
-      child: Transform(
+      width: width + 0.5, // Small overlap to prevent gaps
+      child: Image.asset(
+        assetPath,
+        fit: BoxFit.fitHeight,
         alignment: Alignment.center,
-        transform: Matrix4.diagonal3Values(
-          isFlipped ? -1.0 : 1.0,
-          1.0,
-          1.0,
-        ),
-        child: Image.asset(
-          assetPath,
-          fit: BoxFit.fitHeight,
-          alignment: Alignment.center,
-        ),
       ),
     );
   }

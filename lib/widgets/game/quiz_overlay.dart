@@ -65,7 +65,7 @@ class _QuizOverlayState extends State<QuizOverlay>
           Positioned.fill(
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-              child: Container(color: Colors.black.withOpacity(0.1)),
+              child: Container(color: Colors.black.withValues(alpha: 0.1)),
             ),
           ),
           AnimatedBuilder(
@@ -88,15 +88,15 @@ class _QuizOverlayState extends State<QuizOverlay>
               child: Container(
                 clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.85),
+                  color: Colors.white.withValues(alpha: 0.85),
                   borderRadius: BorderRadius.circular(32),
                   border: Border.all(
-                    color: FayColors.gold.withOpacity(0.5),
+                    color: FayColors.gold.withValues(alpha: 0.5),
                     width: 1.5,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
+                      color: Colors.black.withValues(alpha: 0.15),
                       blurRadius: 40,
                       spreadRadius: 5,
                     ),
@@ -113,7 +113,7 @@ class _QuizOverlayState extends State<QuizOverlay>
                         gradient: LinearGradient(
                           colors: [
                             FayColors.gold,
-                            FayColors.gold.withOpacity(0.8),
+                            FayColors.gold.withValues(alpha: 0.8),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -124,7 +124,7 @@ class _QuizOverlayState extends State<QuizOverlay>
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.3),
+                              color: Colors.white.withValues(alpha: 0.3),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
