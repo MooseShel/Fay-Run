@@ -45,27 +45,29 @@ class SupabaseService {
     int gradeLevel = 4,
     int? weekNumber,
     String? topic,
+    bool isExam = false,
+    int? difficultyLevel,
   }) async {
     debugPrint(
-        'Supabase: getCurrentChallenge mock (Grade $gradeLevel, Week $weekNumber)');
+        'Supabase: getCurrentChallenge mock (Grade $gradeLevel, Week $weekNumber, Exam $isExam, Diff $difficultyLevel)');
 
-    // Mock Response Generator (Pre-K to 5th)
-    if (gradeLevel <= 0) {
-      // Pre-K and K Mock
+    if (isExam) {
+      // Mock Exam Challenges
       return Challenge(
-        id: 'mock_prek_k',
-        topic: 'Math',
+        id: 'mock_exam_${topic ?? 'Mixed'}_d${difficultyLevel ?? 1}',
+        topic: topic ?? 'Mixed',
         gradeLevel: gradeLevel,
         questions: [
           QuizQuestion(
-            questionText: 'What color is the sun?',
+            questionText: '[EXAM] What is the capital of Louisiana?',
             correctOptionIndex: 0,
-            options: ['Yellow', 'Blue', 'Green'],
+            options: ['Baton Rouge', 'New Orleans', 'Shreveport'],
           ),
           QuizQuestion(
-            questionText: 'Count: ⭐️ ⭐️',
+            questionText:
+                '[EXAM] $gradeLevel Grade ${topic ?? 'General'} Question',
             correctOptionIndex: 0,
-            options: ['2', '1', '3'],
+            options: ['Correct Answer', 'Wrong 1', 'Wrong 2'],
           ),
         ],
       );
@@ -73,13 +75,12 @@ class SupabaseService {
 
     // Default Mock (Grade 4)
     return Challenge(
-      id: 'mock_g4_w1',
-      topic: 'Math',
-      // season and weekNumber are not in the Client Model yet
+      id: 'mock_g4_d${difficultyLevel ?? 1}',
+      topic: topic ?? 'Math',
       gradeLevel: 4,
       questions: [
         QuizQuestion(
-          questionText: '500 + 500 = ?',
+          questionText: 'Difficulty $difficultyLevel Question: 500 + 500 = ?',
           correctOptionIndex: 0,
           options: ['1000', '500', '2000'],
         ),

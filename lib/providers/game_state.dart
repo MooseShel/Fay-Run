@@ -32,6 +32,12 @@ class GameState extends ChangeNotifier {
   int _comboCount = 0;
   int get comboCount => _comboCount;
 
+  // Exam Mode
+  bool _isExamMode = false;
+  String? _examTopic;
+  bool get isExamMode => _isExamMode;
+  String? get examTopic => _examTopic;
+
   // Getters
   List<Map<String, dynamic>> get students => _students;
   Map<String, dynamic>? get currentStudent => _currentStudent;
@@ -81,20 +87,23 @@ class GameState extends ChangeNotifier {
 
     try {
       final service = SupabaseService();
-      // Use the current grade, default to 4 if not set
       final grade = currentGrade;
 
-      // Use current game level as week number for progressive difficulty
-      // Level 1 → Week 1 (easiest), Level 5 → Week 5 (hardest)
+      // Map level 1-10 to difficulty 1-5
+      final difficulty = ((_currentLevel - 1) / 2).floor() + 1;
+
       _currentChallenge = await service.getCurrentChallenge(
         gradeLevel: grade,
-        weekNumber: _currentLevel, // Map game level to question week
+        weekNumber: _currentLevel, // Keep for backward compatibility
+        topic: _isExamMode ? _examTopic : null,
+        isExam: _isExamMode,
+        difficultyLevel: difficulty,
       );
 
       if (_currentChallenge != null) {
         debugPrint(
           'Loaded challenge: ${_currentChallenge!.topic} '
-          'for Level $_currentLevel (Week $_currentLevel), Grade $grade',
+          'for Level $_currentLevel (Diff $difficulty), Grade $grade, Exam: $_isExamMode',
         );
       }
     } catch (e) {
@@ -182,6 +191,14 @@ class GameState extends ChangeNotifier {
     _studentName = name;
     _generatedNickname = nickname;
     notifyListeners();
+  }
+
+  void setExamMode(bool active, {String? topic}) {
+    _isExamMode = active;
+    _examTopic = topic;
+    notifyListeners();
+    // Reload challenge if we are in a state where it matters (e.g., menu)
+    loadChallenge();
   }
 
   void startGame({int level = 1}) {

@@ -9,6 +9,7 @@ CREATE TABLE challenges (
     week_number INTEGER NOT NULL, -- e.g., 1, 2, ... 52
     grade_level INTEGER NOT NULL DEFAULT 4, -- 1 or 4
     difficulty_level INTEGER DEFAULT 1, -- 1-5, matching game levels?
+    is_exam BOOLEAN DEFAULT FALSE,      -- Whether this is part of an Exam Week
     active_start_date TIMESTAMPTZ,   -- When this challenge becomes available
     active_end_date TIMESTAMPTZ      -- When it expires
 );

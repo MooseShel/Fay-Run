@@ -283,6 +283,97 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
               const SizedBox(height: 24),
 
+              // Exam Mode Section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: gameState.isExamMode
+                        ? FayColors.gold.withValues(alpha: 0.1)
+                        : Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: gameState.isExamMode
+                          ? FayColors.gold
+                          : Colors.white10,
+                      width: 1,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.school,
+                                color: gameState.isExamMode
+                                    ? FayColors.gold
+                                    : Colors.white70,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 12),
+                              const Text(
+                                'Exam Mode',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Switch(
+                            value: gameState.isExamMode,
+                            activeColor: FayColors.gold,
+                            onChanged: (val) {
+                              gameState.setExamMode(val,
+                                  topic: val
+                                      ? (gameState.examTopic ?? 'Math')
+                                      : null);
+                            },
+                          ),
+                        ],
+                      ),
+                      if (gameState.isExamMode) ...[
+                        const Divider(color: Colors.white10, height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Select Topic:',
+                              style: TextStyle(color: Colors.white70),
+                            ),
+                            DropdownButton<String>(
+                              value: gameState.examTopic ?? 'Math',
+                              dropdownColor: FayColors.navy,
+                              style: const TextStyle(
+                                  color: FayColors.gold,
+                                  fontWeight: FontWeight.bold),
+                              underline: Container(),
+                              items: ['Math', 'Science', 'Social Studies']
+                                  .map((t) {
+                                return DropdownMenuItem(
+                                  value: t,
+                                  child: Text(t),
+                                );
+                              }).toList(),
+                              onChanged: (val) {
+                                gameState.setExamMode(true, topic: val);
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
               // Level Selector Title
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 24.0),
@@ -366,6 +457,24 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
+                                  if (isUnlocked && gameState.isExamMode)
+                                    Container(
+                                      margin: const EdgeInsets.only(top: 4),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: FayColors.gold,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: const Text(
+                                        'EXAM',
+                                        style: TextStyle(
+                                          color: FayColors.navy,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
                                 ],
                               ),
                             ),

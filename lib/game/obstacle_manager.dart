@@ -264,8 +264,8 @@ class ObstacleManager {
         height = 0.18;
         break;
       case ObstacleType.cone:
-        width = 0.12;
-        height = 0.15;
+        width = 0.18; // 0.12 * 1.5
+        height = 0.225; // 0.15 * 1.5
         break;
       case ObstacleType.trashCan:
         width = 0.15;
@@ -303,8 +303,8 @@ class ObstacleManager {
       case ObstacleType.apple:
       case ObstacleType.banana:
       case ObstacleType.burger:
-        width = 0.07;
-        height = 0.07;
+        width = 0.105; // 0.07 * 1.5
+        height = 0.105; // 0.07 * 1.5
         break;
       case ObstacleType.lunchTray:
         width = 0.27;
