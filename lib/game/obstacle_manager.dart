@@ -76,37 +76,35 @@ class ObstacleManager {
     } else {
       switch (level) {
         case 1:
-          spawnInterval = 3.5; // Relaxed from 3.0
-          break;
         case 2:
-          spawnInterval = 3.0; // Relaxed from 2.5
+          spawnInterval = 3.8;
           break;
         case 3:
-          spawnInterval = 2.6; // Relaxed from 2.1
+          spawnInterval = 3.2;
           break;
         case 4:
-          spawnInterval = 2.2; // Relaxed from 1.7
+          spawnInterval = 2.9;
           break;
         case 5:
-          spawnInterval = 1.8; // Relaxed from 1.4
+          spawnInterval = 2.6;
           break;
         case 6:
-          spawnInterval = 1.7; // Relaxed from 1.3
+          spawnInterval = 2.4;
           break;
         case 7:
-          spawnInterval = 1.6; // Relaxed from 1.3
+          spawnInterval = 2.3;
           break;
         case 8:
-          spawnInterval = 1.5; // Relaxed from 1.2
+          spawnInterval = 2.2;
           break;
         case 9:
-          spawnInterval = 1.45; // Relaxed from 1.2
+          spawnInterval = 2.2;
           break;
         case 10:
-          spawnInterval = 1.4; // Relaxed from 1.0
+          spawnInterval = 2.0;
           break;
         default:
-          spawnInterval = 3.5;
+          spawnInterval = 2.0;
       }
     }
 

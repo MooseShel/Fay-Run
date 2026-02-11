@@ -104,41 +104,61 @@ class SupabaseService {
       // Use provided topic or calculate from week
       final selectedTopic = topic ?? _getTopicForWeek(currentWeek);
 
-      // Try to get challenge for current week and topic
-      var response = await _client
+      // Build base query
+      var query = _client
           .from('challenges')
           .select('*, questions(*)')
           .eq('grade_level', gradeLevel)
-          .eq('week_number', currentWeek)
-          .eq('topic', selectedTopic)
-          .maybeSingle();
+          .eq('is_exam', isExam);
 
-      // Fallback 1: Try current week with any topic
-      response ??= await _client
-          .from('challenges')
-          .select('*, questions(*)')
-          .eq('grade_level', gradeLevel)
-          .eq('week_number', currentWeek)
-          .limit(1)
-          .maybeSingle();
+      if (difficultyLevel != null) {
+        query = query.eq('difficulty_level', difficultyLevel);
+      }
 
-      // Fallback 2: Try Week 1 with rotated topic
-      response ??= await _client
-          .from('challenges')
-          .select('*, questions(*)')
-          .eq('grade_level', gradeLevel)
-          .eq('week_number', 1)
-          .eq('topic', selectedTopic)
-          .maybeSingle();
+      // If it's a normal week, filter by week and topic
+      if (!isExam) {
+        query = query.eq('week_number', currentWeek).eq('topic', selectedTopic);
+      } else if (topic != null) {
+        // If it's an exam and a specific topic is requested, filter by it
+        query = query.eq('topic', topic);
+      }
 
-      // Fallback 3: Week 1 Math (guaranteed to exist)
-      response ??= await _client
-          .from('challenges')
-          .select('*, questions(*)')
-          .eq('grade_level', gradeLevel)
-          .eq('week_number', 1)
-          .eq('topic', 'Math')
-          .maybeSingle();
+      var response = await query.maybeSingle();
+
+      // Fallback 1: Try current week with any topic (Non-Exam only)
+      if (response == null && !isExam) {
+        response = await _client
+            .from('challenges')
+            .select('*, questions(*)')
+            .eq('grade_level', gradeLevel)
+            .eq('week_number', currentWeek)
+            .eq('is_exam', false)
+            .limit(1)
+            .maybeSingle();
+      }
+
+      // Fallback 2: Try Week 1 with rotated topic (Non-Exam only)
+      if (response == null && !isExam) {
+        response = await _client
+            .from('challenges')
+            .select('*, questions(*)')
+            .eq('grade_level', gradeLevel)
+            .eq('week_number', 1)
+            .eq('topic', selectedTopic)
+            .eq('is_exam', false)
+            .maybeSingle();
+      }
+
+      // Fallback for Exam: If no specific exam found, try any exam for this grade
+      if (response == null && isExam) {
+        response = await _client
+            .from('challenges')
+            .select('*, questions(*)')
+            .eq('grade_level', gradeLevel)
+            .eq('is_exam', true)
+            .limit(1)
+            .maybeSingle();
+      }
 
       if (response == null) return null;
       return Challenge.fromJson(response);

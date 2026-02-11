@@ -30,7 +30,7 @@ class SceneryObject {
     this.totalFrames = 2,
     this.currentFrame = 1,
     this.animationTimer = 0,
-    this.animationSpeed = 0.2, // Seconds per frame
+    this.animationSpeed = 0.35, // Seconds per frame (Slower for smoother look)
   });
 }
 

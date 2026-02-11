@@ -53,21 +53,28 @@ class SupabaseService {
 
     if (isExam) {
       // Mock Exam Challenges
+      final displayTopic = topic ?? 'Mixed';
       return Challenge(
-        id: 'mock_exam_${topic ?? 'Mixed'}_d${difficultyLevel ?? 1}',
-        topic: topic ?? 'Mixed',
+        id: 'mock_exam_${displayTopic.replaceAll(' ', '_')}_d${difficultyLevel ?? 1}',
+        topic: displayTopic,
         gradeLevel: gradeLevel,
         questions: [
           QuizQuestion(
-            questionText: '[EXAM] What is the capital of Louisiana?',
+            questionText:
+                '[EXAM] $displayTopic: What is the capital of Louisiana?',
             correctOptionIndex: 0,
             options: ['Baton Rouge', 'New Orleans', 'Shreveport'],
           ),
           QuizQuestion(
             questionText:
-                '[EXAM] $gradeLevel Grade ${topic ?? 'General'} Question',
+                '[EXAM] Difficulty ${difficultyLevel ?? 1} $displayTopic Question',
             correctOptionIndex: 0,
             options: ['Correct Answer', 'Wrong 1', 'Wrong 2'],
+          ),
+          QuizQuestion(
+            questionText: '[EXAM] Final $displayTopic Challenge',
+            correctOptionIndex: 0,
+            options: ['Finish', 'No', 'Wait'],
           ),
         ],
       );

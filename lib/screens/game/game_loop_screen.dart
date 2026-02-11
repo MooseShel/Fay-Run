@@ -161,8 +161,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
     // Run Animation (Slower speed: approx 6-7 fps for smoother look)
     _runAnimationTimer += dt;
-    if (_runAnimationTimer > 0.15) {
-      // Increased frame time from ~0.1 to 0.15
+    if (_runAnimationTimer > 0.25) {
+      // Increased frame time from 0.15 to 0.25 for smoother, slower look
       _runAnimationTimer = 0;
       // Cycle through 3 frames (0, 1, 2)
       _runFrame = (_runFrame + 1) % 3;
@@ -189,11 +189,14 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       );
     }
 
-    // Random Staff Appearances (Every 10-15s for fun sounds/visuals only)
-    // Reduce timer for debug/testing to see it more often
-    // Random Staff Appearances (Reduced frequency by 100% / Half)
-    // threshold increased from 10+random(5) to 20+random(10)
-    if (_chaosTimer > (kDebugMode ? 10 : 20) + _random.nextInt(10)) {
+    // Level-based threshold for chaos (Less frequent in later levels to reduce overwhelming feel)
+    final double chaosThreshold = kDebugMode
+        ? 10.0
+        : (gameState.currentLevel >= 6
+            ? 35.0 + _random.nextInt(15) // Level 6-10: 35-50s
+            : 20.0 + _random.nextInt(10)); // Level 1-5: 20-30s
+
+    if (_chaosTimer > chaosThreshold) {
       _chaosTimer = 0;
 
       // Only trigger if no staff event is currently active
