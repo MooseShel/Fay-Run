@@ -21,6 +21,7 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   double _scrollOffset = 0;
+  DateTime? _lastUpdate;
 
   @override
   void initState() {
@@ -34,9 +35,20 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
   }
 
   void _updateScroll() {
-    if (widget.isPaused) return;
+    if (widget.isPaused) {
+      _lastUpdate = null;
+      return;
+    }
+
+    final now = DateTime.now();
+    final double dt = _lastUpdate == null
+        ? 0.016
+        : now.difference(_lastUpdate!).inMicroseconds / 1000000.0;
+    _lastUpdate = now;
+
     setState(() {
-      _scrollOffset += widget.runSpeed;
+      // runSpeed (e.g. 3.0) per frame at 60fps = 3.0 * 60 = 180 per second
+      _scrollOffset += widget.runSpeed * 60 * dt;
     });
   }
 

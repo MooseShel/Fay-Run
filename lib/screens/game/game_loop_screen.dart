@@ -32,8 +32,6 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   // Game Physics State
   double _playerY = 0; // 0 = ground, positive = up
   double _verticalVelocity = 0;
-  final double _gravity = -0.5; // Floatier
-  final double _jumpForce = 13.0; // Balanced
   final double _groundHeight =
       20.0; // Lowered from 50.0 to shift everything down towards the "walking way"
 
@@ -50,6 +48,9 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   bool _isCrashed = false;
   int _runFrame = 0;
   double _runAnimationTimer = 0;
+
+  // Frame-rate Independence
+  DateTime? _lastFrameTime;
 
   // Floating Score Logic
   final List<FloatingScore> _floatingScores = [];
@@ -133,96 +134,96 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     final gameState = context.read<GameState>();
 
     if (gameState.status != GameStatus.playing &&
-        gameState.status != GameStatus.bonusRound) return;
+        gameState.status != GameStatus.bonusRound) {
+      _lastFrameTime = null; // Reset when not playing
+      return;
+    }
 
-    // 0. Timers & Progression
-    const double dt = 0.016;
+    // 0. Timers & Progression - Calculate Delta Time
+    final now = DateTime.now();
+    final double dt = _lastFrameTime == null
+        ? 0.016
+        : now.difference(_lastFrameTime!).inMicroseconds / 1000000.0;
+    _lastFrameTime = now;
+
     if (gameState.status == GameStatus.playing) {
       _distanceRun += gameState.runSpeed * dt * 10; // Scale up
     }
 
-    // Score based on distance (approx 1 point per unit run)
-    // RunSpeed 3.0 * 0.016 * 10 = 0.48 units per frame.
-    // Let's add 1 point every few frames? Or just use a timer accumulator?
-    // Let's just add 1 point every frame the user is moving?
-    // Simple: gameState.addScore(1); runs 60 times a second -> 60 points/sec.
-    // Maybe too fast? Let's add (runSpeed / 10).round()
+    // Score based on distance
     if (gameState.status == GameStatus.playing) {
-      gameState.addScore(1);
+      // Add roughly 60 points per second if runSpeed is ~3.0
+      gameState.addScore(
+          ((gameState.runSpeed / 3.0) * 60 * dt).round().clamp(0, 10));
 
       // Update Floating Scores
       for (var fs in _floatingScores) {
-        fs.animationTime += dt * 2; // Speed of animation
+        fs.animationTime += dt * 2.0; // Speed of animation
       }
       _floatingScores.removeWhere((fs) => fs.animationTime >= 1.0);
     }
 
     _chaosTimer += dt;
 
-    // Run Animation (Slower speed: approx 6-7 fps for smoother look)
+    // Run Animation
     _runAnimationTimer += dt;
-    if (_runAnimationTimer > 0.25) {
-      // Increased frame time from 0.15 to 0.25 for smoother, slower look
+    if (_runAnimationTimer > 0.15) {
+      // Back to 0.15 for better feel at 3.0 speed
       _runAnimationTimer = 0;
-      // Cycle through 3 frames (0, 1, 2)
       _runFrame = (_runFrame + 1) % 3;
     }
 
-    // Level Completion (e.g., Target = Speed * 600 for ~60s playtime)
-    // Speed 2.5 * 600 = 1500 units
-    // Speed 3.6 * 600 = 2160 units
-    // Calculation: Distance/Frame = Speed * 0.16. Frame/Sec = 60. Distance/Sec = Speed * 9.6.
-    // Target for 60s = Speed * 9.6 * 60 = Speed * 576. Let's round to 600 for simplicity.
+    // Level Completion
     final targetDistance = gameState.runSpeed * 600;
 
     if (_distanceRun > targetDistance) {
       _distanceRun = 0;
       gameState.completeLevel();
-      // Stop music when level completes
       AudioService().stopBGM();
-      // Show Level Up toast or overlay?
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Level ${gameState.currentLevel}! Speed Up!'),
+          content: Text('Level ${gameState.currentLevel} Complete!'),
           duration: const Duration(seconds: 1),
         ),
       );
     }
 
-    // Level-based threshold for chaos (Less frequent in later levels to reduce overwhelming feel)
+    // Chaos Threshold
     final double chaosThreshold = kDebugMode
         ? 10.0
         : (gameState.currentLevel >= 6
-            ? 35.0 + _random.nextInt(15) // Level 6-10: 35-50s
-            : 20.0 + _random.nextInt(10)); // Level 1-5: 20-30s
+            ? 35.0 + _random.nextInt(15)
+            : 20.0 + _random.nextInt(10));
 
     if (_chaosTimer > chaosThreshold) {
       _chaosTimer = 0;
-
-      // Only trigger if no staff event is currently active
       if (gameState.activeStaffEvent == null) {
         gameState.triggerStaffChaos();
       }
     }
 
+    // 1. Physics Update (Applying dt to gravity and velocity)
+    if (_isJumping || _playerY > 0) {
+      // Scale movement and gravity by dt
+      // Base gravity was -0.5 per frame (at 60fps) -> -0.5 * 60^2 = -1800 per sec^2
+      const double gravityAccel = -1800.0;
+
+      _playerY += _verticalVelocity * dt;
+      _verticalVelocity += gravityAccel * dt;
+
+      if (_playerY <= 0) {
+        _playerY = 0;
+        _verticalVelocity = 0;
+        _isJumping = false;
+        _jumpCount = 0;
+      }
+    }
+
     // Performance Optimization: Consolidate state updates into one setState call
     setState(() {
-      // 1. Physics Update
-      if (_isJumping || _playerY > 0) {
-        _playerY += _verticalVelocity;
-        _verticalVelocity += _gravity;
-
-        if (_playerY <= 0) {
-          _playerY = 0;
-          _verticalVelocity = 0;
-          _isJumping = false;
-          _jumpCount = 0; // Reset jumps
-        }
-      }
-
       // 2. Obstacle Update
       _obstacleManager.update(
-        0.016,
+        dt,
         gameState.runSpeed,
         gameState.currentLevel,
         gameState.status == GameStatus.bonusRound,
@@ -231,7 +232,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
       // 3. Scenery Update
       _sceneryManager.update(
-        0.016,
+        dt,
         gameState.runSpeed,
         gameState.currentLevel,
       );
@@ -388,8 +389,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         AudioService().playJump();
       }
       setState(() {
-        // Normal jump power (no staff modifications)
-        _verticalVelocity = _jumpForce;
+        // Base jump force was 13.0 per frame (at 60fps) -> 13 * 60 = 780 per second
+        _verticalVelocity = 780.0;
         _isJumping = true;
         _jumpCount++;
       });

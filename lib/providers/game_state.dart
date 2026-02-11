@@ -22,7 +22,7 @@ class GameState extends ChangeNotifier {
   int _score = 0;
   int _lives = 5; // Increased from 3 to 5 hearts
   int _currentLevel = 1;
-  double _runSpeed = 2.2; // Base speed reduced from 3.0
+  double _runSpeed = 3.0; // Consistent speed across all levels
   GameStatus _status = GameStatus.menu;
 
   // Events
@@ -214,13 +214,8 @@ class GameState extends ChangeNotifier {
   }
 
   void _resetLevelPhysics() {
-    // Progressive speed increases - approx 5-8% per level for smooth curve
-    // Base speed at Level 1 = 2.5
-    // Level 10 speed target ~4.5 to 5.0
-    final double baseSpeed = 2.2;
-    final double increment = 0.15; // Linear increment reduced from 0.25
-
-    _runSpeed = baseSpeed + ((_currentLevel - 1) * increment);
+    // Consistent speed for all levels as requested
+    _runSpeed = 3.0;
 
     debugPrint('Level $_currentLevel Physics Reset: Speed = $_runSpeed');
   }
@@ -270,6 +265,14 @@ class GameState extends ChangeNotifier {
     // Staff events now only show visual notification and play sound
     _activeStaffEvent = StaffEvent.getEvent(type);
     AudioService().playStaffSound(type); // Play staff voice
+
+    // Apply speed modifications for specific staff events
+    if (type == StaffEventType.coachWhistle) {
+      _runSpeed = 4.5; // Hurried!
+    } else if (type == StaffEventType.deanGlare) {
+      _runSpeed = 1.5; // Slow motion!
+    }
+
     notifyListeners();
 
     // Auto-clear event after duration

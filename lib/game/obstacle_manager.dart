@@ -114,7 +114,10 @@ class ObstacleManager {
     }
 
     // Move & Cleanup
-    double moveAmt = (runSpeed * 0.002);
+    // Original moveAmt was (runSpeed * 0.002) per frame (at 60fps).
+    // To make it frame-rate independent: moveAmt = runSpeed * 0.002 * 60 * dt
+    // 0.002 * 60 = 0.12
+    double moveAmt = runSpeed * 0.12 * dt;
 
     for (var i = obstacles.length - 1; i >= 0; i--) {
       var obs = obstacles[i];

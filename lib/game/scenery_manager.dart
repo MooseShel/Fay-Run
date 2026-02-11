@@ -55,9 +55,9 @@ class SceneryManager {
       final obj = objects[i];
 
       // Scenery moves relative to player runSpeed
-      // dt * runSpeed * 0.002 is the base move amount from ObstacleManager
+      // 0.12 * dt * runSpeed is the base move amount (equivalent to 0.002 per frame at 60fps)
       // We apply a multiplier for parallax effect
-      obj.x -= (runSpeed * 0.002) * obj.speedMultiplier;
+      obj.x -= (runSpeed * 0.12 * dt) * obj.speedMultiplier;
 
       // Animate
       obj.animationTimer += dt;
