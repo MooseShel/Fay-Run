@@ -400,6 +400,9 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     if (obs.type == ObstacleType.car && obs.direction == 1.0) {
       // Left-to-Right cars are in the nearer lane (closer to camera), need more drop
       offset = screenHeight * 0.06;
+    } else if (obs.type == ObstacleType.bench) {
+      // Benches were floating, lowering them by 3% of screen height
+      offset = screenHeight * 0.03;
     }
 
     return offset;

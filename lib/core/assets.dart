@@ -17,9 +17,7 @@ class Assets {
   static const String ernieCrash = 'ernie_crash.png';
 
   static String background(int level) {
-    // Level 2 is jpg, others are png
-    final ext = level == 2 ? 'jpg' : 'png';
-    return 'bgs/bg_fay_$level.$ext';
+    return 'bgs/bg_fay_$level.png';
   }
 
   static const String itemGoldenBook = 'obstacles/item_golden_book.png';

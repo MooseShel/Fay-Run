@@ -238,8 +238,8 @@ class ObstacleManager {
 
     switch (type) {
       case ObstacleType.log:
-        width = 0.27;
-        height = 0.12;
+        width = 0.405; // 0.27 * 1.5
+        height = 0.18; // 0.12 * 1.5
         break;
       case ObstacleType.puddle:
         width = 0.27;
@@ -272,8 +272,8 @@ class ObstacleManager {
         height = 0.20;
         break;
       case ObstacleType.hydrant:
-        width = 0.12;
-        height = 0.18;
+        width = 0.18; // 0.12 * 1.5
+        height = 0.27; // 0.18 * 1.5
         break;
       case ObstacleType.bench:
         width = 0.375;
