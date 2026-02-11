@@ -208,232 +208,267 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               );
             }),
             SafeArea(
-              child: Column(
-                children: [
-                  // Header
-                  Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Grade Badge
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: FayColors.gold.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: FayColors.gold),
-                          ),
-                          child: Text(
-                            student != null
-                                ? (student['grade'] ?? 'Grade ?')
-                                : 'Guest',
-                            style: const TextStyle(
-                              color: FayColors.gold,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.logout, color: Colors.white70),
-                          onPressed: () {
-                            Navigator.pushReplacementNamed(
-                              context,
-                              '/select_student',
-                            );
-                          },
-                        ),
-                        IconButton(
-                          icon:
-                              const Icon(Icons.settings, color: Colors.white70),
-                          onPressed: () {
-                            _showSettings(context);
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Welcome
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Text(
-                          'Welcome Back,',
-                          style: TextStyle(color: Colors.white70, fontSize: 16),
-                        ),
-                        Text(
-                          gameState.generatedNickname.isNotEmpty
-                              ? gameState.generatedNickname
-                              : 'Future Gator',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        // Top Score
-                        Text(
-                          'Top Score: ${student?['high_score'] ?? 0}',
-                          style: const TextStyle(
-                            color: FayColors.gold,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        // Reminder Note
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.05),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.1),
-                            ),
-                          ),
-                          child: const Row(
-                            children: [
-                              Icon(Icons.info_outline,
-                                  color: Colors.white70, size: 16),
-                              SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  'Remember: Finish the level for your score to count!',
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 12,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Exam Mode Section
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: gameState.isExamMode
-                            ? FayColors.gold.withValues(alpha: 0.1)
-                            : Colors.white.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: gameState.isExamMode
-                              ? FayColors.gold
-                              : Colors.white10,
-                          width: 1,
-                        ),
-                      ),
-                      child: Column(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.school,
-                                    color: gameState.isExamMode
-                                        ? FayColors.gold
-                                        : Colors.white70,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  const Text(
-                                    'Exam Mode',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
+                          // Grade Badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: FayColors.gold.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: FayColors.gold),
+                            ),
+                            child: Text(
+                              student != null
+                                  ? (student['grade'] ?? 'Grade ?')
+                                  : 'Guest',
+                              style: const TextStyle(
+                                color: FayColors.gold,
+                                fontWeight: FontWeight.bold,
                               ),
-                              Switch(
-                                value: gameState.isExamMode,
-                                activeThumbColor: FayColors.gold,
-                                inactiveThumbColor:
-                                    FayColors.gold.withValues(alpha: 0.8),
-                                inactiveTrackColor: Colors.white10,
-                                onChanged: (val) {
-                                  gameState.setExamMode(val,
-                                      topic: val
-                                          ? (gameState.examTopic ?? 'Math')
-                                          : null);
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.leaderboard,
+                                    color: FayColors.gold),
+                                tooltip: 'Leaderboard',
+                                onPressed: () {
+                                  final grade = student?['grade'];
+                                  context
+                                      .read<GameState>()
+                                      .loadLeaderboard(grade: grade);
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => LeaderboardScreen(
+                                        leaderboard: context
+                                            .read<GameState>()
+                                            .leaderboard,
+                                        grade: grade,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.logout,
+                                    color: Colors.white70),
+                                onPressed: () {
+                                  Navigator.pushReplacementNamed(
+                                    context,
+                                    '/select_student',
+                                  );
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.settings,
+                                    color: Colors.white70),
+                                onPressed: () {
+                                  _showSettings(context);
                                 },
                               ),
                             ],
                           ),
-                          if (gameState.isExamMode) ...[
-                            const Divider(color: Colors.white10, height: 24),
+                        ],
+                      ),
+                    ),
+
+                    // Welcome
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Text(
+                            'Welcome Back,',
+                            style:
+                                TextStyle(color: Colors.white70, fontSize: 16),
+                          ),
+                          Text(
+                            gameState.generatedNickname.isNotEmpty
+                                ? gameState.generatedNickname
+                                : 'Future Gator',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          // Top Score
+                          Text(
+                            'Top Score: ${student?['high_score'] ?? 0}',
+                            style: const TextStyle(
+                              color: FayColors.gold,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          // Reminder Note
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.1),
+                              ),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.info_outline,
+                                    color: Colors.white70, size: 16),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Remember: Finish the level for your score to count!',
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Exam Mode Section
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: gameState.isExamMode
+                              ? FayColors.gold.withValues(alpha: 0.1)
+                              : Colors.white.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: gameState.isExamMode
+                                ? FayColors.gold
+                                : Colors.white10,
+                            width: 1,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text(
-                                  'Select Topic:',
-                                  style: TextStyle(color: Colors.white70),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.school,
+                                      color: gameState.isExamMode
+                                          ? FayColors.gold
+                                          : Colors.white70,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Text(
+                                      'Exam Mode',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                DropdownButton<String>(
-                                  value: gameState.examTopic ?? 'Math',
-                                  dropdownColor: FayColors.navy,
-                                  style: const TextStyle(
-                                      color: FayColors.gold,
-                                      fontWeight: FontWeight.bold),
-                                  underline: Container(),
-                                  items: ['Math', 'Science', 'Social Studies']
-                                      .map((t) {
-                                    return DropdownMenuItem(
-                                      value: t,
-                                      child: Text(t),
-                                    );
-                                  }).toList(),
+                                Switch(
+                                  value: gameState.isExamMode,
+                                  activeThumbColor: FayColors.gold,
+                                  inactiveThumbColor:
+                                      FayColors.gold.withValues(alpha: 0.8),
+                                  inactiveTrackColor: Colors.white10,
                                   onChanged: (val) {
-                                    gameState.setExamMode(true, topic: val);
+                                    gameState.setExamMode(val,
+                                        topic: val
+                                            ? (gameState.examTopic ?? 'Math')
+                                            : null);
                                   },
                                 ),
                               ],
                             ),
+                            if (gameState.isExamMode) ...[
+                              const Divider(color: Colors.white10, height: 24),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'Select Topic:',
+                                    style: TextStyle(color: Colors.white70),
+                                  ),
+                                  DropdownButton<String>(
+                                    value: gameState.examTopic ?? 'Math',
+                                    dropdownColor: FayColors.navy,
+                                    style: const TextStyle(
+                                        color: FayColors.gold,
+                                        fontWeight: FontWeight.bold),
+                                    underline: Container(),
+                                    items: ['Math', 'Science', 'Social Studies']
+                                        .map((t) {
+                                      return DropdownMenuItem(
+                                        value: t,
+                                        child: Text(t),
+                                      );
+                                    }).toList(),
+                                    onChanged: (val) {
+                                      gameState.setExamMode(true, topic: val);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ],
                           ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Level Selector Title
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24.0),
+                      child: Row(
+                        children: [
+                          Text(
+                            'Select Level',
+                            style: TextStyle(
+                              color: FayColors.gold,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                  ),
 
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 12),
 
-                  // Level Selector Title
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Text(
-                      'Select Level',
-                      style: TextStyle(
-                        color: FayColors.gold,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Responsive Level Grid
-                  Expanded(
-                    child: GridView.builder(
+                    // Responsive Level Grid
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       gridDelegate:
                           const SliverGridDelegateWithMaxCrossAxisExtent(
@@ -591,43 +626,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                         );
                       },
                     ),
-                  ),
-
-                  // Leaderboard Button
-                  Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          final grade = student?['grade'];
-                          context
-                              .read<GameState>()
-                              .loadLeaderboard(grade: grade);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => LeaderboardScreen(
-                                leaderboard:
-                                    context.watch<GameState>().leaderboard,
-                                grade: grade,
-                              ),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.leaderboard,
-                            color: FayColors.gold),
-                        label: const Text('View Leaderboard'),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          side: const BorderSide(color: FayColors.gold),
-                          foregroundColor: FayColors.gold,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                ],
+                    const SizedBox(height: 40),
+                  ],
+                ),
               ),
             ),
           ],

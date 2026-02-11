@@ -120,9 +120,9 @@ class ObstacleManager {
 
       // Stagger Logic: Ensure rewards don't clump with obstacles
       // If a reward was about to spawn, push it back slightly to give breathing room
-      if (_rewardTimer > _rewardInterval - 1.5) {
-        _rewardTimer =
-            _rewardInterval - 2.5; // Reset to at least 2.5s remaining
+      // Reduced pushback to 0.5s so it doesn't get stuck in a loop at high frequencies
+      if (_rewardTimer > _rewardInterval - 1.0) {
+        _rewardTimer = _rewardInterval - 0.5;
       }
     }
 

@@ -159,6 +159,12 @@ class GameState extends ChangeNotifier {
   ) async {
     try {
       final service = SupabaseService();
+      final userId = service.currentUser?.id;
+      if (userId == null) {
+        debugPrint('GameState: Cannot add student, no user logged in.');
+        return;
+      }
+
       // Add student
       await service.addStudent(
         firstName: firstName,
@@ -278,7 +284,8 @@ class GameState extends ChangeNotifier {
     notifyListeners();
 
     // Auto-clear event after duration
-    Future.delayed(_activeStaffEvent!.duration, () {
+    final duration = _activeStaffEvent?.duration ?? const Duration(seconds: 4);
+    Future.delayed(duration, () {
       _clearStaffEvent();
     });
   }
@@ -323,10 +330,11 @@ class GameState extends ChangeNotifier {
   }
 
   Future<void> checkHighScore() async {
-    if (_score > 0 && _currentStudent != null) {
+    final studentId = _currentStudent?['id'];
+    if (_score > 0 && studentId != null) {
       try {
         final service = SupabaseService();
-        await service.updateStudentScore(_currentStudent!['id'], _score);
+        await service.updateStudentScore(studentId, _score);
 
         // Also unlock next level if needed (simple logic: score > 0 unlocks next?)
         // Or explicitly called in completeLevel
@@ -347,8 +355,11 @@ class GameState extends ChangeNotifier {
 
     try {
       final service = SupabaseService();
+      final studentId = _currentStudent?['id'];
+      if (studentId == null) return;
+
       await service.submitQuizResult(
-        studentId: _currentStudent!['id'],
+        studentId: studentId,
         challengeId: challengeId,
         score: correct ? 100 : 0,
       );
@@ -380,7 +391,10 @@ class GameState extends ChangeNotifier {
 
       try {
         final service = SupabaseService();
-        await service.unlockLevel(_currentStudent!['id'], _maxLevel);
+        final studentId = _currentStudent?['id'];
+        if (studentId != null) {
+          await service.unlockLevel(studentId, _maxLevel);
+        }
       } catch (e) {
         debugPrint('Error unlocking level: $e');
       }

@@ -48,9 +48,11 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
         : now.difference(_lastUpdate!).inMicroseconds / 1000000.0;
     _lastUpdate = now;
 
+    final double screenWidth = MediaQuery.sizeOf(context).width;
+
     setState(() {
-      // runSpeed (e.g. 3.0) per frame at 60fps = 3.0 * 60 = 180 per second
-      _scrollOffset += widget.runSpeed * 60 * dt;
+      // Synchronized with ObstacleManager: 0.12 * screenWidth * runSpeed per second
+      _scrollOffset += widget.runSpeed * (0.12 * screenWidth) * dt;
     });
   }
 
