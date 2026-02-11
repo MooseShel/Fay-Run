@@ -590,58 +590,136 @@ class _GameLoopScreenState extends State<GameLoopScreen>
             if (gameState.activeStaffEvent != null)
               AnimatedStaffChaos(event: gameState.activeStaffEvent!),
 
-            // Level Progress Bar
+            // Premium Game HUD
             Positioned(
-              top: 50,
-              left: screenSize.width * 0.25,
-              right: screenSize.width * 0.25,
+              top: MediaQuery.paddingOf(context).top + 10,
+              left: 20,
+              right: 20,
               child: Column(
                 children: [
-                  Container(
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: FayColors.navy.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        width: 1,
-                      ),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: Stack(
-                        children: [
-                          LinearProgressIndicator(
-                            value: (_distanceRun / (gameState.runSpeed * 600))
-                                .clamp(0.0, 1.0),
-                            backgroundColor: Colors.transparent,
-                            color: FayColors.gold,
-                            minHeight: 12,
-                          ),
-                          // Subtle Gloss Effect
-                          Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Colors.white.withValues(alpha: 0.2),
-                                  Colors.transparent,
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(Icons.directions_run,
-                          size: 14, color: FayColors.gold),
-                      Icon(Icons.flag, size: 14, color: FayColors.gold),
+                      // Lives Display
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.black26,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white24),
+                        ),
+                        child: Row(
+                          children: List.generate(5, (index) {
+                            return Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 2.0),
+                              child: Icon(
+                                index < gameState.lives
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                color: FayColors.brickRed,
+                                size: 24,
+                              ),
+                            );
+                          }),
+                        ),
+                      ),
+                      // Level Indicator
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: FayColors.navy.withValues(alpha: 0.8),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: FayColors.gold, width: 2),
+                        ),
+                        child: Text(
+                          'LEVEL ${gameState.currentLevel}',
+                          style: const TextStyle(
+                            color: FayColors.gold,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                      ),
+                      // Score Display
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.black26,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white24),
+                        ),
+                        child: TweenAnimationBuilder<int>(
+                          duration: const Duration(milliseconds: 500),
+                          tween: IntTween(begin: 0, end: gameState.score),
+                          builder: (context, value, child) {
+                            return Text(
+                              value.toString().padLeft(6, '0'),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontFamily: 'BubblegumSans',
+                                fontSize: 24,
+                                letterSpacing: 2,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  // Progress Bar
+                  Stack(
+                    alignment: Alignment.centerLeft,
+                    clipBehavior: Clip.none,
+                    children: [
+                      // Track
+                      Container(
+                        height: 16,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.black38,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.white10),
+                        ),
+                      ),
+                      // Progress Fill
+                      FractionallySizedBox(
+                        widthFactor: (_distanceRun / (gameState.runSpeed * 600))
+                            .clamp(0.001, 1.0),
+                        child: Container(
+                          height: 16,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [FayColors.gold, Color(0xFFFFD54F)],
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: [
+                              BoxShadow(
+                                color: FayColors.gold.withValues(alpha: 0.4),
+                                blurRadius: 10,
+                                spreadRadius: 1,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // Animated Gator Marker
+                      Positioned(
+                        left: (screenSize.width - 40) *
+                                (_distanceRun / (gameState.runSpeed * 600))
+                                    .clamp(0.0, 1.0) -
+                            20,
+                        top: -12,
+                        child: Image.asset(
+                          'assets/images/ernie_run.png',
+                          width: 40,
+                          height: 40,
+                        ),
+                      ),
                     ],
                   ),
                 ],

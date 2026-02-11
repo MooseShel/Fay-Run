@@ -1,24 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'constants.dart';
 
 class FayTheme {
   static ThemeData get themeData {
-    return ThemeData(
+    final baseTheme = ThemeData(
       primaryColor: FayColors.navy,
       scaffoldBackgroundColor: const Color(0xFFF5F9FF), // Light blue tint
-      // Text Theme (System Fonts)
-      textTheme: const TextTheme().copyWith(
-        displayLarge: const TextStyle(
-          fontSize: 32,
+      // fontFamily will be set by GoogleFonts.bubblegumSansTextTheme
+    );
+
+    return baseTheme.copyWith(
+      // Use GoogleFonts for the entire text theme
+      textTheme:
+          GoogleFonts.bubblegumSansTextTheme(baseTheme.textTheme).copyWith(
+        displayLarge: GoogleFonts.bubblegumSans(
+          fontSize: 36,
+          fontWeight: FontWeight.bold,
+          color: FayColors.navy,
+          letterSpacing: 1.2,
+        ),
+        displayMedium: GoogleFonts.bubblegumSans(
+          fontSize: 28,
           fontWeight: FontWeight.bold,
           color: FayColors.navy,
         ),
-        displayMedium: const TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-          color: FayColors.navy,
+        bodyLarge: GoogleFonts.bubblegumSans(
+          fontSize: 18,
+          color: FayColors.text,
+          fontWeight: FontWeight.w600,
         ),
-        bodyLarge: const TextStyle(fontSize: 18, color: FayColors.text),
       ),
 
       appBarTheme: const AppBarTheme(
@@ -27,9 +38,11 @@ class FayTheme {
         elevation: 0,
         centerTitle: true,
         titleTextStyle: TextStyle(
-          fontSize: 24,
+          fontFamily: 'BubblegumSans',
+          fontSize: 26,
           fontWeight: FontWeight.bold,
           color: FayColors.white,
+          letterSpacing: 1.5,
         ),
       ),
 
