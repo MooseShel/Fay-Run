@@ -105,9 +105,11 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       // 2. Precache current level background (others preloaded in MainMenu)
       final bgPreload = AssetManager().precacheLevelAssets(context, level);
 
-      // 3. Data & Music
-      await state.loadChallenge();
+      // 3. Audio - Play BGM early to mask loading
       AudioService().playBGM(level);
+
+      // 4. Data
+      await state.loadChallenge();
 
       // Wait for visuals to be ready and min delay
       await Future.wait([minDelayFuture, essentialPreload, bgPreload]);
@@ -859,8 +861,9 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                           onPressed: () {
                             _obstacleManager.clear();
                             _sceneryManager.clear();
+                            setState(() => _isLoading = true);
                             gameState.startBonusRound();
-                            // Optional: play special music?
+                            _loadAssets();
                           },
                           icon: const Icon(Icons.flash_on),
                           label: const Text('START GOLDEN DASH'),
@@ -878,7 +881,9 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                           onPressed: () {
                             _obstacleManager.clear();
                             _sceneryManager.clear();
+                            setState(() => _isLoading = true);
                             gameState.startNextLevel();
+                            _loadAssets();
                           },
                           child: const Text(
                             'SKIP TO NEXT CLASS',
@@ -890,7 +895,9 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                           onPressed: () {
                             _obstacleManager.clear();
                             _sceneryManager.clear();
+                            setState(() => _isLoading = true);
                             gameState.startNextLevel();
+                            _loadAssets();
                           },
                           icon: const Icon(Icons.arrow_forward),
                           label: const Text('GO TO NEXT CLASS'),

@@ -64,14 +64,13 @@ class AudioService {
       'staff_prek2.mp3',
     ];
 
-    for (var s in sfx) {
-      // Preload by creating a temporary player and setting source
+    // Use the SFX pool to "warm up" the players with the most common sounds
+    // This avoids rapid allocation/deallocation which triggers EXC_BAD_ACCESS
+    for (int i = 0; i < _sfxPool.length && i < sfx.length; i++) {
       try {
-        final player = AudioPlayer();
-        await player.setSource(AssetSource('audio/$s'));
-        await player.dispose();
+        await _sfxPool[i].setSource(AssetSource('audio/${sfx[i]}'));
       } catch (e) {
-        debugPrint('Error preloading $s: $e');
+        debugPrint('Error preloading ${sfx[i]}: $e');
       }
     }
   }
