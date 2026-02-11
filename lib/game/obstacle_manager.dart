@@ -43,7 +43,9 @@ class Obstacle {
   double height;
   double direction; // -1.0 for Left (default), 1.0 for Right
   int variant; // 1 or 2
-  bool isCollected; // For Golden Book
+  bool isCollected; // For Golden Book (to disappear)
+  bool
+      hasEngaged; // To prevent double-collision while potentially staying on screen
 
   Obstacle({
     required this.id,
@@ -55,6 +57,7 @@ class Obstacle {
     this.direction = -1.0,
     this.variant = 1,
     this.isCollected = false,
+    this.hasEngaged = false,
   });
 }
 

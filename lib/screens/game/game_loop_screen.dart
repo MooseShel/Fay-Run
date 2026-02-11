@@ -99,43 +99,40 @@ class _GameLoopScreenState extends State<GameLoopScreen>
           precacheImage(
               const AssetImage('assets/images/ernie_run_2.png'), context),
           precacheImage(
-              const AssetImage('assets/images/ernie_run_3.png'), context),
+              AssetImage('assets/images/${Assets.ernieRun}'), context),
           precacheImage(
-              const AssetImage('assets/images/ernie_jump.png'), context),
+              AssetImage('assets/images/${Assets.ernieRun2}'), context),
           precacheImage(
-              const AssetImage('assets/images/ernie_crash.png'), context),
+              AssetImage('assets/images/${Assets.ernieRun3}'), context),
+          precacheImage(
+              AssetImage('assets/images/${Assets.ernieJump}'), context),
+          precacheImage(
+              AssetImage('assets/images/${Assets.ernieCrash}'), context),
           // Common Obstacles
-          precacheImage(
-              const AssetImage('assets/images/obstacles/obstacle_log.png'),
-              context),
-          precacheImage(
-              const AssetImage('assets/images/obstacles/obstacle_rock.png'),
-              context),
+          precacheImage(AssetImage('assets/images/${Assets.obsLog}'), context),
+          precacheImage(AssetImage('assets/images/${Assets.obsRock}'), context),
           // Food
           precacheImage(
-              const AssetImage('assets/images/obstacles/obstacle_apple.png'),
-              context),
+              AssetImage('assets/images/${Assets.obsApple}'), context),
           precacheImage(
-              const AssetImage('assets/images/obstacles/obstacle_banana.png'),
-              context),
+              AssetImage('assets/images/${Assets.obsBanana}'), context),
           precacheImage(
-              const AssetImage('assets/images/obstacles/obstacle_burger_1.png'),
-              context),
+              AssetImage('assets/images/${Assets.obsBurger1}'), context),
           precacheImage(
-              const AssetImage('assets/images/obstacles/obstacle_burger_2.png'),
-              context),
+              AssetImage('assets/images/${Assets.obsBurger2}'), context),
           precacheImage(
               AssetImage('assets/images/${Assets.itemGoldenBook}'), context),
         ]);
 
         // 2. Precache 10 Backgrounds
         for (int i = 1; i <= 10; i++) {
-          final ext = i == 2 ? 'jpg' : 'png';
+          if (!mounted) return;
           await precacheImage(
-              AssetImage('assets/images/bgs/bg_fay_$i.$ext'), context);
+              AssetImage('assets/images/${Assets.background(i)}'), context);
         }
 
         // 3. Audio & Data
+        if (!mounted) return;
         final state = context.read<GameState>();
         await state.loadChallenge();
         // Don't await BGM to prevent hangs if audio context is blocked
@@ -301,24 +298,25 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       // Y overlap
       bool yOverlap = (playerBottom < obsTop) && (playerTop > obsBottom);
 
-      if (xOverlap && yOverlap && !obs.isCollected) {
+      if (xOverlap && yOverlap && !obs.hasEngaged) {
         _handleCollision(obs, gameState);
       }
     }
   }
 
   void _handleCollision(Obstacle obs, GameState gameState) {
-    obs.isCollected = true; // Prevent multi-trigger
+    obs.hasEngaged = true; // Prevent multi-trigger
 
     if (obs.type == ObstacleType.goldenBook) {
       gameState.pauseGame();
-      _showQuiz(gameState, reward: 200); // Double Reward
+      _showQuiz(gameState, obs, reward: 200); // Double Reward
     } else if (obs.type == ObstacleType.burger ||
         obs.type == ObstacleType.apple ||
         obs.type == ObstacleType.banana) {
       gameState.pauseGame();
-      _showQuiz(gameState, reward: 100); // Standard Reward
+      _showQuiz(gameState, obs, reward: 100); // Standard Reward
     } else {
+      obs.isCollected = true; // Disappear on hit
       if (!gameState.isInvincible) {
         AudioService().playBonk();
         gameState.takeDamage();
@@ -340,13 +338,13 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     }
   }
 
-  void _showQuiz(GameState gameState, {int reward = 100}) {
+  void _showQuiz(GameState gameState, Obstacle obs, {int reward = 100}) {
     // Use loaded challenge or fallback to a default one
     final challenge = gameState.currentChallenge ??
         Challenge(
           id: 'fallback_math',
           topic: 'Math',
-          gradeLevel: 4,
+          gradeLevel: 1,
           questions: [
             QuizQuestion(
               questionText: 'What is 5 + 5?',
@@ -372,7 +370,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     showDialog(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.black.withOpacity(0.7), // Darker overlay
+      barrierColor: Colors.black.withValues(alpha: 0.7), // Darker overlay
       builder: (context) => QuizOverlay(
         challenge: challenge,
         question: question,
@@ -382,12 +380,14 @@ class _GameLoopScreenState extends State<GameLoopScreen>
             AudioService().playPowerup();
             gameState.addScore(reward);
             gameState.setInvincible(true);
+            obs.isCollected = true; // Disappear ONLY if correct
 
             // Spawn Floating Text
             _spawnFloatingScore(reward);
           } else {
             AudioService().playBonk();
-            gameState.takeDamage();
+            // User requested to remove punishment for missing a question
+            // gameState.takeDamage();
           }
 
           // submit result to backend
@@ -550,10 +550,10 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                   Container(
                     height: 12,
                     decoration: BoxDecoration(
-                      color: FayColors.navy.withOpacity(0.3),
+                      color: FayColors.navy.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         width: 1,
                       ),
                     ),
@@ -575,7 +575,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
                                 colors: [
-                                  Colors.white.withOpacity(0.2),
+                                  Colors.white.withValues(alpha: 0.2),
                                   Colors.transparent,
                                 ],
                               ),
@@ -613,7 +613,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                   ),
                   onPressed: () => context.read<GameState>().pauseGame(),
                   style: IconButton.styleFrom(
-                    backgroundColor: Colors.white.withOpacity(0.5),
+                    backgroundColor: Colors.white.withValues(alpha: 0.5),
                   ),
                 ),
               ),
@@ -673,7 +673,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
             // 7. Level Complete Overlay
             if (gameState.status == GameStatus.levelComplete)
               Container(
-                color: FayColors.navy.withOpacity(0.9),
+                color: FayColors.navy.withValues(alpha: 0.9),
                 child: Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,

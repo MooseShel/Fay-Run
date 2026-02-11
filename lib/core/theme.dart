@@ -50,7 +50,7 @@ class FayTheme {
           ),
           textStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
           elevation: 4,
-          shadowColor: FayColors.navyDark.withOpacity(0.4),
+          shadowColor: FayColors.navyDark.withValues(alpha: 0.4),
         ),
       ),
 
@@ -60,7 +60,7 @@ class FayTheme {
         fillColor: Colors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: FayColors.navy.withOpacity(0.2)),
+          borderSide: BorderSide(color: FayColors.navy.withValues(alpha: 0.2)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),

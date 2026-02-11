@@ -5,6 +5,7 @@ import '../../services/supabase_service.dart';
 import '../../providers/game_state.dart';
 import '../../services/audio_service.dart';
 import '../../services/settings_service.dart';
+import '../../core/assets.dart';
 import 'leaderboard_screen.dart';
 
 class MainMenuScreen extends StatefulWidget {
@@ -174,7 +175,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: FayColors.gold.withOpacity(0.2),
+                        color: FayColors.gold.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(color: FayColors.gold),
                       ),
@@ -242,10 +243,10 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
+                        color: Colors.white.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                         ),
                       ),
                       child: const Row(
@@ -301,9 +302,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                   itemBuilder: (context, index) {
                     final level = index + 1;
                     final isUnlocked = level <= gameState.maxLevel;
-                    final String extension = level == 2 ? 'jpg' : 'png';
                     final String assetPath =
-                        'assets/images/bgs/bg_fay_$level.$extension';
+                        'assets/images/${Assets.background(level)}';
 
                     return InkWell(
                       onTap: isUnlocked
@@ -321,8 +321,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                             fit: BoxFit.cover,
                             colorFilter: ColorFilter.mode(
                               isUnlocked
-                                  ? Colors.black.withOpacity(0.4)
-                                  : Colors.black.withOpacity(0.8),
+                                  ? Colors.black.withValues(alpha: 0.4)
+                                  : Colors.black.withValues(alpha: 0.8),
                               BlendMode.darken,
                             ),
                           ),

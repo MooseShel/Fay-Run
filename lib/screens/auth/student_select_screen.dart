@@ -214,7 +214,7 @@ class _StudentSelectScreenState extends State<StudentSelectScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: FayColors.navy.withOpacity(0.1),
+                  color: FayColors.navy.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -237,7 +237,7 @@ class _StudentSelectScreenState extends State<StudentSelectScreen> {
     return GestureDetector(
       onTap: _addNewStudent,
       child: Card(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.1),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: const BorderSide(color: Colors.white54, width: 2),

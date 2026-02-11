@@ -10,6 +10,18 @@ class Assets {
   static const String staffFirstG = 'staff_firstg.png';
   static const String staffPrek2 = 'staff_prek2.png';
   static const String ernie = 'ernie.png';
+  static const String ernieRun = 'ernie_run.png';
+  static const String ernieRun2 = 'ernie_run_2.png';
+  static const String ernieRun3 = 'ernie_run_3.png';
+  static const String ernieJump = 'ernie_jump.png';
+  static const String ernieCrash = 'ernie_crash.png';
+
+  static String background(int level) {
+    // Level 2 is jpg, others are png
+    final ext = level == 2 ? 'jpg' : 'png';
+    return 'bgs/bg_fay_$level.$ext';
+  }
+
   static const String itemGoldenBook = 'obstacles/item_golden_book.png';
 
   // Audio - Background Music
@@ -25,6 +37,19 @@ class Assets {
   static const String musicCafeteria = 'audio/music_cafeteria.mp3';
 
   // Images - Obstacles
+  static const String obsLog = 'obstacles/obstacle_log.png';
+  static const String obsRock = 'obstacles/obstacle_rock.png';
+  static const String obsApple = 'obstacles/obstacle_apple.png';
+  static const String obsBanana = 'obstacles/obstacle_banana.png';
+  static const String obsBurger1 = 'obstacles/obstacle_burger_1.png';
+  static const String obsBurger2 = 'obstacles/obstacle_burger_2.png';
+  static const String obsBucket = 'obstacles/obstacle_bucket.png';
+  static const String obsFood = 'obstacles/obstacle_food.png';
+  static const String obsSuv = 'obstacles/obstacle_suv.png';
+  static const String obsSuv2 = 'obstacles/obstacle_suv_2.png';
+  static const String obsCone = 'obstacles/obstacle_cone.png';
+  static const String obsBackpack = 'obstacles/obstacle_backpack.png';
+
   static const String obsTrashCan1 = 'obstacles/obstacle_trash_can_1.png';
   static const String obsTrashCan2 = 'obstacles/obstacle_trash_can_2.png';
   static const String obsHydrant1 = 'obstacles/obstacle_hydrant_1.png';
@@ -43,8 +68,6 @@ class Assets {
   static const String obsSoccerBall2 = 'obstacles/obstacle_soccer_ball_2.png';
   static const String obsGymMat1 = 'obstacles/obstacle_gym_mat_1.png';
   static const String obsGymMat2 = 'obstacles/obstacle_gym_mat_2.png';
-  static const String obsBurger1 = 'obstacles/obstacle_burger_1.png';
-  static const String obsBurger2 = 'obstacles/obstacle_burger_2.png';
   static const String obsLunchTray1 = 'obstacles/obstacle_lunch_tray_1.png';
   static const String obsLunchTray2 = 'obstacles/obstacle_lunch_tray_2.png';
   static const String obsMilkCart1 = 'obstacles/obstacle_milk_cart_1.png';

@@ -133,7 +133,7 @@ class _StudentSetupScreenState extends State<StudentSetupScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: FayColors.gold.withOpacity(0.2),
+                  color: FayColors.gold.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: FayColors.gold, width: 2),
                 ),

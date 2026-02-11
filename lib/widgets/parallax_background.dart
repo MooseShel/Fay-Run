@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/assets.dart';
 
 class ParallaxBackground extends StatefulWidget {
   final double runSpeed;
@@ -48,10 +49,7 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
   @override
   Widget build(BuildContext context) {
     // Use the new naming convention: bg_fay_1.png through bg_fay_10.png
-    // Note: Level 2 is a JPG, others are PNG
-    final String extension = widget.level == 2 ? 'jpg' : 'png';
-    final String assetPath =
-        'assets/images/bgs/bg_fay_${widget.level}.$extension';
+    final String assetPath = 'assets/images/${Assets.background(widget.level)}';
 
     return Stack(
       children: [
@@ -102,8 +100,11 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
                   tileWidth + 0.5, // Tiny 0.5px bleed to prevent subpixel gaps
               child: Transform(
                 alignment: Alignment.center,
-                transform: Matrix4.identity()
-                  ..scale(isFlipped ? -1.0 : 1.0, 1.0),
+                transform: Matrix4.diagonal3Values(
+                  isFlipped ? -1.0 : 1.0,
+                  1.0,
+                  1.0,
+                ),
                 child: Image.asset(
                   assetPath,
                   fit: BoxFit.fitHeight,
@@ -193,7 +194,7 @@ class _GroundPainter extends CustomPainter {
       // This avoids the "treadmill" strobing effect
 
       Paint scuffPaint = Paint()
-        ..color = Colors.white.withOpacity(0.25)
+        ..color = Colors.white.withValues(alpha: 0.25)
         ..style = PaintingStyle.fill;
 
       // Draw repeating texture chunks
@@ -246,7 +247,7 @@ class _GroundPainter extends CustomPainter {
       canvas.drawRect(Rect.fromLTWH(0, 0, width, 10), edgePaint);
 
       Paint grassPaint = Paint()
-        ..color = const Color(0xFF33691E).withOpacity(0.3);
+        ..color = const Color(0xFF33691E).withValues(alpha: 0.3);
       // Occasional grass tufts
       double chunkWidth = 150.0;
       double chunkOffset = scrollOffset % chunkWidth;

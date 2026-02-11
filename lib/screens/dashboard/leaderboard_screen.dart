@@ -61,7 +61,7 @@ class LeaderboardScreen extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: FayColors.gold.withOpacity(0.2),
+                      color: FayColors.gold.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: FayColors.gold),
                     ),

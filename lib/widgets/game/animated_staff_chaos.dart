@@ -131,7 +131,7 @@ class _AnimatedStaffChaosState extends State<AnimatedStaffChaos>
                 border: Border.all(color: FayColors.gold, width: 4),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.5),
+                    color: Colors.black.withValues(alpha: 0.5),
                     blurRadius: 20,
                     spreadRadius: 5,
                   ),

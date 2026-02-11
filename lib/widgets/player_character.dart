@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants.dart';
+import '../../core/assets.dart';
 
 class PlayerCharacter extends StatelessWidget {
   final bool isJumping;
@@ -24,17 +25,17 @@ class PlayerCharacter extends StatelessWidget {
     String assetName;
 
     if (isCrashed) {
-      assetName = 'assets/images/ernie_crash.png';
+      assetName = 'assets/images/${Assets.ernieCrash}';
     } else if (isJumping) {
-      assetName = 'assets/images/ernie_jump.png';
+      assetName = 'assets/images/${Assets.ernieJump}';
     } else {
       // Run animation
       if (runFrame == 0) {
-        assetName = 'assets/images/ernie_run.png';
+        assetName = 'assets/images/${Assets.ernieRun}';
       } else if (runFrame == 1) {
-        assetName = 'assets/images/ernie_run_2.png';
+        assetName = 'assets/images/${Assets.ernieRun2}';
       } else {
-        assetName = 'assets/images/ernie_run_3.png';
+        assetName = 'assets/images/${Assets.ernieRun3}';
       }
     }
 
@@ -47,7 +48,7 @@ class PlayerCharacter extends StatelessWidget {
         boxShadow: isInvincible
             ? [
                 BoxShadow(
-                  color: FayColors.gold.withOpacity(0.6),
+                  color: FayColors.gold.withValues(alpha: 0.6),
                   blurRadius: 15,
                   spreadRadius: 2,
                 ),

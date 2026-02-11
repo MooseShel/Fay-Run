@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'question_bank.dart';
 
 /// A helper class to generate SQL insert statements for weekly challenges.
@@ -56,5 +57,5 @@ void main() async {
   final sql = generator.generateWeeklySQL(1, 'Spring 2025');
   final file = File('lib/services/generated_content.sql');
   await file.writeAsString(sql);
-  print('Generated SQL written to ${file.absolute.path}');
+  debugPrint('Generated SQL written to ${file.absolute.path}');
 }
