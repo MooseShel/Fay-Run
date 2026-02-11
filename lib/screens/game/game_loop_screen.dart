@@ -35,7 +35,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   final double _gravity = -0.5; // Floatier
   final double _jumpForce = 13.0; // Balanced
   final double _groundHeight =
-      50.0; // Adjusted from 40.0 for better visual alignment on ground
+      20.0; // Lowered from 50.0 to shift everything down towards the "walking way"
 
   bool _isJumping = false;
   int _jumpCount = 0;
@@ -509,10 +509,10 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
               return Positioned(
                 left: obj.x * screenSize.width,
-                // Higher bottom offset (0.05) to put them "farther back" than obstacles
+                // Minimal bottom offset (0.01) to keep them grounded but slightly "behind"
                 bottom: _groundHeight +
                     (obj.y * screenSize.height) +
-                    (screenSize.height * 0.05),
+                    (screenSize.height * 0.01),
                 width: charSize,
                 height: charSize,
                 child: Image.asset(
