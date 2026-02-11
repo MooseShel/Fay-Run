@@ -328,6 +328,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                           Switch(
                             value: gameState.isExamMode,
                             activeColor: FayColors.gold,
+                            inactiveThumbColor:
+                                FayColors.gold.withValues(alpha: 0.8),
+                            inactiveTrackColor: Colors.white10,
                             onChanged: (val) {
                               gameState.setExamMode(val,
                                   topic: val
