@@ -22,7 +22,7 @@ class GameState extends ChangeNotifier {
   int _score = 0;
   int _lives = 5; // Increased from 3 to 5 hearts
   int _currentLevel = 1;
-  double _runSpeed = 3.0; // Base speed
+  double _runSpeed = 2.2; // Base speed reduced from 3.0
   GameStatus _status = GameStatus.menu;
 
   // Events
@@ -217,8 +217,8 @@ class GameState extends ChangeNotifier {
     // Progressive speed increases - approx 5-8% per level for smooth curve
     // Base speed at Level 1 = 2.5
     // Level 10 speed target ~4.5 to 5.0
-    final double baseSpeed = 2.5;
-    final double increment = 0.25; // Linear increment for predictability
+    final double baseSpeed = 2.2;
+    final double increment = 0.15; // Linear increment reduced from 0.25
 
     _runSpeed = baseSpeed + ((_currentLevel - 1) * increment);
 

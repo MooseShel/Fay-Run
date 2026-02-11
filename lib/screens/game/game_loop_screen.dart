@@ -498,11 +498,19 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
               assetName = Assets.bgCharacter(baseName, frame);
 
+              // Dynamic scaling based on type
+              double charSize = screenSize.height * 0.14; // Default for animals
+              if (obj.type == SceneryType.boy ||
+                  obj.type == SceneryType.girl ||
+                  obj.type == SceneryType.janitor) {
+                charSize = screenSize.height * 0.18; // Match player size
+              }
+
               return Positioned(
                 left: obj.x * screenSize.width,
                 bottom: _groundHeight + (obj.y * screenSize.height),
-                width: screenSize.height * 0.12, // Standard scenery size
-                height: screenSize.height * 0.12,
+                width: charSize,
+                height: charSize,
                 child: Image.asset(
                   'assets/images/$assetName',
                   fit: BoxFit.contain,

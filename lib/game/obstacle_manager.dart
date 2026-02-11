@@ -76,33 +76,37 @@ class ObstacleManager {
     } else {
       switch (level) {
         case 1:
-          spawnInterval = 3.0; // Faster start
+          spawnInterval = 3.5; // Relaxed from 3.0
           break;
         case 2:
-          spawnInterval = 2.5;
+          spawnInterval = 3.0; // Relaxed from 2.5
           break;
         case 3:
-          spawnInterval = 2.1;
+          spawnInterval = 2.6; // Relaxed from 2.1
           break;
         case 4:
-          spawnInterval = 1.7;
+          spawnInterval = 2.2; // Relaxed from 1.7
           break;
         case 5:
-          spawnInterval = 1.4; // Intense
+          spawnInterval = 1.8; // Relaxed from 1.4
           break;
         case 6:
+          spawnInterval = 1.7; // Relaxed from 1.3
+          break;
         case 7:
-          spawnInterval = 1.3;
+          spawnInterval = 1.6; // Relaxed from 1.3
           break;
         case 8:
+          spawnInterval = 1.5; // Relaxed from 1.2
+          break;
         case 9:
-          spawnInterval = 1.2;
+          spawnInterval = 1.45; // Relaxed from 1.2
           break;
         case 10:
-          spawnInterval = 1.0; // Maximum Chaos
+          spawnInterval = 1.4; // Relaxed from 1.0
           break;
         default:
-          spawnInterval = 3.0;
+          spawnInterval = 3.5;
       }
     }
 
@@ -333,7 +337,11 @@ class ObstacleManager {
     }
 
     double y = 0.0;
-    if (type == ObstacleType.goldenBook ||
+    if (isBonusRound) {
+      // Randomize heights: 0.0 (ground), 0.25 (mid), 0.5 (high)
+      final heights = [0.0, 0.25, 0.5];
+      y = heights[_random.nextInt(heights.length)];
+    } else if (type == ObstacleType.goldenBook ||
         type == ObstacleType.apple ||
         type == ObstacleType.banana ||
         type == ObstacleType.burger) {

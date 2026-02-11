@@ -127,7 +127,7 @@ class SceneryManager {
       case SceneryType.squirrel:
         y = 0.0;
         speedMult = 1.2; // Move faster across screen
-        frames = 3; // Hopping
+        frames = 4; // Hopping
         break;
       case SceneryType.janitor:
         y = 0.0;
