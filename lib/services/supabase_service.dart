@@ -48,55 +48,124 @@ class SupabaseService {
     bool isExam = false,
     int? difficultyLevel,
   }) async {
-    debugPrint(
-        'Supabase: getCurrentChallenge mock (Grade $gradeLevel, Week $weekNumber, Exam $isExam, Diff $difficultyLevel)');
+    final diff = difficultyLevel ?? 1;
+    final selectedTopic = topic ?? 'Math';
+    final prefix = isExam ? '[EXAM] ' : '';
 
-    if (isExam) {
-      // Mock Exam Challenges
-      final displayTopic = topic ?? 'Mixed';
-      return Challenge(
-        id: 'mock_exam_${displayTopic.replaceAll(' ', '_')}_d${difficultyLevel ?? 1}',
-        topic: displayTopic,
-        gradeLevel: gradeLevel,
-        questions: [
+    debugPrint(
+        'Supabase: getCurrentChallenge mock (Grade $gradeLevel, Topic $selectedTopic, Exam $isExam, Diff $diff)');
+
+    List<QuizQuestion> questionPool = [];
+
+    if (selectedTopic == 'Math') {
+      if (diff <= 2) {
+        questionPool = [
           QuizQuestion(
-            questionText:
-                '[EXAM] $displayTopic: What is the capital of Louisiana?',
-            correctOptionIndex: 0,
-            options: ['Baton Rouge', 'New Orleans', 'Shreveport'],
-          ),
+              questionText: '${prefix}What is ${diff + 2} + ${diff + 5}?',
+              options: [
+                '${2 * diff + 7}',
+                '${2 * diff + 8}',
+                '${2 * diff + 6}'
+              ],
+              correctOptionIndex: 0),
           QuizQuestion(
-            questionText:
-                '[EXAM] Difficulty ${difficultyLevel ?? 1} $displayTopic Question',
-            correctOptionIndex: 0,
-            options: ['Correct Answer', 'Wrong 1', 'Wrong 2'],
-          ),
+              questionText: '${prefix}What is 10 - $diff?',
+              options: ['${10 - diff}', '${11 - diff}', '${9 - diff}'],
+              correctOptionIndex: 0),
+        ];
+      } else if (diff <= 5) {
+        questionPool = [
           QuizQuestion(
-            questionText: '[EXAM] Final $displayTopic Challenge',
-            correctOptionIndex: 0,
-            options: ['Finish', 'No', 'Wait'],
-          ),
-        ],
-      );
+              questionText: '${prefix}What is $diff x 5?',
+              options: ['${diff * 5}', '${diff * 4}', '${diff * 6}'],
+              correctOptionIndex: 0),
+          QuizQuestion(
+              questionText: '${prefix}What is 100 / ${10 - diff}?',
+              options: ['${100 / (10 - diff)}', '10', '20'],
+              correctOptionIndex: 0),
+        ];
+      } else {
+        questionPool = [
+          QuizQuestion(
+              questionText: '${prefix}What is $diff x $diff?',
+              options: [
+                '${diff * diff}',
+                '${diff * diff + 1}',
+                '${diff * diff - 1}'
+              ],
+              correctOptionIndex: 0),
+          QuizQuestion(
+              questionText: '${prefix}Find X: X + $diff = ${diff * 3}?',
+              options: ['${diff * 2}', '$diff', '${diff * 3}'],
+              correctOptionIndex: 0),
+        ];
+      }
+    } else if (selectedTopic == 'Science') {
+      if (diff <= 4) {
+        questionPool = [
+          QuizQuestion(
+              questionText: '${prefix}Which planet is known as the Red Planet?',
+              options: ['Mars', 'Venus', 'Jupiter'],
+              correctOptionIndex: 0),
+          QuizQuestion(
+              questionText: '${prefix}What do plants need for photosynthesis?',
+              options: ['Sunlight', 'Milk', 'Pizza'],
+              correctOptionIndex: 0),
+        ];
+      } else {
+        questionPool = [
+          QuizQuestion(
+              questionText: '${prefix}What is the boiling point of water?',
+              options: ['100°C', '0°C', '50°C'],
+              correctOptionIndex: 0),
+          QuizQuestion(
+              questionText:
+                  '${prefix}Which part of the cell is the powerhouse?',
+              options: ['Mitochondria', 'Nucleus', 'Wall'],
+              correctOptionIndex: 0),
+        ];
+      }
+    } else {
+      // Social Studies
+      if (diff <= 5) {
+        questionPool = [
+          QuizQuestion(
+              questionText: '${prefix}Who was the first U.S. President?',
+              options: [
+                'George Washington',
+                'Abraham Lincoln',
+                'Thomas Jefferson'
+              ],
+              correctOptionIndex: 0),
+          QuizQuestion(
+              questionText: '${prefix}What is the capital of the USA?',
+              options: ['Washington D.C.', 'New York', 'Los Angeles'],
+              correctOptionIndex: 0),
+        ];
+      } else {
+        questionPool = [
+          QuizQuestion(
+              questionText:
+                  '${prefix}Which document starts with "We the People"?',
+              options: ['Constitution', 'Declaration', 'Bill of Rights'],
+              correctOptionIndex: 0),
+          QuizQuestion(
+              questionText:
+                  '${prefix}In which year did the American Revolution end?',
+              options: ['1783', '1776', '1812'],
+              correctOptionIndex: 0),
+        ];
+      }
     }
 
-    // Default Mock (Grade 4)
+    // Add some random variety
+    questionPool.shuffle();
+
     return Challenge(
-      id: 'mock_g4_d${difficultyLevel ?? 1}',
-      topic: topic ?? 'Math',
-      gradeLevel: 4,
-      questions: [
-        QuizQuestion(
-          questionText: 'Difficulty $difficultyLevel Question: 500 + 500 = ?',
-          correctOptionIndex: 0,
-          options: ['1000', '500', '2000'],
-        ),
-        QuizQuestion(
-          questionText: '12 x 2 = ?',
-          correctOptionIndex: 0,
-          options: ['24', '14', '22'],
-        ),
-      ],
+      id: 'mock_${isExam ? 'exam' : 'normal'}_${selectedTopic.toLowerCase()}_d$diff',
+      topic: selectedTopic,
+      gradeLevel: gradeLevel,
+      questions: questionPool,
     );
   }
 

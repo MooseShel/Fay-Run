@@ -1,0 +1,71 @@
+-- =============================================================
+-- Fay Gator Run: Academic Question Pool (Linear Difficulty 1-10)
+-- Topics: Math, Science, Social Studies
+-- Includes both Normal and Exam challenges
+-- =============================================================
+
+-- Populate Challenges (Grade 4 example)
+-- Normal Challenges (Difficulty 1-10)
+INSERT INTO challenges (id, topic, season, week_number, grade_level, difficulty_level, is_exam) VALUES
+('ch_g4_math_d1', 'Math', 'Spring 2025', 1, 4, 1, false),
+('ch_g4_math_d2', 'Math', 'Spring 2025', 2, 4, 2, false),
+('ch_g4_math_d3', 'Math', 'Spring 2025', 3, 4, 3, false),
+('ch_g4_math_d4', 'Math', 'Spring 2025', 4, 4, 4, false),
+('ch_g4_math_d5', 'Math', 'Spring 2025', 5, 4, 5, false),
+('ch_g4_math_d6', 'Math', 'Spring 2025', 6, 4, 6, false),
+('ch_g4_math_d7', 'Math', 'Spring 2025', 7, 4, 7, false),
+('ch_g4_math_d8', 'Math', 'Spring 2025', 8, 4, 8, false),
+('ch_g4_math_d9', 'Math', 'Spring 2025', 9, 4, 9, false),
+('ch_g4_math_d10', 'Math', 'Spring 2025', 10, 4, 10, false),
+
+-- Exam Challenges (Difficulty 1-10)
+('exam_g4_math_d1', 'Math', 'Spring 2025', 1, 4, 1, true),
+('exam_g4_math_d3', 'Math', 'Spring 2025', 3, 4, 3, true),
+('exam_g4_math_d5', 'Math', 'Spring 2025', 5, 4, 5, true),
+('exam_g4_math_d7', 'Math', 'Spring 2025', 7, 4, 7, true),
+('exam_g4_math_d10', 'Math', 'Spring 2025', 10, 4, 10, true),
+
+-- Science Challenges
+('ch_g4_sci_d1', 'Science', 'Spring 2025', 1, 4, 1, false),
+('ch_g4_sci_d5', 'Science', 'Spring 2025', 5, 4, 5, false),
+('ch_g4_sci_d10', 'Science', 'Spring 2025', 10, 4, 10, false),
+
+-- Social Studies Challenges
+('ch_g4_soc_d1', 'Social Studies', 'Spring 2025', 1, 4, 1, false),
+('ch_g4_soc_d5', 'Social Studies', 'Spring 2025', 5, 4, 5, false),
+('ch_g4_soc_d10', 'Social Studies', 'Spring 2025', 10, 4, 10, false)
+ON CONFLICT (id) DO UPDATE SET 
+  topic = EXCLUDED.topic,
+  difficulty_level = EXCLUDED.difficulty_level,
+  is_exam = EXCLUDED.is_exam;
+
+-- Populate Questions (Consolidated into one statement)
+INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES
+-- Math Difficulty 1
+('q_m_d1_1', 'ch_g4_math_d1', 'What is 3 + 5?', '8', '7', '9'),
+('q_m_d1_2', 'ch_g4_math_d1', 'What is 10 - 2?', '8', '7', '9'),
+('q_ex_m_d1_1', 'exam_g4_math_d1', '[EXAM] What is 4 + 4?', '8', '7', '9'),
+
+-- Math Difficulty 5
+('q_m_d5_1', 'ch_g4_math_d5', 'What is 5 x 5?', '25', '20', '30'),
+('q_m_d5_2', 'ch_g4_math_d5', 'What is 100 / 4?', '25', '20', '30'),
+('q_ex_m_d5_1', 'exam_g4_math_d5', '[EXAM] What is 12 x 5?', '60', '50', '70'),
+
+-- Math Difficulty 10
+('q_m_d10_1', 'ch_g4_math_d10', 'What is 12 x 12?', '144', '124', '134'),
+('q_m_d10_2', 'ch_g4_math_d10', 'Find X: X + 10 = 30', '20', '10', '30'),
+('q_ex_m_d10_1', 'exam_g4_math_d10', '[EXAM] What is 15 x 10?', '150', '140', '160'),
+
+-- Science Difficulty 1
+('q_s_d1_1', 'ch_g4_sci_d1', 'Which planet is the Red Planet?', 'Mars', 'Venus', 'Jupiter'),
+('q_s_d1_2', 'ch_g4_sci_d1', 'What do plants need most?', 'Sunlight', 'Milk', 'Bread'),
+
+-- Social Studies Difficulty 1
+('q_ss_d1_1', 'ch_g4_soc_d1', 'Who was the first U.S. President?', 'George Washington', 'Abraham Lincoln', 'John Adams'),
+('q_ss_d1_2', 'ch_g4_soc_d1', 'What is the capital of the USA?', 'Washington D.C.', 'New York', 'Dallas')
+
+ON CONFLICT (id) DO UPDATE SET
+  question_text = EXCLUDED.question_text,
+  correct_option = EXCLUDED.correct_option,
+  wrong_option_1 = EXCLUDED.wrong_option_1,
+  wrong_option_2 = EXCLUDED.wrong_option_2;

@@ -89,8 +89,8 @@ class GameState extends ChangeNotifier {
       final service = SupabaseService();
       final grade = currentGrade;
 
-      // Map level 1-10 to difficulty 1-5
-      final difficulty = ((_currentLevel - 1) / 2).floor() + 1;
+      // Map level 1-10 to difficulty 1-10 (Linear)
+      final difficulty = _currentLevel;
 
       _currentChallenge = await service.getCurrentChallenge(
         gradeLevel: grade,
