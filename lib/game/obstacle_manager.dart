@@ -242,97 +242,97 @@ class ObstacleManager {
 
     switch (type) {
       case ObstacleType.log:
-        width = 0.405; // 0.27 * 1.5
-        height = 0.18; // 0.12 * 1.5
+        width = 0.465; // 0.405 * 1.15
+        height = 0.207; // 0.18 * 1.15
         break;
       case ObstacleType.puddle:
-        width = 0.27;
-        height = 0.1125;
+        width = 0.31; // 0.27 * 1.15
+        height = 0.13; // 0.1125 * 1.15
         break;
       case ObstacleType.rock:
-        width = 0.15;
-        height = 0.12;
+        width = 0.17; // 0.15 * 1.15
+        height = 0.14; // 0.12 * 1.15
         break;
       case ObstacleType.janitorBucket:
       case ObstacleType.beaker:
-        width = 0.15;
-        height = 0.18;
+        width = 0.17; // 0.15 * 1.15
+        height = 0.207; // 0.18 * 1.15
         break;
       case ObstacleType.books:
-        width = 0.18;
-        height = 0.15;
+        width = 0.207; // 0.18 * 1.15
+        height = 0.17; // 0.15 * 1.15
         break;
       case ObstacleType.flyingPizza:
       case ObstacleType.food:
-        width = 0.18;
-        height = 0.18;
+        width = 0.207; // 0.18 * 1.15
+        height = 0.207; // 0.18 * 1.15
         break;
       case ObstacleType.cone:
-        width = 0.18; // 0.12 * 1.5
-        height = 0.225; // 0.15 * 1.5
+        width = 0.207; // 0.18 * 1.15
+        height = 0.26; // 0.225 * 1.15
         break;
       case ObstacleType.trashCan:
-        width = 0.15;
-        height = 0.20;
+        width = 0.17; // 0.15 * 1.15
+        height = 0.23; // 0.20 * 1.15
         break;
       case ObstacleType.hydrant:
-        width = 0.18; // 0.12 * 1.5
-        height = 0.27; // 0.18 * 1.5
+        width = 0.207; // 0.18 * 1.15
+        height = 0.31; // 0.27 * 1.15
         break;
       case ObstacleType.bench:
-        width = 0.375;
-        height = 0.225;
+        width = 0.43; // 0.375 * 1.15
+        height = 0.26; // 0.225 * 1.15
         break;
       case ObstacleType.tire:
-        width = 0.225;
-        height = 0.225;
+        width = 0.26; // 0.225 * 1.15
+        height = 0.26; // 0.225 * 1.15
         break;
       case ObstacleType.flowerPot:
-        width = 0.225;
-        height = 0.225;
+        width = 0.26; // 0.225 * 1.15
+        height = 0.26; // 0.225 * 1.15
         break;
       case ObstacleType.gnome:
-        width = 0.18;
-        height = 0.225;
+        width = 0.207; // 0.18 * 1.15
+        height = 0.26; // 0.225 * 1.15
         break;
       case ObstacleType.basketBall:
       case ObstacleType.soccerBall:
-        width = 0.12;
-        height = 0.12;
+        width = 0.14; // 0.12 * 1.15
+        height = 0.14; // 0.12 * 1.15
         break;
       case ObstacleType.gymMat:
-        width = 0.375;
-        height = 0.12;
+        width = 0.43; // 0.375 * 1.15
+        height = 0.14; // 0.12 * 1.15
         break;
       case ObstacleType.apple:
       case ObstacleType.banana:
       case ObstacleType.burger:
-        width = 0.105; // 0.07 * 1.5
-        height = 0.105; // 0.07 * 1.5
+        width = 0.12; // 0.105 * 1.15
+        height = 0.12; // 0.105 * 1.15
         break;
       case ObstacleType.lunchTray:
-        width = 0.27;
-        height = 0.15;
+        width = 0.31; // 0.27 * 1.15
+        height = 0.17; // 0.15 * 1.15
         break;
       case ObstacleType.milkCarton:
-        width = 0.12;
-        height = 0.15;
+        width = 0.14; // 0.12 * 1.15
+        height = 0.17; // 0.15 * 1.15
         break;
       case ObstacleType.wildFlowers:
-        width = 0.15;
-        height = 0.15;
+        width = 0.17; // 0.15 * 1.15
+        height = 0.17; // 0.15 * 1.15
         break;
       case ObstacleType.car:
-        width = 0.50;
-        height = 0.25;
+        width = 0.575; // 0.50 * 1.15
+        height = 0.29; // 0.25 * 1.15
         break;
       case ObstacleType.backpack:
-        width = 0.15;
-        height = 0.18;
+        width = 0.17; // 0.15 * 1.15
+        height = 0.207; // 0.18 * 1.15
         break;
       case ObstacleType.goldenBook:
-        width = 0.18;
-        height = 0.18;
+        width = 0.207; // 0.18 * 1.15
+        height = 0.207; // 0.18 * 1.15
         break;
     }
 

@@ -260,7 +260,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       double obsTop = obsPixelY - verticalOffset + obsPixelHeight - obsPaddingY;
 
       // Player Hitbox (Responsive)
-      double playerPixelSize = screenSize.height * 0.18;
+      double playerPixelSize = screenSize.height * 0.21; // Increased from 0.18
       double playerPadding = playerPixelSize * 0.4;
       double playerBaseX = screenSize.width * 0.30;
 
@@ -499,16 +499,20 @@ class _GameLoopScreenState extends State<GameLoopScreen>
               assetName = Assets.bgCharacter(baseName, frame);
 
               // Dynamic scaling based on type
-              double charSize = screenSize.height * 0.14; // Default for animals
+              double charSize =
+                  screenSize.height * 0.16; // Default for animals (scaled up)
               if (obj.type == SceneryType.boy ||
                   obj.type == SceneryType.girl ||
                   obj.type == SceneryType.janitor) {
-                charSize = screenSize.height * 0.18; // Match player size
+                charSize = screenSize.height * 0.21; // Match new player size
               }
 
               return Positioned(
                 left: obj.x * screenSize.width,
-                bottom: _groundHeight + (obj.y * screenSize.height),
+                // Higher bottom offset (0.05) to put them "farther back" than obstacles
+                bottom: _groundHeight +
+                    (obj.y * screenSize.height) +
+                    (screenSize.height * 0.05),
                 width: charSize,
                 height: charSize,
                 child: Image.asset(
@@ -548,7 +552,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                 isInvincible: gameState.isInvincible,
                 isCrashed: _isCrashed,
                 runFrame: _runFrame,
-                size: screenSize.height * 0.18, // Responsive size
+                size: screenSize.height * 0.21, // Increased from 0.18
               ),
             ),
 
