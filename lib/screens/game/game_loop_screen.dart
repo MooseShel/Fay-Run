@@ -254,9 +254,9 @@ class _GameLoopScreenState extends State<GameLoopScreen>
           _getObstacleVerticalOffset(obs, screenSize.height);
 
       double obsPaddingX =
-          isGoldenBook ? obsPixelWidth * 0.10 : obsPixelWidth * 0.20;
+          isGoldenBook ? obsPixelWidth * 0.15 : obsPixelWidth * 0.35;
       double obsPaddingY =
-          isGoldenBook ? obsPixelHeight * 0.10 : obsPixelHeight * 0.20;
+          isGoldenBook ? obsPixelHeight * 0.15 : obsPixelHeight * 0.35;
 
       double obsLeft = obsPixelX + obsPaddingX;
       double obsRight = obsPixelX + obsPixelWidth - obsPaddingX;
@@ -264,15 +264,15 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       double obsTop = obsPixelY - verticalOffset + obsPixelHeight - obsPaddingY;
 
       // Player Hitbox (Responsive)
-      double playerPixelSize = screenSize.height * 0.21; // Increased from 0.18
-      double playerPadding = playerPixelSize * 0.4;
+      double playerPixelSize = screenSize.height * 0.21;
+      double playerPadding = playerPixelSize * 0.45;
       double playerBaseX = screenSize.width * 0.30;
 
       double playerLeft = playerBaseX + playerPadding;
       double playerRight = playerBaseX + playerPixelSize - playerPadding;
 
-      double playerBottom = _playerY + (playerPixelSize * 0.3); // 30% padding
-      double playerTop = _playerY + playerPixelSize - (playerPixelSize * 0.3);
+      double playerBottom = _playerY + (playerPixelSize * 0.4); // 40% padding
+      double playerTop = _playerY + playerPixelSize - (playerPixelSize * 0.4);
 
       // X overlap
       bool xOverlap = (obsLeft < playerRight) && (obsRight > playerLeft);

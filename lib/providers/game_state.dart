@@ -22,7 +22,7 @@ class GameState extends ChangeNotifier {
   int _score = 0;
   int _lives = 5; // Increased from 3 to 5 hearts
   int _currentLevel = 1;
-  double _runSpeed = 3.0; // Consistent speed across all levels
+  double _runSpeed = 4.0; // Increased base speed
   GameStatus _status = GameStatus.menu;
 
   // Events
@@ -214,8 +214,8 @@ class GameState extends ChangeNotifier {
   }
 
   void _resetLevelPhysics() {
-    // Consistent speed for all levels as requested
-    _runSpeed = 3.0;
+    // Increase speed with level scaling: Base 4.0 + 0.2 per level
+    _runSpeed = 4.0 + (_currentLevel * 0.2);
 
     debugPrint('Level $_currentLevel Physics Reset: Speed = $_runSpeed');
   }
