@@ -17,6 +17,8 @@ class Assets {
   static const String ernieCrash = 'ernie_crash.png';
 
   static String background(int level) {
+    // Safety check for invalid levels
+    if (level < 1) level = 1;
     return 'bgs/bg_fay_$level.webp';
   }
 

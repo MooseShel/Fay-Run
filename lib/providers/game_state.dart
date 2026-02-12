@@ -135,7 +135,9 @@ class GameState extends ChangeNotifier {
 
   void selectStudent(Map<String, dynamic> student) {
     _currentStudent = student;
-    _maxLevel = kDebugMode ? 10 : ((student['max_level'] as int?) ?? 1);
+    int studentLevel = (student['max_level'] as int?) ?? 1;
+    if (studentLevel < 1) studentLevel = 1;
+    _maxLevel = kDebugMode ? 10 : studentLevel;
     _score = 0; // Reset session score
     notifyListeners();
   }
