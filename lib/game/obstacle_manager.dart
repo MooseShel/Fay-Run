@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/material.dart' show Size;
 
 enum ObstacleType {
   log, // Level 1 (Bayou)
@@ -90,7 +91,8 @@ class ObstacleManager {
   }
 
   void update(double dt, double runSpeed, int level, bool isBonusRound,
-      Function(Obstacle) onHit) {
+      Function(Obstacle) onHit,
+      {required Size screenSize}) {
     // 1. Regular Obstacle Spawn Logic
     _spawnTimer += dt;
 
@@ -138,9 +140,6 @@ class ObstacleManager {
       if (_isPositionClear(1.1, 0.4)) {
         _spawnObstacle(level, isBonusRound, isReward: false);
         _spawnTimer = 0;
-      } else {
-        // Wait a bit (try next frame or short delay)
-        _spawnTimer = spawnInterval - 0.2; // Fast retry
       }
     }
 
@@ -148,22 +147,23 @@ class ObstacleManager {
     if (!isBonusRound) {
       _rewardTimer += dt;
       if (_rewardTimer > _rewardInterval) {
-        // Independent check
-        // Check overlap prevents spawning on top of regular obstacles
-        if (_isPositionClear(1.1, 0.4)) {
+        // Reward priority: Try harder to spawn rewards
+        // We use a smaller clearance for rewards to ensure they appear
+        if (_isPositionClear(1.1, 0.25)) {
           _spawnObstacle(level, false, isReward: true);
           _rewardTimer = 0;
-          // More frequent rewards: 2 to 5 seconds
-          _rewardInterval = 2.0 + _random.nextDouble() * 3.0;
-        } else {
-          // Retry soon
-          _rewardTimer = _rewardInterval - 0.2;
+          // Education First: More frequent rewards (1.5 to 3.5 seconds)
+          _rewardInterval = 1.5 + _random.nextDouble() * 2.0;
         }
       }
     }
 
     // 3. Move & Cleanup
-    double moveAmt = runSpeed * 0.12 * dt;
+    // PHYSICS NORMALIZATION:
+    // runSpeed (e.g. 4.0) represents logical "widths per second" relative to ScreenHeight.
+    // Convert this to a relative X shift (fraction of ScreenWidth).
+    double logicalWidth = screenSize.width / screenSize.height;
+    double moveAmt = (runSpeed * 0.15 * dt) / logicalWidth;
 
     for (var i = obstacles.length - 1; i >= 0; i--) {
       var obs = obstacles[i];

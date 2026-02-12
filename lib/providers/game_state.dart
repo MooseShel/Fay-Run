@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../models/staff_event.dart';
 import '../models/challenge.dart';
@@ -40,6 +42,7 @@ class GameState extends ChangeNotifier {
   int get goldenBooksCollectedCurrentLevel => _goldenBooksCollectedCurrentLevel;
   int _comboCount = 0;
   int get comboCount => _comboCount;
+  Timer? _invincibilityTimer;
 
   // Exam Mode
   bool _isExamMode = false;
@@ -228,7 +231,8 @@ class GameState extends ChangeNotifier {
   void _resetLevelPhysics() {
     // Increase speed with level scaling: Base 4.0 + 0.2 per level
     // Increased by 10% per user request
-    _runSpeed = (4.0 + (_currentLevel * 0.2)) * 1.1;
+    // Balanced speed curve: Steady manageable growth (1.05x multiplier)
+    _runSpeed = (4.0 + (_currentLevel * 0.15)) * 1.05;
 
     debugPrint('Level $_currentLevel Physics Reset: Speed = $_runSpeed');
   }
@@ -336,10 +340,13 @@ class GameState extends ChangeNotifier {
   }
 
   void setInvincible(bool active) {
+    _invincibilityTimer?.cancel();
     _isInvincible = active;
     notifyListeners();
+
     if (active) {
-      Future.delayed(const Duration(seconds: 5), () {
+      // 4 seconds power-up version (extendable)
+      _invincibilityTimer = Timer(const Duration(seconds: 4), () {
         _isInvincible = false;
         notifyListeners();
       });
@@ -474,27 +481,36 @@ class GameState extends ChangeNotifier {
     if (_currentChallenge == null || _currentChallenge!.questions.isEmpty) {
       // Fallback
       return QuizQuestion(
+        id: 'fallback_math',
         questionText: 'What is the alligator\'s favorite color?',
         correctOptionIndex: 2,
         options: ['Red', 'Blue', 'Green', 'Orange'],
       );
     }
 
-    // Filter available questions (using questionText as ID since we don't have one on the model yet)
+    // Filter available questions (using ID for deterministic tracking)
     final available = _currentChallenge!.questions
-        .where((q) => !_answeredQuestions.contains(q.questionText))
+        .where((q) => !_answeredQuestions.contains(q.id))
         .toList();
 
     if (available.isEmpty) {
       _answeredQuestions.clear(); // Reset if all answered
-      final question = _currentChallenge!.questions[
-          DateTime.now().microsecond % _currentChallenge!.questions.length];
-      _answeredQuestions.add(question.questionText);
+      final random = math.Random();
+      final question = _currentChallenge!
+          .questions[random.nextInt(_currentChallenge!.questions.length)];
+      _answeredQuestions.add(question.id);
       return question;
     }
 
-    final question = available[DateTime.now().microsecond % available.length];
-    _answeredQuestions.add(question.questionText);
+    final random = math.Random();
+    final question = available[random.nextInt(available.length)];
+    _answeredQuestions.add(question.id);
     return question;
+  }
+
+  @override
+  void dispose() {
+    _invincibilityTimer?.cancel();
+    super.dispose();
   }
 }

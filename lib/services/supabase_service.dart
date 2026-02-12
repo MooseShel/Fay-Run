@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/challenge.dart';
 import '../core/constants.dart';
 
-/// SupabaseService - Handles diagnostic logging and mock data for offline stability
+/// SupabaseService - Handles authentication, data fetching, and progression logic
 class SupabaseService {
   static final SupabaseService _instance = SupabaseService._internal();
   factory SupabaseService() => _instance;
@@ -52,35 +52,45 @@ class SupabaseService {
     }
   }
 
-  // --- Auth (Stubs for stability) ---
+  // --- Auth ---
 
-  Future<dynamic> signUp({
+  Future<AuthResponse> signUp({
     required String email,
     required String password,
     required String firstName,
     required String lastName,
   }) async {
-    debugPrint('Supabase: signUp mock');
-    return null;
+    return await _client!.auth.signUp(
+      email: email,
+      password: password,
+      data: {
+        'first_name': firstName,
+        'last_name': lastName,
+      },
+    );
   }
 
-  Future<dynamic> signIn({
+  Future<AuthResponse> signIn({
     required String email,
     required String password,
   }) async {
-    debugPrint('Supabase: signIn mock');
-    return null;
+    return await _client!.auth.signInWithPassword(
+      email: email,
+      password: password,
+    );
   }
 
   Future<void> signOut() async {
-    debugPrint('Supabase: signOut mock');
+    await _client?.auth.signOut();
   }
 
   Future<void> deleteAccount() async {
-    debugPrint('Supabase: deleteAccount mock');
+    // Note: User deletion usually requires admin privileges or an RPC/Edge function.
+    // Standard client signOut + local wipe is what we can do here.
+    await signOut();
   }
 
-  dynamic get currentUser => null;
+  User? get currentUser => _client?.auth.currentUser;
 
   // --- Data & Progression ---
 
@@ -91,125 +101,114 @@ class SupabaseService {
     bool isExam = false,
     int? difficultyLevel,
   }) async {
-    final diff = difficultyLevel ?? 1;
-    final selectedTopic = topic ?? 'Math';
-    final prefix = isExam ? '[EXAM] ' : '';
-
-    debugPrint(
-        'Supabase: getCurrentChallenge mock (Grade $gradeLevel, Topic $selectedTopic, Exam $isExam, Diff $diff)');
-
-    List<QuizQuestion> questionPool = [];
-
-    if (selectedTopic == 'Math') {
-      if (diff <= 2) {
-        questionPool = [
-          QuizQuestion(
-              questionText: '${prefix}What is ${diff + 2} + ${diff + 5}?',
-              options: [
-                '${2 * diff + 7}',
-                '${2 * diff + 8}',
-                '${2 * diff + 6}'
-              ],
-              correctOptionIndex: 0),
-          QuizQuestion(
-              questionText: '${prefix}What is 10 - $diff?',
-              options: ['${10 - diff}', '${11 - diff}', '${9 - diff}'],
-              correctOptionIndex: 0),
-        ];
-      } else if (diff <= 5) {
-        questionPool = [
-          QuizQuestion(
-              questionText: '${prefix}What is $diff x 5?',
-              options: ['${diff * 5}', '${diff * 4}', '${diff * 6}'],
-              correctOptionIndex: 0),
-          QuizQuestion(
-              questionText: '${prefix}What is 100 / ${10 - diff}?',
-              options: ['${100 / (10 - diff)}', '10', '20'],
-              correctOptionIndex: 0),
-        ];
-      } else {
-        questionPool = [
-          QuizQuestion(
-              questionText: '${prefix}What is $diff x $diff?',
-              options: [
-                '${diff * diff}',
-                '${diff * diff + 1}',
-                '${diff * diff - 1}'
-              ],
-              correctOptionIndex: 0),
-          QuizQuestion(
-              questionText: '${prefix}Find X: X + $diff = ${diff * 3}?',
-              options: ['${diff * 2}', '$diff', '${diff * 3}'],
-              correctOptionIndex: 0),
-        ];
-      }
-    } else if (selectedTopic == 'Science') {
-      if (diff <= 4) {
-        questionPool = [
-          QuizQuestion(
-              questionText: '${prefix}Which planet is known as the Red Planet?',
-              options: ['Mars', 'Venus', 'Jupiter'],
-              correctOptionIndex: 0),
-          QuizQuestion(
-              questionText: '${prefix}What do plants need for photosynthesis?',
-              options: ['Sunlight', 'Milk', 'Pizza'],
-              correctOptionIndex: 0),
-        ];
-      } else {
-        questionPool = [
-          QuizQuestion(
-              questionText: '${prefix}What is the boiling point of water?',
-              options: ['100°C', '0°C', '50°C'],
-              correctOptionIndex: 0),
-          QuizQuestion(
-              questionText:
-                  '${prefix}Which part of the cell is the powerhouse?',
-              options: ['Mitochondria', 'Nucleus', 'Wall'],
-              correctOptionIndex: 0),
-        ];
-      }
-    } else {
-      // Social Studies
-      if (diff <= 5) {
-        questionPool = [
-          QuizQuestion(
-              questionText: '${prefix}Who was the first U.S. President?',
-              options: [
-                'George Washington',
-                'Abraham Lincoln',
-                'Thomas Jefferson'
-              ],
-              correctOptionIndex: 0),
-          QuizQuestion(
-              questionText: '${prefix}What is the capital of the USA?',
-              options: ['Washington D.C.', 'New York', 'Los Angeles'],
-              correctOptionIndex: 0),
-        ];
-      } else {
-        questionPool = [
-          QuizQuestion(
-              questionText:
-                  '${prefix}Which document starts with "We the People"?',
-              options: ['Constitution', 'Declaration', 'Bill of Rights'],
-              correctOptionIndex: 0),
-          QuizQuestion(
-              questionText:
-                  '${prefix}In which year did the American Revolution end?',
-              options: ['1783', '1776', '1812'],
-              correctOptionIndex: 0),
-        ];
-      }
+    if (_client == null) {
+      debugPrint('Supabase: Client not initialized');
+      return null;
     }
 
-    // Add some random variety
-    questionPool.shuffle();
+    try {
+      if (isExam) {
+        // --- EXAM MODE LOGIC ---
+        // Fetch all questions for this grade and specific topic (across all weeks)
+        var query = _client!
+            .from('questions')
+            .select('*, challenges!inner(*)')
+            .eq('challenges.grade_level', gradeLevel);
 
-    return Challenge(
-      id: 'mock_${isExam ? 'exam' : 'normal'}_${selectedTopic.toLowerCase()}_d$diff',
-      topic: selectedTopic,
-      gradeLevel: gradeLevel,
-      questions: questionPool,
-    );
+        if (topic != null && topic.isNotEmpty) {
+          query = query.eq('challenges.topic', topic);
+        }
+
+        final response = await query;
+        final data = response as List<dynamic>;
+
+        if (data.isEmpty) {
+          debugPrint(
+              'Supabase: No exam questions found for Grade $gradeLevel, Topic $topic');
+          return null;
+        }
+
+        final questions =
+            data.map((json) => QuizQuestion.fromJson(json)).toList();
+        questions.shuffle();
+
+        return Challenge(
+          id: 'exam_${gradeLevel}_${topic ?? "all"}',
+          topic: topic ?? 'All Subjects',
+          gradeLevel: gradeLevel,
+          questions: questions,
+        );
+      } else {
+        // --- NORMAL MODE LOGIC ---
+        // Prioritize difficulty_level, fallback to week_number
+        var query = _client!
+            .from('challenges')
+            .select('*, questions(*)')
+            .eq('grade_level', gradeLevel);
+
+        if (topic != null && topic.isNotEmpty) {
+          query = query.eq('topic', topic);
+        }
+
+        // Try difficulty_level first if provided
+        if (difficultyLevel != null) {
+          final difficultyResponse =
+              await query.eq('difficulty_level', difficultyLevel);
+          if ((difficultyResponse as List).isNotEmpty) {
+            final List<dynamic> challenges = difficultyResponse;
+            return _processChallenges(
+                challenges, gradeLevel, null, difficultyLevel, topic);
+          }
+        }
+
+        // Fallback to week_number
+        final weekToUse = weekNumber ?? difficultyLevel ?? 1;
+        final weekResponse = await query.eq('week_number', weekToUse);
+        final List<dynamic> challenges = weekResponse as List;
+
+        if (challenges.isEmpty) {
+          debugPrint(
+              'Supabase: No challenge found for Grade $gradeLevel, Diff $difficultyLevel, Week $weekNumber');
+          return null;
+        }
+
+        return _processChallenges(
+            challenges, gradeLevel, weekToUse, difficultyLevel, topic);
+      }
+    } catch (e) {
+      debugPrint('Supabase: Error fetching challenge: $e');
+      return null;
+    }
+  }
+
+  Challenge? _processChallenges(List<dynamic> challenges, int gradeLevel,
+      int? weekNumber, int? difficultyLevel, String? topic) {
+    if (challenges.length == 1 && topic != null && topic.isNotEmpty) {
+      // Single specific topic challenge
+      return Challenge.fromJson(challenges.first as Map<String, dynamic>);
+    } else {
+      // Aggregate questions from multiple challenges (e.g., all topics for the level/week)
+      final List<QuizQuestion> allQuestions = [];
+      for (var c in challenges) {
+        final challengeData = c as Map<String, dynamic>;
+        if (challengeData['questions'] != null) {
+          final questionsData = challengeData['questions'] as List<dynamic>;
+          allQuestions.addAll(
+              questionsData.map((q) => QuizQuestion.fromJson(q)).toList());
+        }
+      }
+
+      if (allQuestions.isEmpty) return null;
+      allQuestions.shuffle();
+
+      return Challenge(
+        id: 'challenge_${gradeLevel}_${difficultyLevel ?? weekNumber}_all',
+        topic: topic ?? 'All Subjects',
+        gradeLevel: gradeLevel,
+        difficultyLevel: difficultyLevel,
+        questions: allQuestions,
+      );
+    }
   }
 
   Future<void> submitQuizResult({
@@ -217,23 +216,53 @@ class SupabaseService {
     required String challengeId,
     required int score,
   }) async {
-    debugPrint('Supabase: submitQuizResult mock');
+    if (_client == null) return;
+    try {
+      // Check if this is an "aggregate" ID (doesn't exist in DB)
+      bool isAggregate = challengeId.endsWith('_all');
+
+      Map<String, dynamic> insertData = {
+        'student_id': studentId,
+        'score': score,
+        'completed_at': DateTime.now().toIso8601String(),
+      };
+
+      if (!isAggregate) {
+        insertData['challenge_id'] = challengeId;
+      }
+
+      await _client!.from('student_progress').insert(insertData);
+    } catch (e) {
+      debugPrint('Supabase: submitQuizResult error: $e');
+      // If we failed due to FK constraint even with non-aggregate, try one last time without ID
+      if (e.toString().contains('23503')) {
+        try {
+          await _client!.from('student_progress').insert({
+            'student_id': studentId,
+            'score': score,
+            'completed_at': DateTime.now().toIso8601String(),
+          });
+        } catch (inner) {
+          debugPrint('Supabase: submitQuizResult fallback failed: $inner');
+        }
+      }
+    }
   }
 
   // --- Students ---
 
   Future<List<Map<String, dynamic>>> getStudents() async {
-    debugPrint('Supabase: getStudents mock');
-    return [
-      {
-        'id': 'mock-id',
-        'first_name': 'Offline',
-        'nickname': 'Runner',
-        'grade': '4',
-        'high_score': 0,
-        'max_level': 1,
-      },
-    ];
+    if (_client == null) return [];
+    try {
+      final response = await _client!
+          .from('students')
+          .select('*')
+          .order('created_at', ascending: true);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      debugPrint('Supabase: getStudents error: $e');
+      return [];
+    }
   }
 
   Future<void> addStudent({
@@ -241,20 +270,72 @@ class SupabaseService {
     required String nickname,
     required String grade,
   }) async {
-    debugPrint('Supabase: addStudent mock');
+    if (_client == null) return;
+    try {
+      final userId = _client!.auth.currentUser?.id;
+      if (userId == null) return;
+
+      await _client!.from('students').insert({
+        'parent_id': userId,
+        'first_name': firstName,
+        'nickname': nickname,
+        'grade': grade,
+      });
+    } catch (e) {
+      debugPrint('Supabase: addStudent error: $e');
+    }
   }
 
   Future<void> updateStudentScore(String studentId, int newScore) async {
-    debugPrint('Supabase: updateStudentScore mock');
+    if (_client == null) return;
+    try {
+      // Get current high score first or update if new is higher
+      final response = await _client!
+          .from('students')
+          .select('high_score')
+          .eq('id', studentId)
+          .maybeSingle();
+
+      final currentHigh = (response?['high_score'] as int?) ?? 0;
+      if (newScore > currentHigh) {
+        await _client!
+            .from('students')
+            .update({'high_score': newScore}).eq('id', studentId);
+      }
+    } catch (e) {
+      debugPrint('Supabase: updateStudentScore error: $e');
+    }
   }
 
   Future<void> unlockLevel(String studentId, int level) async {
-    debugPrint('Supabase: unlockLevel mock');
+    if (_client == null) return;
+    try {
+      await _client!
+          .from('students')
+          .update({'max_level': level}).eq('id', studentId);
+    } catch (e) {
+      debugPrint('Supabase: unlockLevel error: $e');
+    }
   }
 
   Future<List<Map<String, dynamic>>> getLeaderboard({String? grade}) async {
-    debugPrint('Supabase: getLeaderboard mock');
-    return [];
+    if (_client == null) return [];
+    try {
+      var query = _client!
+          .from('students')
+          .select('first_name, nickname, grade, high_score');
+
+      if (grade != null) {
+        query = query.eq('grade', grade);
+      }
+
+      final response =
+          await query.order('high_score', ascending: false).limit(10);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      debugPrint('Supabase: getLeaderboard error: $e');
+      return [];
+    }
   }
 
   // --- Parent Profile ---
@@ -263,13 +344,41 @@ class SupabaseService {
     required String firstName,
     required String lastName,
   }) async {
-    debugPrint('Supabase: upsertProfile mock');
+    if (_client == null) return;
+    final userId = _client!.auth.currentUser?.id;
+    if (userId == null) return;
+
+    try {
+      await _client!.from('profiles').upsert({
+        'id': userId,
+        'first_name': firstName,
+        'last_name': lastName,
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      debugPrint('Supabase: upsertProfile error: $e');
+    }
   }
 
   Future<Map<String, dynamic>?> getProfile() async {
-    debugPrint('Supabase: getProfile mock');
-    return {'first_name': 'Offline', 'last_name': 'Mode'};
+    if (_client == null) return null;
+    final userId = _client!.auth.currentUser?.id;
+    if (userId == null) return null;
+
+    try {
+      final response = await _client!
+          .from('profiles')
+          .select()
+          .eq('id', userId)
+          .maybeSingle();
+      return response;
+    } catch (e) {
+      debugPrint('Supabase: getProfile error: $e');
+      return null;
+    }
   }
 
-  Future<void> updateHighScore(int newScore) async {}
+  Future<void> updateHighScore(int newScore) async {
+    // Usually handled via updateStudentScore, keeping for legacy compatibility
+  }
 }

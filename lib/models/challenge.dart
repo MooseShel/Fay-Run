@@ -2,12 +2,14 @@ class Challenge {
   final String id;
   final String topic; // e.g., "Geometry", "Fractions"
   final int gradeLevel;
+  final int? difficultyLevel;
   final List<QuizQuestion> questions;
 
   Challenge({
     required this.id,
     required this.topic,
     required this.gradeLevel,
+    this.difficultyLevel,
     required this.questions,
   });
 
@@ -16,6 +18,7 @@ class Challenge {
       id: json['id'] as String,
       topic: json['topic'] as String,
       gradeLevel: json['grade_level'] != null ? json['grade_level'] as int : 4,
+      difficultyLevel: json['difficulty_level'] as int?,
       questions: (json['questions'] as List<dynamic>)
           .map((e) => QuizQuestion.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -24,11 +27,13 @@ class Challenge {
 }
 
 class QuizQuestion {
+  final String id;
   final String questionText;
   final List<String> options;
   final int correctOptionIndex;
 
   QuizQuestion({
+    required this.id,
     required this.questionText,
     required this.options,
     required this.correctOptionIndex,
@@ -50,6 +55,7 @@ class QuizQuestion {
     final correctIndex = allOptions.indexOf(correct);
 
     return QuizQuestion(
+      id: (json['id'] ?? json['question_text']).toString(),
       questionText: json['question_text'] as String,
       options: allOptions,
       correctOptionIndex: correctIndex,

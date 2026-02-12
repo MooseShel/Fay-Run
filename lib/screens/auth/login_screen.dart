@@ -12,8 +12,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   // Pre-fill for easier testing in Debug mode
-  final _emailController = TextEditingController(text: '');
-  final _passwordController = TextEditingController(text: '');
+  final _emailController = TextEditingController(text: 'test@gmail.com');
+  final _passwordController = TextEditingController(text: 'abcd1234');
   final _formKey = GlobalKey<FormState>();
 
   final _supabaseService = SupabaseService();
@@ -35,13 +35,16 @@ class _LoginScreenState extends State<LoginScreen> {
         Navigator.pushReplacementNamed(context, '/select_student');
       }
     } else if (kDebugMode) {
-      // Auto-login in debug mode (optional, currently disabled)
-      // _login();
+      // Auto-login in debug mode (wait for first frame)
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _login(force: true);
+      });
     }
   }
 
-  Future<void> _login() async {
-    if (_formKey.currentState!.validate()) {
+  Future<void> _login({bool force = false}) async {
+    if (force ||
+        (_formKey.currentState != null && _formKey.currentState!.validate())) {
       setState(() => _isLoading = true);
       try {
         final email = _emailController.text.trim();
@@ -107,16 +110,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
                         labelText: 'Email',
-                        prefixIcon: const Icon(Icons.email),
+                        prefixIcon:
+                            const Icon(Icons.email, color: FayColors.navy),
                         filled: true,
-                        fillColor: Colors.white.withValues(alpha: 0.1),
-                        labelStyle: const TextStyle(color: Colors.white70),
+                        fillColor: Colors.white,
+                        labelStyle: const TextStyle(color: FayColors.navy),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
                         ),
                       ),
-                      style: const TextStyle(color: Colors.white),
+                      style: const TextStyle(color: FayColors.navy),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your email';
@@ -132,16 +136,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       obscureText: true,
                       decoration: InputDecoration(
                         labelText: 'Password',
-                        prefixIcon: const Icon(Icons.lock),
+                        prefixIcon:
+                            const Icon(Icons.lock, color: FayColors.navy),
                         filled: true,
-                        fillColor: Colors.white.withValues(alpha: 0.1),
-                        labelStyle: const TextStyle(color: Colors.white70),
+                        fillColor: Colors.white,
+                        labelStyle: const TextStyle(color: FayColors.navy),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
                         ),
                       ),
-                      style: const TextStyle(color: Colors.white),
+                      style: const TextStyle(color: FayColors.navy),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your password';

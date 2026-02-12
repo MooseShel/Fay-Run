@@ -150,10 +150,12 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
       left: xPos,
       top: 0,
       bottom: 0,
-      width: width + 0.5, // Small overlap to prevent gaps
+      width: width +
+          2.0, // Increased overlap to prevent sub-pixel gaps (flickering)
       child: Image.asset(
         assetPath,
-        fit: BoxFit.fitHeight,
+        fit: BoxFit
+            .cover, // Changed from fitHeight to cover to ensure full bleed
         alignment: Alignment.center,
         cacheHeight: screenHeight.toInt(), // Memory Optimization
       ),

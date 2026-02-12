@@ -114,9 +114,10 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         size.height != _cachedScreenHeight) {
       _cachedScreenWidth = size.width;
       _cachedScreenHeight = size.height;
-      _cachedPlayerSize = size.height * 0.21;
-      _cachedPlayerPadding = _cachedPlayerSize * 0.20;
-      _cachedPlayerBaseX = size.width * 0.30;
+      // Normalizing based on Height (which is the stable vertical dimension)
+      _cachedPlayerSize = size.height * 0.25; // Sized up for better reach
+      _cachedPlayerPadding = _cachedPlayerSize * 0.15;
+      _cachedPlayerBaseX = size.width * 0.25;
       debugPrint(
           'Please resize cache: ${_cachedScreenWidth}x${_cachedScreenHeight}');
     }
@@ -130,8 +131,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       final state = context.read<GameState>();
       final level = state.currentLevel;
 
-      // UX goal: 3 seconds "Preparing Level" screen to ensure assets (images/sound) are fully loaded
-      final minDelayFuture = Future.delayed(const Duration(milliseconds: 3000));
+      // UX goal: 4 seconds "Preparing Level" screen to ensure assets (images/sound) are fully loaded
+      final minDelayFuture = Future.delayed(const Duration(milliseconds: 4000));
 
       // 1. Ensure essential assets are loaded (likely already done in StudentSelect)
       final essentialPreload = AssetManager().precacheEssentialAssets(context);
@@ -173,6 +174,10 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
     try {
       final gameState = context.read<GameState>();
+      final screenSize = MediaQuery.sizeOf(context);
+
+      // Stability Fix: Prevent layout crashes if context/screen is not ready
+      if (screenSize.width <= 0 || screenSize.height <= 0) return;
 
       // Level Transition Logic: Clear obstacles when the level changes
       if (_lastLevel != null && _lastLevel != gameState.currentLevel) {
@@ -197,7 +202,11 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       _lastFrameTime = now;
 
       if (gameState.status == GameStatus.playing) {
-        _distanceRun += gameState.runSpeed * dt * 10; // Scale up
+        // NORMALIZATION: Speed is logical units per second relative to Height
+        // Convert to relative X units (as a fraction of screen width)
+        double logicalWidth = _cachedScreenWidth / _cachedScreenHeight;
+        double speedX = (gameState.runSpeed * 1.5 * dt) / logicalWidth;
+        _distanceRun += speedX * 100; // Multiplier for progress tracking scale
       }
 
       // Score based on distance
@@ -229,7 +238,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       final double baseSpeed = (4.0 + (gameState.currentLevel * 0.2)) * 1.1;
 
       // Target 120 seconds duration: BaseSpeed * 1200 (since distance is Speed * 10 * Time)
-      final targetDistance = baseSpeed * 1200;
+      // Calculation matches the new scaled _distanceRun logic
+      final targetDistance = baseSpeed * 12000;
 
       if (_distanceRun > targetDistance) {
         _distanceRun = 0;
@@ -264,9 +274,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
       // 1. Physics Update (Applying dt to gravity and velocity)
       if (_isJumping || _playerY > 0) {
-        // Scale movement and gravity by dt
-        // Base gravity was -0.5 per frame (at 60fps) -> -0.5 * 60^2 = -1800 per sec^2
-        const double gravityAccel = -1800.0;
+        // NORMALIZATION: Gravity relative to ScreenHeight
+        double gravityAccel = -_cachedScreenHeight * 4.5;
 
         _playerY += _verticalVelocity * dt;
         _verticalVelocity += gravityAccel * dt;
@@ -289,6 +298,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
             gameState.currentLevel,
             gameState.status == GameStatus.bonusRound,
             (obs) => _handleCollision(obs, gameState),
+            screenSize: screenSize,
           );
 
           // 3. Scenery Update
@@ -309,10 +319,12 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         }
       }
 
+      /*
       final screenSize = MediaQuery.sizeOf(context);
 
       // Stability Fix: Prevent layout crashes if context/screen is not ready
       if (screenSize.width <= 0 || screenSize.height <= 0) return;
+      */
 
       for (var obs in _obstacleManager.obstacles) {
         bool isGoldenBook = obs.type == ObstacleType.goldenBook;
@@ -344,7 +356,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         double playerRight =
             _cachedPlayerBaseX + _cachedPlayerSize - _cachedPlayerPadding;
 
-        double playerBottom = _playerY + (_cachedPlayerSize * 0.2);
+        double playerBottom =
+            _playerY + (_cachedPlayerSize * 0.1); // Slightly lower
         double playerTop =
             _playerY + _cachedPlayerSize - (_cachedPlayerSize * 0.2);
 
@@ -415,16 +428,19 @@ class _GameLoopScreenState extends State<GameLoopScreen>
           gradeLevel: 1,
           questions: [
             QuizQuestion(
+              id: 'q_fallback_1',
               questionText: 'What is 5 + 5?',
               options: ['10', '12', '8', '20'],
               correctOptionIndex: 0,
             ),
             QuizQuestion(
+              id: 'q_fallback_2',
               questionText: 'What is 10 - 3?',
               options: ['7', '6', '5', '4'],
               correctOptionIndex: 0,
             ),
             QuizQuestion(
+              id: 'q_fallback_3',
               questionText: 'What is 3 x 3?',
               options: ['9', '6', '12', '15'],
               correctOptionIndex: 0,
@@ -480,8 +496,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         AudioService().playJump();
       }
       setState(() {
-        // Base jump force was 13.0 per frame (at 60fps) -> 13 * 60 = 780 per second
-        _verticalVelocity = 780.0;
+        // NORMALIZATION: Jump velocity relative to Height
+        _verticalVelocity = _cachedScreenHeight * 1.95;
         _isJumping = true;
         _jumpCount++;
       });
@@ -507,6 +523,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   Widget build(BuildContext context) {
     final gameState = context.watch<GameState>();
     final screenSize = MediaQuery.sizeOf(context);
+    final double baseSpeed = (4.0 + (gameState.currentLevel * 0.2)) * 1.1;
+    final double targetDistance = baseSpeed * 12000;
 
     if (_isLoading) {
       return Scaffold(
@@ -794,8 +812,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                       ),
                       // Progress Fill
                       FractionallySizedBox(
-                        widthFactor: (_distanceRun / (gameState.runSpeed * 600))
-                            .clamp(0.001, 1.0),
+                        widthFactor:
+                            (_distanceRun / targetDistance).clamp(0.001, 1.0),
                         child: Container(
                           height: 16,
                           decoration: BoxDecoration(
@@ -816,7 +834,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                       // Animated Gator Marker
                       Positioned(
                         left: (screenSize.width - 40) *
-                                (_distanceRun / (gameState.runSpeed * 600))
+                                (_distanceRun / targetDistance)
                                     .clamp(0.0, 1.0) -
                             20,
                         top: -12,

@@ -51,8 +51,8 @@ class SceneryObject {
     this.speedMultiplier = speedMultiplier;
     this.totalFrames = totalFrames;
     this.animationSpeed = animationSpeed;
-    this.currentFrame = 1;
-    this.animationTimer = 0;
+    currentFrame = 1;
+    animationTimer = 0;
   }
 }
 

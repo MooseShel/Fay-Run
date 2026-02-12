@@ -14,6 +14,7 @@ import 'services/audio_service.dart';
 import 'services/crash_report_service.dart';
 import 'services/supabase_service.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 void main() {
   runZonedGuarded(
@@ -24,6 +25,8 @@ void main() {
         DeviceOrientation.landscapeLeft,
         DeviceOrientation.landscapeRight,
       ]);
+      // Optional: Hide status bars for more immersive game feel
+      await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
       // Initialize Services
       await SupabaseService().init();
@@ -70,6 +73,62 @@ class FayGatorRunApp extends StatelessWidget {
         '/select_student': (context) => const StudentSelectScreen(),
         '/menu': (context) => const MainMenuScreen(),
         '/game': (context) => const GameLoopScreen(),
+      },
+      builder: (context, child) {
+        return OrientationBuilder(
+          builder: (context, orientation) {
+            final isPortrait = orientation == Orientation.portrait;
+
+            return Stack(
+              children: [
+                if (child != null) child,
+                if (isPortrait && kIsWeb)
+                  Material(
+                    color: FayColors.navy,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            'assets/images/ernie_run.png',
+                            width: 150,
+                            height: 150,
+                          ),
+                          const SizedBox(height: 32),
+                          const Text(
+                            'PLEASE ROTATE YOUR DEVICE',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'BubblegumSans',
+                              fontSize: 28,
+                              color: FayColors.gold,
+                              letterSpacing: 2.0,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'THE GATOR RUNS BEST IN LANDSCAPE!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'BubblegumSans',
+                              fontSize: 18,
+                              color: Colors.white70,
+                            ),
+                          ),
+                          const SizedBox(height: 48),
+                          const Icon(
+                            Icons.screen_rotation,
+                            color: Colors.white54,
+                            size: 64,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        );
       },
     );
   }
