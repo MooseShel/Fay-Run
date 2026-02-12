@@ -169,6 +169,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   }
 
   void _gameLoop() {
+    if (_isLoading) return;
+
     try {
       final gameState = context.read<GameState>();
 
