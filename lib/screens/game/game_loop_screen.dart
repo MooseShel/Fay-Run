@@ -297,9 +297,9 @@ class _GameLoopScreenState extends State<GameLoopScreen>
             _getObstacleVerticalOffset(obs, screenSize.height);
 
         double obsPaddingX =
-            isGoldenBook ? obsPixelWidth * 0.15 : obsPixelWidth * 0.35;
+            isGoldenBook ? obsPixelWidth * 0.15 : obsPixelWidth * 0.20;
         double obsPaddingY =
-            isGoldenBook ? obsPixelHeight * 0.15 : obsPixelHeight * 0.35;
+            isGoldenBook ? obsPixelHeight * 0.15 : obsPixelHeight * 0.20;
 
         double obsLeft = obsPixelX + obsPaddingX;
         double obsRight = obsPixelX + obsPixelWidth - obsPaddingX;
@@ -309,14 +309,16 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
         // Player Hitbox (Responsive)
         double playerPixelSize = screenSize.height * 0.21;
-        double playerPadding = playerPixelSize * 0.45;
+        double playerPadding =
+            playerPixelSize * 0.20; // Reduced from 0.45 to 0.20
         double playerBaseX = screenSize.width * 0.30;
 
         double playerLeft = playerBaseX + playerPadding;
         double playerRight = playerBaseX + playerPixelSize - playerPadding;
 
-        double playerBottom = _playerY + (playerPixelSize * 0.4); // 40% padding
-        double playerTop = _playerY + playerPixelSize - (playerPixelSize * 0.4);
+        double playerBottom =
+            _playerY + (playerPixelSize * 0.2); // Reduced from 0.4
+        double playerTop = _playerY + playerPixelSize - (playerPixelSize * 0.2);
 
         // X overlap
         bool xOverlap = (obsLeft < playerRight) && (obsRight > playerLeft);
@@ -571,10 +573,11 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
               return Positioned(
                 left: obj.x * screenSize.width,
-                // Minimal bottom offset (0.01) to keep them grounded but slightly "behind"
+                // Align to top edge of walking area (Horizon)
+                // Lift them up by ~23% of screen height
                 bottom: _groundHeight +
                     (obj.y * screenSize.height) +
-                    (screenSize.height * 0.01),
+                    (screenSize.height * 0.23),
                 width: charSize,
                 height: charSize,
                 child: RepaintBoundary(
