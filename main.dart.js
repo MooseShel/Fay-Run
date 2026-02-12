@@ -47130,7 +47130,8 @@ return A.p($async$ts,r)},
 P3(a){var s,r=this
 r.b=a
 s=A.eF(a.h(0,"max_level"))
-r.d=s==null?1:s
+if(s==null)s=1
+r.d=s<1?1:s
 r.w=0
 r.a2()},
 xA(a){return this.awW(a)},
@@ -47807,8 +47808,8 @@ A.au7.prototype={
 $1(a){this.a.Pc(!0,a)},
 $S:95}
 A.au8.prototype={
-$2(a,b){var s=b+1,r=this.a,q=r.d
-return A.aDZ(new A.atZ(s<=q,s,"assets/images/"+("bgs/bg_fay_"+s+".webp"),s===q,r),B.bS,new A.am(1,1,t.Y),t.i)},
+$2(a,b){var s=b+1,r=this.a,q=r.d,p=s<1?1:s
+return A.aDZ(new A.atZ(s<=q,s,"assets/images/"+("bgs/bg_fay_"+p+".webp"),s===q,r),B.bS,new A.am(1,1,t.Y),t.i)},
 $S:415}
 A.atZ.prototype={
 $3(a,b,c){var s,r,q,p,o=this,n=null,m=o.a,l=m?new A.atY(a,o.b):n,k=A.cl(24),j=A.cl(24),i=A.aS9(new A.uI(m?B.l.bH(0.3):B.l.bH(0.7),B.Dm,n,B.FU),B.nW,new A.la(o.c,n,n),n),h=o.d
@@ -48450,7 +48451,7 @@ A.bS().$1("\ud83c\udfa8 Precache Level "+l+" Assets Started...")
 if(a.e==null){s=1
 break}p=4
 s=7
-return A.k(A.aNj(new A.la("assets/images/"+("bgs/bg_fay_"+l+".webp"),null,null),a),$async$xY)
+return A.k(A.aNj(new A.la("assets/images/"+("bgs/bg_fay_"+(b<1?1:b)+".webp"),null,null),a),$async$xY)
 case 7:j.B(0,b)
 A.bS().$1("\u2705 Precache Level "+l+" Finished")
 p=2
@@ -49525,9 +49526,9 @@ l(){var s=this.d
 s===$&&A.a()
 s.l()
 this.a9r()},
-K(a){var s=this,r=null,q="assets/images/"+("bgs/bg_fay_"+s.a.e+".webp")
-if(s.w!==q){s.w=q
-s.amq(q)}return A.hQ(B.by,A.b([A.Pk(0,A.fy(r,r,r,new A.Zn(s.a.e,r),B.E)),A.Pk(0,s.abe(q,0.2)),s.abd()],t.p),B.L,B.bo,r)},
+K(a){var s=this,r=null,q=s.a.e,p="assets/images/"+("bgs/bg_fay_"+(q<1?1:q)+".webp")
+if(s.w!==p){s.w=p
+s.amq(p)}return A.hQ(B.by,A.b([A.Pk(0,A.fy(r,r,r,new A.Zn(s.a.e,r),B.E)),A.Pk(0,s.abe(p,0.2)),s.abd()],t.p),B.L,B.bo,r)},
 amq(a){var s=null
 new A.la(a,s,s).V(B.Kv).Y(new A.fC(new A.av0(this),s,s))},
 abe(a,b){if(this.r==null)return B.aj
