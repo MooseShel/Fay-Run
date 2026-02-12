@@ -31,20 +31,16 @@ enum ObstacleType {
 }
 
 class Obstacle {
-  final String id;
-  final ObstacleType type;
-  double x; // 0.0 to 1.0 (relative to screen width? or absolute pixels?)
-  // Let's use absolute pixels for game loop simplicity?
-  // Or relative to allow resizing.
-  // Let's use relative 1.0 (right) -> -0.1 (left offscreen).
-  double y; // Relative 0.0 (bottom) to 1.0 (top)
+  String id;
+  ObstacleType type;
+  double x;
+  double y;
   double width;
   double height;
-  double direction; // -1.0 for Left (default), 1.0 for Right
-  int variant; // 1 or 2
-  bool isCollected; // For Golden Book (to disappear)
-  bool
-      hasEngaged; // To prevent double-collision while potentially staying on screen
+  double direction;
+  int variant;
+  bool isCollected;
+  bool hasEngaged;
 
   Obstacle({
     required this.id,
@@ -58,6 +54,28 @@ class Obstacle {
     this.isCollected = false,
     this.hasEngaged = false,
   });
+
+  void reset({
+    required String id,
+    required ObstacleType type,
+    required double x,
+    required double y,
+    required double width,
+    required double height,
+    required double direction,
+    required int variant,
+  }) {
+    this.id = id;
+    this.type = type;
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.direction = direction;
+    this.variant = variant;
+    isCollected = false;
+    hasEngaged = false;
+  }
 }
 
 class ObstacleManager {
@@ -162,6 +180,9 @@ class ObstacleManager {
       }
     }
   }
+
+  // Object Pooling
+  final List<Obstacle> _obstaclePool = [];
 
   void _spawnObstacle(int level, bool isBonusRound, {bool isReward = false}) {
     List<ObstacleType> obstaclePool = [];
@@ -373,20 +394,23 @@ class ObstacleManager {
       y = 0.25; // Only Golden Book floats now
     }
 
-    double startX = 1.1;
+    double startX = 1.1; // Offscreen Right
     double direction = -1.0;
 
     if (level >= 4 && type != ObstacleType.goldenBook && !isBonusRound) {
       if (_random.nextBool()) {
-        startX = -0.6;
+        startX = -0.6; // Offscreen Left
         direction = 1.0;
       }
     }
 
     int variant = _random.nextBool() ? 1 : 2;
 
-    obstacles.add(
-      Obstacle(
+    // POOLING: Get from pool or create new
+    Obstacle obs;
+    if (_obstaclePool.isNotEmpty) {
+      obs = _obstaclePool.removeLast();
+      obs.reset(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         type: type,
         x: startX,
@@ -395,11 +419,26 @@ class ObstacleManager {
         height: height,
         direction: direction,
         variant: variant,
-      ),
-    );
+      );
+    } else {
+      obs = Obstacle(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        type: type,
+        x: startX,
+        y: y,
+        width: width,
+        height: height,
+        direction: direction,
+        variant: variant,
+      );
+    }
+
+    obstacles.add(obs);
   }
 
   void clear() {
+    // Return all active obstacles to pool
+    _obstaclePool.addAll(obstacles);
     obstacles.clear();
   }
 }

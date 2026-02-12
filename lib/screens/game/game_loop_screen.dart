@@ -99,6 +99,29 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     });
   }
 
+  // Cache screen dimensions to avoid recalculation every frame
+  double _cachedScreenWidth = 0;
+  double _cachedScreenHeight = 0;
+  double _cachedPlayerSize = 0;
+  double _cachedPlayerPadding = 0;
+  double _cachedPlayerBaseX = 0;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final size = MediaQuery.sizeOf(context);
+    if (size.width != _cachedScreenWidth ||
+        size.height != _cachedScreenHeight) {
+      _cachedScreenWidth = size.width;
+      _cachedScreenHeight = size.height;
+      _cachedPlayerSize = size.height * 0.21;
+      _cachedPlayerPadding = _cachedPlayerSize * 0.20;
+      _cachedPlayerBaseX = size.width * 0.30;
+      debugPrint(
+          'Please resize cache: ${_cachedScreenWidth}x${_cachedScreenHeight}');
+    }
+  }
+
   Future<void> _loadAssets() async {
     final startTime = DateTime.now();
     debugPrint('🎬 Starting optimized level loading...');
@@ -288,13 +311,14 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
         // Convert relative coordinates to pixels for accurate collision
         // All dimensions (width/height) are now relative to Screen Height
-        double obsPixelWidth = obs.width * screenSize.height;
-        double obsPixelHeight = obs.height * screenSize.height;
-        double obsPixelX = obs.x * screenSize.width;
-        double obsPixelY = obs.y * screenSize.height;
+        // Use cached pixel values
+        double obsPixelWidth = obs.width * _cachedScreenHeight;
+        double obsPixelHeight = obs.height * _cachedScreenHeight;
+        double obsPixelX = obs.x * _cachedScreenWidth;
+        double obsPixelY = obs.y * _cachedScreenHeight;
 
         double verticalOffset =
-            _getObstacleVerticalOffset(obs, screenSize.height);
+            _getObstacleVerticalOffset(obs, _cachedScreenHeight);
 
         double obsPaddingX =
             isGoldenBook ? obsPixelWidth * 0.15 : obsPixelWidth * 0.20;
@@ -307,18 +331,14 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         double obsTop =
             obsPixelY - verticalOffset + obsPixelHeight - obsPaddingY;
 
-        // Player Hitbox (Responsive)
-        double playerPixelSize = screenSize.height * 0.21;
-        double playerPadding =
-            playerPixelSize * 0.20; // Reduced from 0.45 to 0.20
-        double playerBaseX = screenSize.width * 0.30;
+        // Player Hitbox (Cached)
+        double playerLeft = _cachedPlayerBaseX + _cachedPlayerPadding;
+        double playerRight =
+            _cachedPlayerBaseX + _cachedPlayerSize - _cachedPlayerPadding;
 
-        double playerLeft = playerBaseX + playerPadding;
-        double playerRight = playerBaseX + playerPixelSize - playerPadding;
-
-        double playerBottom =
-            _playerY + (playerPixelSize * 0.2); // Reduced from 0.4
-        double playerTop = _playerY + playerPixelSize - (playerPixelSize * 0.2);
+        double playerBottom = _playerY + (_cachedPlayerSize * 0.2);
+        double playerTop =
+            _playerY + _cachedPlayerSize - (_cachedPlayerSize * 0.2);
 
         // X overlap
         bool xOverlap = (obsLeft < playerRight) && (obsRight > playerLeft);
