@@ -46839,13 +46839,13 @@ case 8:break
 case 9:break
 case 10:s=2
 break
-default:s=2}}if(l>s)if(m.d<1.5&&!d){l=s-0.5
+default:s=2}}if(l>s)if(m.d<0.8&&!d){l=s-0.5
 m.c=l}else{m.WC(c,d,!1)
 m.c=0
 if(!d&&m.d>m.e-1.5)m.d=m.e-1.5
 l=0}if(!d){r=m.d+=a
 q=m.e
-if(r>q)if(l>s-1.5)m.d=q-0.5
+if(r>q)if(l>s-0.8)m.d=q-0.2
 else{m.WC(c,!1,!0)
 m.d=0
 m.e=2+m.b.c5()*3}}p=b*0.12*a
@@ -48287,7 +48287,7 @@ q=r.b
 p=q*0.16
 if(n===B.iF||n===B.iG||n===B.m9)p=q*0.21
 n=a.c
-return A.fG(20+a.d*q+q*0.23,new A.fH(A.nz("assets/images/"+("bg_characters/"+m+"_"+s+".png"),B.S,B.d.fe(p),o,B.eO,o,o),o),p,o,n*r.a,o,o,p)},
+return A.fG(20+a.d*q,new A.fH(A.nz("assets/images/"+("bg_characters/"+m+"_"+s+".png"),B.S,B.d.fe(p),o,B.eO,o,o),o),p,o,n*r.a,o,o,p)},
 $S:389}
 A.asp.prototype={
 $1(a){var s=null,r=this.a,q=this.b,p=q.b,o=r.T5(a,p),n=a.c,m=a.d,l=a.e,k=a.f
