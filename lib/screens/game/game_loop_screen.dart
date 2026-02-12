@@ -599,9 +599,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                 left: obj.x * screenSize.width,
                 // Align to top edge of walking area (Horizon)
                 // Lift them up by ~23% of screen height
-                bottom: _groundHeight +
-                    (obj.y * screenSize.height) +
-                    (screenSize.height * 0.23),
+                bottom: _groundHeight + (obj.y * screenSize.height),
                 width: charSize,
                 height: charSize,
                 child: RepaintBoundary(

@@ -138,8 +138,8 @@ class ObstacleManager {
       // If a reward recently spawned (rewardTimer is low), delay this obstacle
       // Or if a reward is ABOUT to spawn (rewardTimer is high), push the reward back
 
-      // If reward just spawned (< 1.5s ago), delay obstacle
-      if (_rewardTimer < 1.5 && !isBonusRound) {
+      // If reward just spawned (< 0.8s ago), delay obstacle
+      if (_rewardTimer < 0.8 && !isBonusRound) {
         _spawnTimer = spawnInterval - 0.5; // Wait a bit more
       } else {
         _spawnObstacle(level, isBonusRound, isReward: false);
@@ -156,9 +156,9 @@ class ObstacleManager {
     if (!isBonusRound) {
       _rewardTimer += dt;
       if (_rewardTimer > _rewardInterval) {
-        // Mutual exclusion: Don't spawn if obstacle is about to spawn
-        if (_spawnTimer > spawnInterval - 1.5) {
-          _rewardTimer = _rewardInterval - 0.5; // Wait for obstacle to clear
+        // Mutual exclusion: Don't spawn if obstacle is VERY imminent
+        if (_spawnTimer > spawnInterval - 0.8) {
+          _rewardTimer = _rewardInterval - 0.2; // Wait slightly
         } else {
           _spawnObstacle(level, false, isReward: true);
           _rewardTimer = 0;
