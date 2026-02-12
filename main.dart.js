@@ -47729,7 +47729,7 @@ if(h.CW){p=h.cx
 if(p==null)p="Math"
 l=A.cQ(i,i,B.r,i,i,i,i,i,i,i,i,i,i)
 j=t.fo
-j=A.a2(new A.a3(A.b(["Math","Science","Social Studies"],t.s),new A.aub(),j),j.i("aq.E"))
+j=A.a2(new A.a3(A.b(["Math","Science","Social Studies","English"],t.s),new A.aub(),j),j.i("aq.E"))
 B.b.M(k,A.b([B.It,A.ha(A.b([B.a0S,new A.nk(j,p,i,i,new A.auc(h),i,i,8,B.mU,l,i,i,i,24,!1,!1,48,i,i,!1,B.z,i,i,i,B.dG,i,!0,i,i,i,!1,i,t.Af)],n),B.B,B.dj,B.a2,0)],n))}f.push(A.w1(!0,A.al3(A.d8(A.b([new A.bL(B.dZ,r,i),new A.bL(B.fd,o,i),B.j2,new A.bL(B.fd,A.cQ(i,A.d8(k,B.B,B.S,B.a2),B.r,i,i,new A.c_(s,i,m,q,i,i,B.a_),i,i,i,B.kC,i,i,i),i),B.j2,B.RP,B.eu,A.aI_(B.Fd,new A.aud(h),10,B.fd,B.QC,!0),B.j3],n),B.B,B.S,B.a2),i),B.aQ,!0))
 return A.rl(i,i,A.cQ(i,A.hQ(B.by,f,B.L,B.bo,i),B.r,i,i,B.DG,i,i,i,i,i,i,i))}}
 A.aue.prototype={
