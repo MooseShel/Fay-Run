@@ -109,29 +109,47 @@ class SceneryManager {
 
     // Level-specific pools
     List<SceneryType> pool = [];
-    if (level <= 5) {
-      // Campus Grounds
+
+    if (level == 1) {
+      // Level 1: Remove dogStanding, Add Bird
+      pool = [SceneryType.dogSitting, SceneryType.squirrel, SceneryType.bird];
+    } else if (level == 2) {
+      // Level 2: Remove dogSitting, Add Chicken
       pool = [
-        SceneryType.dogSitting,
         SceneryType.dogStanding,
-        SceneryType.squirrel
+        SceneryType.squirrel,
+        SceneryType.chicken
       ];
-      if (level == 3) {
-        pool.addAll([SceneryType.janitor, SceneryType.boy, SceneryType.girl]);
-      }
+    } else if (level == 3) {
+      // Level 3: Remove dog & squirrel. Add bird & butterfly
+      pool = [
+        SceneryType.boy,
+        SceneryType.girl,
+        SceneryType.bird,
+        SceneryType.butterfly
+      ];
+    } else if (level == 4 || level == 5) {
+      // Levels 4 & 5: Repalce dogs with Janitor
+      pool = [SceneryType.janitor, SceneryType.squirrel];
     } else if (level == 6) {
-      // Playground
-      pool = [SceneryType.boy, SceneryType.girl, SceneryType.squirrel];
+      // Playground: Add bird & butterfly
+      pool = [
+        SceneryType.boy,
+        SceneryType.girl,
+        SceneryType.squirrel,
+        SceneryType.bird,
+        SceneryType.butterfly
+      ];
     } else if (level == 7) {
-      // Garden (Chicken added)
+      // Garden: Remove dogSitting, Add bird
       pool = [
         SceneryType.butterfly,
         SceneryType.squirrel,
-        SceneryType.dogSitting,
-        SceneryType.chicken
+        SceneryType.chicken,
+        SceneryType.bird
       ];
     } else if (level == 8) {
-      // Meadow (Bird added)
+      // Meadow: Already has bird, keeping it
       pool = [
         SceneryType.butterfly,
         SceneryType.squirrel,

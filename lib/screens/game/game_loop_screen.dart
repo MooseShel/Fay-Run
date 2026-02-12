@@ -467,6 +467,12 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   void _jump() {
     final gameState = context.read<GameState>();
 
+    // Fix: Block jump input if not playing (e.g. paused or in quiz)
+    if (gameState.status != GameStatus.playing &&
+        gameState.status != GameStatus.bonusRound) {
+      return;
+    }
+
     if (_jumpCount < _maxJumps) {
       if (gameState.status == GameStatus.playing) {
         AudioService().playJump();
