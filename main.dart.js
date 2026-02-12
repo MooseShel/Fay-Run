@@ -46818,7 +46818,7 @@ q=m.e
 if(r>q)if(l>s-1.5)m.d=q-0.5
 else{m.WB(c,!1,!0)
 m.d=0
-m.e=3+m.b.c5()*3}}p=b*0.12*a
+m.e=2+m.b.c5()*3}}p=b*0.12*a
 for(l=m.a,o=l.length-1;o>=0;--o){n=l[o]
 r=n.c=n.c+p*n.r
 if(r<-1.5||r>2.5)B.b.hn(l,o)}},
@@ -46917,7 +46917,7 @@ A.aiJ.prototype={
 aAL(a,b,c){var s,r,q,p,o,n=this
 n.c+=a
 s=n.b.c5()
-if(n.c>3+s*3){n.anO(c)
+if(n.c>7+s*5){n.anO(c)
 n.c=0}for(s=n.a,r=s.length-1,q=b*0.12*a;r>=0;--r){p=s[r]
 o=p.c=p.c-q*p.e
 if((p.w+=a)>=p.x){p.w=0
@@ -47845,7 +47845,7 @@ $S:0}
 A.q0.prototype={
 ag(){var s,r=A.b([],t.uJ)
 r=new A.afj(r,B.cf)
-r.e=8+B.cf.c5()*4
+r.e=3+B.cf.c5()*3
 s=A.b([],t.OJ)
 return new A.Gt(r,new A.aiJ(s,B.cf),B.cf,A.b([],t.R0),null,null)}}
 A.Gt.prototype={
@@ -47908,76 +47908,77 @@ s===$&&A.a()
 s.l()
 $.i3().oy()
 this.a9i()},
-ael(){var s,r,q,p,o,n,m,l,k,j,i,h,g,f,e,d,c,b,a,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,b0,b1,b2,b3,b4,b5,b6,b7,b8,b9=this,c0=null
-try{b4=b9.c
-b4.toString
-s=A.eg(b4,!1,t.A)
-b4=b9.as
-if(b4!=null&&b4!==s.y){B.b.a_(b9.e.a)
-B.b.a_(b9.f.a)
-b9.at=0}b9.as=s.y
-if(s.Q!==B.bD&&s.Q!==B.hZ){b9.cy=null
+ael(){var s,r,q,p,o,n,m,l,k,j,i,h,g,f,e,d,c,b,a,a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,b0,b1,b2,b3,b4,b5,b6,b7,b8,b9,c0=this,c1=null
+try{b5=c0.c
+b5.toString
+s=A.eg(b5,!1,t.A)
+b5=c0.as
+if(b5!=null&&b5!==s.y){B.b.a_(c0.e.a)
+B.b.a_(c0.f.a)
+c0.at=0}c0.as=s.y
+if(s.Q!==B.bD&&s.Q!==B.hZ){c0.cy=null
 return}r=new A.d7(Date.now(),0,!1)
-b4=b9.cy
-q=b4==null?0.016:r.eQ(b4).a/1e6
-b9.cy=r
-if(s.Q===B.bD)b9.at=b9.at+s.z*q*10
+b5=c0.cy
+q=b5==null?0.016:r.eQ(b5).a/1e6
+c0.cy=r
+if(s.Q===B.bD)c0.at=c0.at+s.z*q*10
 if(s.Q===B.bD){s.YB(B.f.ds(B.d.aV(s.z/3*60*q),0,10))
-for(b4=b9.db,b5=b4.length,b6=0;b6<b5;++b6){p=b4[b6]
-b7=p
-b7.d=b7.d+q*2}B.b.eY(b4,new A.as3())}b9.ax=b9.ax+q
-b4=b9.cx+q
-b9.cx=b4
-if(b4>0.15){b9.cx=0
-b9.CW=(b9.CW+1)%3}o=s.z*600
-if(b9.at>o){b9.at=0
-b4=s
-b4.Q=B.q5
-b4.a2()
+for(b5=c0.db,b6=b5.length,b7=0;b7<b6;++b7){p=b5[b7]
+b8=p
+b8.d=b8.d+q*2}B.b.eY(b5,new A.as3())}c0.ax=c0.ax+q
+b5=c0.cx+q
+c0.cx=b5
+if(b5>0.15){c0.cx=0
+c0.CW=(c0.CW+1)%3}o=(4+s.y*0.2)*1.1
+n=o*1200
+if(c0.at>n){c0.at=0
+b5=s
+b5.Q=B.q5
+b5.a2()
 $.i3().oy()
-b9.c.af(t.Pu).f.ow(A.E3(c0,c0,c0,c0,c0,B.L,c0,A.bU("Level "+s.y+" Complete!",c0,c0,c0,c0,c0,c0),c0,B.dZ,c0,c0,c0,c0,c0,c0,c0,c0,c0,c0))}b4=b9.ay
-n=s.y>=6?35+b4.i9(15):20+b4.i9(10)
-if(b9.ax>n){b9.ax=0
-if(s.as==null)s.EP()}if(b9.y||b9.r>0){b5=b9.r
-b7=b9.w
-b5+=b7*q
-b9.r=b5
-b9.w=b7+-1800*q
-if(b5<=0){b9.w=b9.r=0
-b9.y=!1
-b9.z=0}}try{b9.ab(new A.as4(b9,q,s))}catch(b8){m=A.U(b8)
-l=A.ak(b8)
-A.bS().$1("Error in GameLoop update: "+A.j(m))
-if(b4.c5()<0.01)A.bS().$1(J.cJ(l))}b4=b9.c
-b4.toString
-k=A.bt(b4,B.cc,t.w).w.a
-if(k.a<=0||k.b<=0)return
-for(b4=b9.e.a,b5=b4.length,b6=0;b6<b4.length;b4.length===b5||(0,A.G)(b4),++b6){j=b4[b6]
-i=j.b===B.dp
-h=j.e*k.b
-g=j.f*k.b
-f=j.c*k.a
-e=j.d*k.b
-d=b9.T4(j,k.b)
-c=i?h*0.15:h*0.35
-b=i?g*0.15:g*0.35
-a=f+c
-a0=f+h-c
-a1=e-d+b
-a2=e-d+g-b
-a3=k.b*0.21
-a4=a3*0.45
-a5=k.a*0.3
-a6=a5+a4
-a7=a5+a3-a4
-b7=b9.r
-a8=b7+a3*0.4
-a9=b7+a3-a3*0.4
-b0=a<a7&&a0>a6
-b1=a8<a2&&a9>a1
-if(b0&&b1&&!j.y)b9.Ts(j,s)}}catch(b8){b2=A.U(b8)
-b3=A.ak(b8)
-$.aBN().xC("GameLoopScreen","critical","GameLoopCrash: "+A.j(b2),J.cJ(b3))}},
+c0.c.af(t.Pu).f.ow(A.E3(c1,c1,c1,c1,c1,B.L,c1,A.bU("Level "+s.y+" Complete!",c1,c1,c1,c1,c1,c1),c1,B.dZ,c1,c1,c1,c1,c1,c1,c1,c1,c1,c1))}b5=c0.ay
+m=s.y>=6?35+b5.i9(15):20+b5.i9(10)
+if(c0.ax>m){c0.ax=0
+if(s.as==null)s.EP()}if(c0.y||c0.r>0){b6=c0.r
+b8=c0.w
+b6+=b8*q
+c0.r=b6
+c0.w=b8+-1800*q
+if(b6<=0){c0.w=c0.r=0
+c0.y=!1
+c0.z=0}}try{c0.ab(new A.as4(c0,q,s))}catch(b9){l=A.U(b9)
+k=A.ak(b9)
+A.bS().$1("Error in GameLoop update: "+A.j(l))
+if(b5.c5()<0.01)A.bS().$1(J.cJ(k))}b5=c0.c
+b5.toString
+j=A.bt(b5,B.cc,t.w).w.a
+if(j.a<=0||j.b<=0)return
+for(b5=c0.e.a,b6=b5.length,b7=0;b7<b5.length;b5.length===b6||(0,A.G)(b5),++b7){i=b5[b7]
+h=i.b===B.dp
+g=i.e*j.b
+f=i.f*j.b
+e=i.c*j.a
+d=i.d*j.b
+c=c0.T4(i,j.b)
+b=h?g*0.15:g*0.35
+a=h?f*0.15:f*0.35
+a0=e+b
+a1=e+g-b
+a2=d-c+a
+a3=d-c+f-a
+a4=j.b*0.21
+a5=a4*0.45
+a6=j.a*0.3
+a7=a6+a5
+a8=a6+a4-a5
+b8=c0.r
+a9=b8+a4*0.4
+b0=b8+a4-a4*0.4
+b1=a0<a8&&a1>a7
+b2=a9<a3&&b0>a2
+if(b1&&b2&&!i.y)c0.Ts(i,s)}}catch(b9){b3=A.U(b9)
+b4=A.ak(b9)
+$.aBN().xC("GameLoopScreen","critical","GameLoopCrash: "+A.j(b3),J.cJ(b4))}},
 Ts(a,b){var s,r=this
 a.y=!0
 s=a.b
