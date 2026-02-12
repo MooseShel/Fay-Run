@@ -187,10 +187,12 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       }
 
       // 0. Timers & Progression - Calculate Delta Time
+      // 0. Timers & Progression - Calculate Delta Time
       final now = DateTime.now();
-      final double dt = _lastFrameTime == null
-          ? 0.016
-          : now.difference(_lastFrameTime!).inMicroseconds / 1000000.0;
+      double dt = 0.016;
+      if (_lastFrameTime != null) {
+        dt = now.difference(_lastFrameTime!).inMicroseconds / 1000000.0;
+      }
       _lastFrameTime = now;
 
       if (gameState.status == GameStatus.playing) {
@@ -604,6 +606,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                   child: Image.asset(
                     'assets/images/$assetName',
                     fit: BoxFit.contain,
+                    cacheHeight: charSize.toInt(), // Memory Optimization
                   ),
                 ),
               );

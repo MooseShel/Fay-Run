@@ -186,7 +186,8 @@ class AudioService {
       // If all busy, reuse the first one
       player ??= _sfxPool.first;
 
-      player.stop().then((_) => player!.play(AssetSource('audio/$sfxName')));
+      final p = player;
+      p.stop().then((_) => p.play(AssetSource('audio/$sfxName')));
     } catch (e) {
       debugPrint('Error playing SFX: $e');
     }

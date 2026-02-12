@@ -13,15 +13,15 @@ enum SceneryType {
 }
 
 class SceneryObject {
-  final String id;
-  final SceneryType type;
+  String id;
+  SceneryType type;
   double x;
   double y;
-  final double speedMultiplier;
-  final int totalFrames;
+  double speedMultiplier;
+  int totalFrames;
   int currentFrame;
   double animationTimer;
-  final double animationSpeed;
+  double animationSpeed;
 
   SceneryObject({
     required this.id,
@@ -32,8 +32,28 @@ class SceneryObject {
     this.totalFrames = 2,
     this.currentFrame = 1,
     this.animationTimer = 0,
-    this.animationSpeed = 0.35, // Seconds per frame (Slower for smoother look)
+    this.animationSpeed = 0.35,
   });
+
+  void reset({
+    required String id,
+    required SceneryType type,
+    required double x,
+    required double y,
+    required double speedMultiplier,
+    required int totalFrames,
+    required double animationSpeed,
+  }) {
+    this.id = id;
+    this.type = type;
+    this.x = x;
+    this.y = y;
+    this.speedMultiplier = speedMultiplier;
+    this.totalFrames = totalFrames;
+    this.animationSpeed = animationSpeed;
+    this.currentFrame = 1;
+    this.animationTimer = 0;
+  }
 }
 
 class SceneryManager {
@@ -78,6 +98,8 @@ class SceneryManager {
       }
     }
   }
+
+  final List<SceneryObject> _sceneryPool = [];
 
   void _spawnObject(int level) {
     SceneryType? type;
@@ -168,10 +190,6 @@ class SceneryManager {
         y = 0.25 +
             _random.nextDouble() * 0.1; // Lower than butterfly (0.25-0.35)
         // Negative speed to move Right against the scroll
-        // Scroll is (PlayerSpeed * 0.12).
-        // If we want it to fly Right, we need speedMultiplier to be negative enough to overcome the scroll logic?
-        // Logic: obj.x -= (moveAmt) * multiplier
-        // If multiplier is negative, x increases (moves right).
         speedMult = -0.8;
         frames = 2;
         animSpeed = 0.2; // Flapping fast
@@ -185,18 +203,34 @@ class SceneryManager {
         break;
     }
 
-    objects.add(SceneryObject(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
-      type: type,
-      x: startX,
-      y: y,
-      speedMultiplier: speedMult,
-      totalFrames: frames,
-      animationSpeed: animSpeed,
-    ));
+    SceneryObject obj;
+    if (_sceneryPool.isNotEmpty) {
+      obj = _sceneryPool.removeLast();
+      obj.reset(
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        type: type,
+        x: startX,
+        y: y,
+        speedMultiplier: speedMult,
+        totalFrames: frames,
+        animationSpeed: animSpeed,
+      );
+    } else {
+      obj = SceneryObject(
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        type: type,
+        x: startX,
+        y: y,
+        speedMultiplier: speedMult,
+        totalFrames: frames,
+        animationSpeed: animSpeed,
+      );
+    }
+    objects.add(obj);
   }
 
   void clear() {
+    _sceneryPool.addAll(objects);
     objects.clear();
   }
 }

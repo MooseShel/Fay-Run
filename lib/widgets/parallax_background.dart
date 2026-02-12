@@ -128,22 +128,23 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
         return Stack(
           children: [
             // Current / Left tile (Index)
-            _buildCarouselTile(assetPath, baseIndex, -offsetInTile, tileWidth),
-            // Next / Right tile (Index + 1)
             _buildCarouselTile(
-                assetPath, baseIndex + 1, tileWidth - offsetInTile, tileWidth),
+                assetPath, baseIndex, -offsetInTile, tileWidth, screenHeight),
+            // Next / Right tile (Index + 1)
+            _buildCarouselTile(assetPath, baseIndex + 1,
+                tileWidth - offsetInTile, tileWidth, screenHeight),
             // If the tile is narrower than half the screen, we might need a third tile
             if (tileWidth - offsetInTile < screenWidth)
               _buildCarouselTile(assetPath, baseIndex + 2,
-                  2 * tileWidth - offsetInTile, tileWidth),
+                  2 * tileWidth - offsetInTile, tileWidth, screenHeight),
           ],
         );
       },
     );
   }
 
-  Widget _buildCarouselTile(
-      String assetPath, int index, double xPos, double width) {
+  Widget _buildCarouselTile(String assetPath, int index, double xPos,
+      double width, double screenHeight) {
     // Mirroring logic removed as per user request
     return Positioned(
       left: xPos,
@@ -154,6 +155,7 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
         assetPath,
         fit: BoxFit.fitHeight,
         alignment: Alignment.center,
+        cacheHeight: screenHeight.toInt(), // Memory Optimization
       ),
     );
   }
