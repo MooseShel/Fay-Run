@@ -110,34 +110,41 @@ class SceneryManager {
     if (pool.isEmpty) return;
     type = pool[_random.nextInt(pool.length)];
 
+    double animSpeed = 0.35;
+
     // Configuration
     switch (type) {
       case SceneryType.boy:
       case SceneryType.girl:
-        y = 0.0;
-        speedMult = 1.0;
+        y = 0.08; // Moved up/back
+        speedMult = 0.2; // Stationary relative to background
         frames = 2;
+        animSpeed = 0.6; // Slower animation for standing/idle look
         break;
       case SceneryType.dogSitting:
       case SceneryType.dogStanding:
-        y = 0.0;
-        speedMult = 0.8; // Farther background
-        frames = 2; // Blinking
+        y = 0.08;
+        speedMult = 0.2;
+        frames = 2;
+        animSpeed = 0.6;
         break;
       case SceneryType.squirrel:
-        y = 0.0;
-        speedMult = 1.2; // Move faster across screen
-        frames = 4; // Hopping
+        y = 0.08;
+        speedMult = 0.2;
+        frames = 4;
+        animSpeed = 0.6;
         break;
       case SceneryType.janitor:
-        y = 0.0;
-        speedMult = 0.7; // Far background
+        y = 0.08;
+        speedMult = 0.2;
         frames = 2;
+        animSpeed = 0.6;
         break;
       case SceneryType.butterfly:
         y = 0.4 + _random.nextDouble() * 0.3; // Sky
         speedMult = 0.5; // Very far background
         frames = 2;
+        animSpeed = 0.35; // Fluttering
         break;
     }
 
@@ -148,6 +155,7 @@ class SceneryManager {
       y: y,
       speedMultiplier: speedMult,
       totalFrames: frames,
+      animationSpeed: animSpeed,
     ));
   }
 

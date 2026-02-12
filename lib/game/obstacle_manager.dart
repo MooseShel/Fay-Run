@@ -114,15 +114,23 @@ class ObstacleManager {
       }
     }
 
+    // Check if an obstacle SHOULD spawn
     if (_spawnTimer > spawnInterval) {
-      _spawnObstacle(level, isBonusRound, isReward: false);
-      _spawnTimer = 0;
+      // Logic to prevent overlap:
+      // If a reward recently spawned (rewardTimer is low), delay this obstacle
+      // Or if a reward is ABOUT to spawn (rewardTimer is high), push the reward back
 
-      // Stagger Logic: Ensure rewards don't clump with obstacles
-      // If a reward was about to spawn, push it back slightly to give breathing room
-      // Reduced pushback to 0.5s so it doesn't get stuck in a loop at high frequencies
-      if (_rewardTimer > _rewardInterval - 1.0) {
-        _rewardTimer = _rewardInterval - 0.5;
+      // If reward just spawned (< 1.5s ago), delay obstacle
+      if (_rewardTimer < 1.5 && !isBonusRound) {
+        _spawnTimer = spawnInterval - 0.5; // Wait a bit more
+      } else {
+        _spawnObstacle(level, isBonusRound, isReward: false);
+        _spawnTimer = 0;
+
+        // Push back reward if it was about to spawn to prevent clutter
+        if (!isBonusRound && _rewardTimer > _rewardInterval - 1.5) {
+          _rewardTimer = _rewardInterval - 1.5;
+        }
       }
     }
 
@@ -130,9 +138,15 @@ class ObstacleManager {
     if (!isBonusRound) {
       _rewardTimer += dt;
       if (_rewardTimer > _rewardInterval) {
-        _spawnObstacle(level, false, isReward: true);
-        _rewardTimer = 0;
-        _rewardInterval = 8.0 + _random.nextDouble() * 4.0; // Randomize next
+        // Mutual exclusion: Don't spawn if obstacle is about to spawn
+        if (_spawnTimer > spawnInterval - 1.5) {
+          _rewardTimer = _rewardInterval - 0.5; // Wait for obstacle to clear
+        } else {
+          _spawnObstacle(level, false, isReward: true);
+          _rewardTimer = 0;
+          // More frequent rewards: 3 to 6 seconds
+          _rewardInterval = 3.0 + _random.nextDouble() * 3.0;
+        }
       }
     }
 
@@ -355,11 +369,8 @@ class ObstacleManager {
     if (isBonusRound) {
       final heights = [0.0, 0.25, 0.5];
       y = heights[_random.nextInt(heights.length)];
-    } else if (type == ObstacleType.goldenBook ||
-        type == ObstacleType.apple ||
-        type == ObstacleType.banana ||
-        type == ObstacleType.burger) {
-      y = 0.25;
+    } else if (type == ObstacleType.goldenBook) {
+      y = 0.25; // Only Golden Book floats now
     }
 
     double startX = 1.1;

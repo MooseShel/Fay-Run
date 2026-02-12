@@ -222,7 +222,8 @@ class GameState extends ChangeNotifier {
 
   void _resetLevelPhysics() {
     // Increase speed with level scaling: Base 4.0 + 0.2 per level
-    _runSpeed = 4.0 + (_currentLevel * 0.2);
+    // Increased by 10% per user request
+    _runSpeed = (4.0 + (_currentLevel * 0.2)) * 1.1;
 
     debugPrint('Level $_currentLevel Physics Reset: Speed = $_runSpeed');
   }

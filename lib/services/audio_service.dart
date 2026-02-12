@@ -171,8 +171,8 @@ class AudioService {
     }
   }
 
-  Future<void> playSFX(String sfxName) async {
-    if (_isMuted) return;
+  void playSFX(String sfxName) {
+    if (_isMuted || _sfxPool.isEmpty) return;
     try {
       // Find an idle player in the pool
       AudioPlayer? player;
@@ -186,8 +186,7 @@ class AudioService {
       // If all busy, reuse the first one
       player ??= _sfxPool.first;
 
-      await player.stop();
-      await player.play(AssetSource('audio/$sfxName'));
+      player.stop().then((_) => player!.play(AssetSource('audio/$sfxName')));
     } catch (e) {
       debugPrint('Error playing SFX: $e');
     }
