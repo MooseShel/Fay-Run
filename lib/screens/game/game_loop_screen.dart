@@ -366,12 +366,12 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     obs.hasEngaged = true; // Prevent multi-trigger
 
     if (obs.type == ObstacleType.goldenBook) {
-      gameState.pauseGame();
+      gameState.startQuiz();
       _showQuiz(gameState, obs, reward: 200); // Double Reward
     } else if (obs.type == ObstacleType.burger ||
         obs.type == ObstacleType.apple ||
         obs.type == ObstacleType.banana) {
-      gameState.pauseGame();
+      gameState.startQuiz();
       _showQuiz(gameState, obs, reward: 100); // Standard Reward
     } else {
       // obs.isCollected = true; // Regular obstacles no longer disappear on hit

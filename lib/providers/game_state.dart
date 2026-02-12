@@ -4,7 +4,15 @@ import '../models/challenge.dart';
 import '../services/supabase_service.dart';
 import '../services/audio_service.dart';
 
-enum GameStatus { menu, playing, paused, levelComplete, gameOver, bonusRound }
+enum GameStatus {
+  menu,
+  playing,
+  paused,
+  levelComplete,
+  gameOver,
+  bonusRound,
+  quiz
+}
 
 class GameState extends ChangeNotifier {
   // Multi-Student Data
@@ -230,6 +238,13 @@ class GameState extends ChangeNotifier {
     debugPrint('Level $_currentLevel Physics Reset: Speed = $_runSpeed');
   }
 
+  void startQuiz() {
+    if (_status == GameStatus.playing) {
+      _status = GameStatus.quiz;
+      notifyListeners();
+    }
+  }
+
   void pauseGame() {
     if (_status == GameStatus.playing) {
       _status = GameStatus.paused;
@@ -238,7 +253,7 @@ class GameState extends ChangeNotifier {
   }
 
   void resumeGame() {
-    if (_status == GameStatus.paused) {
+    if (_status == GameStatus.paused || _status == GameStatus.quiz) {
       _status = GameStatus.playing;
       notifyListeners();
     }
@@ -262,7 +277,9 @@ class GameState extends ChangeNotifier {
   }
 
   void addScore(int points) {
-    if (_status != GameStatus.playing && _status != GameStatus.bonusRound) {
+    if (_status != GameStatus.playing &&
+        _status != GameStatus.bonusRound &&
+        _status != GameStatus.quiz) {
       return;
     }
     // Apply combo multiplier (max x5)
