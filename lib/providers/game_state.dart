@@ -295,11 +295,13 @@ class GameState extends ChangeNotifier {
     AudioService().playStaffSound(type); // Play staff voice
 
     // Apply speed modifications for specific staff events
+    /*
     if (type == StaffEventType.coachWhistle) {
       _runSpeed = 4.5; // Hurried!
     } else if (type == StaffEventType.deanGlare) {
       _runSpeed = 1.5; // Slow motion!
     }
+    */
 
     notifyListeners();
 

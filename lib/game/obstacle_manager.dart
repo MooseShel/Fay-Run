@@ -134,21 +134,13 @@ class ObstacleManager {
 
     // Check if an obstacle SHOULD spawn
     if (_spawnTimer > spawnInterval) {
-      // Logic to prevent overlap:
-      // If a reward recently spawned (rewardTimer is low), delay this obstacle
-      // Or if a reward is ABOUT to spawn (rewardTimer is high), push the reward back
-
-      // If reward just spawned (< 0.8s ago), delay obstacle
-      if (_rewardTimer < 0.8 && !isBonusRound) {
-        _spawnTimer = spawnInterval - 0.5; // Wait a bit more
-      } else {
+      // Check if space is clear offscreen (startX is roughly 1.1 to 1.5 usually)
+      if (_isPositionClear(1.1, 0.4)) {
         _spawnObstacle(level, isBonusRound, isReward: false);
         _spawnTimer = 0;
-
-        // Push back reward if it was about to spawn to prevent clutter
-        if (!isBonusRound && _rewardTimer > _rewardInterval - 1.5) {
-          _rewardTimer = _rewardInterval - 1.5;
-        }
+      } else {
+        // Wait a bit (try next frame or short delay)
+        _spawnTimer = spawnInterval - 0.2; // Fast retry
       }
     }
 
@@ -156,14 +148,16 @@ class ObstacleManager {
     if (!isBonusRound) {
       _rewardTimer += dt;
       if (_rewardTimer > _rewardInterval) {
-        // Mutual exclusion: Don't spawn if obstacle is VERY imminent
-        if (_spawnTimer > spawnInterval - 0.8) {
-          _rewardTimer = _rewardInterval - 0.2; // Wait slightly
-        } else {
+        // Independent check
+        // Check overlap prevents spawning on top of regular obstacles
+        if (_isPositionClear(1.1, 0.4)) {
           _spawnObstacle(level, false, isReward: true);
           _rewardTimer = 0;
           // More frequent rewards: 2 to 5 seconds
           _rewardInterval = 2.0 + _random.nextDouble() * 3.0;
+        } else {
+          // Retry soon
+          _rewardTimer = _rewardInterval - 0.2;
         }
       }
     }
@@ -434,6 +428,16 @@ class ObstacleManager {
     }
 
     obstacles.add(obs);
+  }
+
+  bool _isPositionClear(double x, double safeDistance) {
+    for (var obs in obstacles) {
+      // If obstacle is within the safe distance of the checked x position
+      if ((obs.x - x).abs() < safeDistance) {
+        return false;
+      }
+    }
+    return true;
   }
 
   void clear() {

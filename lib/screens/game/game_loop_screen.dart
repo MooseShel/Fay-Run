@@ -43,7 +43,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   // Progression & Chaos
   int? _lastLevel;
   double _distanceRun = 0;
-  double _chaosTimer = 0;
+  // double _chaosTimer = 0;
   final Random _random = Random();
 
   // Animation State
@@ -130,8 +130,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       final state = context.read<GameState>();
       final level = state.currentLevel;
 
-      // UX goal: 5 seconds "Preparing Level" screen to ensure assets (images/sound) are fully loaded
-      final minDelayFuture = Future.delayed(const Duration(milliseconds: 5000));
+      // UX goal: 3 seconds "Preparing Level" screen to ensure assets (images/sound) are fully loaded
+      final minDelayFuture = Future.delayed(const Duration(milliseconds: 3000));
 
       // 1. Ensure essential assets are loaded (likely already done in StudentSelect)
       final essentialPreload = AssetManager().precacheEssentialAssets(context);
@@ -214,7 +214,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         _floatingScores.removeWhere((fs) => fs.animationTime >= 1.0);
       }
 
-      _chaosTimer += dt;
+      // _chaosTimer += dt;
 
       // Run Animation
       _runAnimationTimer += dt;
@@ -245,18 +245,23 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       }
 
       // Chaos Threshold
+      /*
+      // Chaos Threshold
       final double chaosThreshold = kDebugMode
           ? 10.0
           : (gameState.currentLevel >= 6
               ? 35.0 + _random.nextInt(15)
               : 20.0 + _random.nextInt(10));
+      */
 
+      /*
       if (_chaosTimer > chaosThreshold) {
         _chaosTimer = 0;
         if (gameState.activeStaffEvent == null) {
           gameState.triggerStaffChaos();
         }
       }
+      */
 
       // 1. Physics Update (Applying dt to gravity and velocity)
       if (_isJumping || _playerY > 0) {
@@ -592,14 +597,23 @@ class _GameLoopScreenState extends State<GameLoopScreen>
               if (obj.type == SceneryType.boy ||
                   obj.type == SceneryType.girl ||
                   obj.type == SceneryType.janitor) {
-                charSize = screenSize.height * 0.21; // Match new player size
+                charSize = screenSize.height * 0.28; // Increased from 0.21
+              }
+
+              // Vertical Offset for specific characters (Horizon alignment)
+              double verticalOffset = 0.0;
+              if (obj.type == SceneryType.boy ||
+                  obj.type == SceneryType.girl ||
+                  obj.type == SceneryType.janitor) {
+                verticalOffset = 25.0; // Raise them up to the horizon line
               }
 
               return Positioned(
                 left: obj.x * screenSize.width,
                 // Align to top edge of walking area (Horizon)
-                // Lift them up by ~23% of screen height
-                bottom: _groundHeight + (obj.y * screenSize.height),
+                bottom: _groundHeight +
+                    verticalOffset +
+                    (obj.y * screenSize.height),
                 width: charSize,
                 height: charSize,
                 child: RepaintBoundary(

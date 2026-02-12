@@ -19,9 +19,10 @@ void main() {
   runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
-      // Lock to Portrait Mode (Up only)
+      // Lock to Landscape Mode
       await SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
       ]);
 
       // Initialize Services
