@@ -6,7 +6,7 @@
     "background_color": "#0D47A1",
     "theme_color": "#1565C0",
     "description": "Fay Gator Run - Educational Runner Game",
-    "orientation": "portrait-primary",
+    "orientation": "landscape",
     "prefer_related_applications": false,
     "icons": [
         {
