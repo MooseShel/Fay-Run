@@ -107,8 +107,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       final state = context.read<GameState>();
       final level = state.currentLevel;
 
-      // UX goal: ~800ms "Preparing Level" screen
-      final minDelayFuture = Future.delayed(const Duration(milliseconds: 800));
+      // UX goal: 5 seconds "Preparing Level" screen to ensure assets (images/sound) are fully loaded
+      final minDelayFuture = Future.delayed(const Duration(milliseconds: 5000));
 
       // 1. Ensure essential assets are loaded (likely already done in StudentSelect)
       final essentialPreload = AssetManager().precacheEssentialAssets(context);
