@@ -46,7 +46,8 @@ class SceneryManager {
 
     // Spawn more frequently in nature levels (Butterfly/Squirrel/Bird)
     // Less frequently in school levels (Boy/Girl/Janitor)
-    double spawnInterval = 3.0 + _random.nextDouble() * 3.0; // 3-6 seconds
+    double spawnInterval =
+        7.0 + _random.nextDouble() * 5.0; // 7-12 seconds (Less Clutter)
     if (_spawnTimer > spawnInterval) {
       _spawnObject(level);
       _spawnTimer = 0;

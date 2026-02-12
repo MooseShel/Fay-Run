@@ -68,7 +68,7 @@ class ObstacleManager {
   double _rewardInterval = 0; // Dynamic interval for rewards
 
   ObstacleManager() {
-    _rewardInterval = 8.0 + _random.nextDouble() * 4.0; // 8-12 seconds
+    _rewardInterval = 3.0 + _random.nextDouble() * 3.0; // 3-6 seconds start
   }
 
   void update(double dt, double runSpeed, int level, bool isBonusRound,
@@ -144,8 +144,8 @@ class ObstacleManager {
         } else {
           _spawnObstacle(level, false, isReward: true);
           _rewardTimer = 0;
-          // More frequent rewards: 3 to 6 seconds
-          _rewardInterval = 3.0 + _random.nextDouble() * 3.0;
+          // More frequent rewards: 2 to 5 seconds
+          _rewardInterval = 2.0 + _random.nextDouble() * 3.0;
         }
       }
     }

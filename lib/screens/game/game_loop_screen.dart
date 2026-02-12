@@ -198,7 +198,12 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       }
 
       // Level Completion
-      final targetDistance = gameState.runSpeed * 600;
+      // Fix: Use BASE speed for target calculation so temporary speed changes don't shorten/lengthen the level dynamically.
+      // Base Speed Formula matches GameState._resetLevelPhysics: (4.0 + (level * 0.2)) * 1.1
+      final double baseSpeed = (4.0 + (gameState.currentLevel * 0.2)) * 1.1;
+
+      // Target 120 seconds duration: BaseSpeed * 1200 (since distance is Speed * 10 * Time)
+      final targetDistance = baseSpeed * 1200;
 
       if (_distanceRun > targetDistance) {
         _distanceRun = 0;
