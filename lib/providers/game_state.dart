@@ -81,13 +81,8 @@ class GameState extends ChangeNotifier {
   Challenge? get currentChallenge => _currentChallenge;
 
   bool get isBonusRoundEarned {
-    // Disabled for now - assets pending
+    // Completely disabled as requested
     return false;
-    /*
-    bool isBonusLevel = [3, 6, 9].contains(_currentLevel);
-    bool hitThreshold = _goldenBooksCollectedCurrentLevel >= 5;
-    return isBonusLevel && hitThreshold;
-    */
   }
 
   Future<void> loadChallenge() async {

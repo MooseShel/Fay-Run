@@ -182,8 +182,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       }
       _lastLevel = gameState.currentLevel;
 
-      if (gameState.status != GameStatus.playing &&
-          gameState.status != GameStatus.bonusRound) {
+      if (gameState.status != GameStatus.playing) {
         _lastFrameTime = null; // Reset when not playing
         return;
       }
@@ -357,6 +356,10 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
         if (xOverlap && yOverlap && !obs.hasEngaged) {
           _handleCollision(obs, gameState);
+          // CRITICAL: Stop processing other collisions if the first one triggers a quiz
+          if (gameState.status == GameStatus.quiz) {
+            break;
+          }
         }
       }
     } catch (e, stack) {
@@ -467,9 +470,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   void _jump() {
     final gameState = context.read<GameState>();
 
-    // Fix: Block jump input if not playing (e.g. paused or in quiz)
-    if (gameState.status != GameStatus.playing &&
-        gameState.status != GameStatus.bonusRound) {
+    // Fix: Block jump input if not playing (exactly playing)
+    if (gameState.status != GameStatus.playing) {
       return;
     }
 
