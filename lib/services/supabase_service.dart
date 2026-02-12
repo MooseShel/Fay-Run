@@ -109,11 +109,12 @@ class SupabaseService {
     try {
       if (isExam) {
         // --- EXAM MODE LOGIC ---
-        // Fetch all questions for this grade and specific topic (across all weeks)
+        // Fetch questions for this grade and specific topic that are EXPRESSLY exams
         var query = _client!
             .from('questions')
             .select('*, challenges!inner(*)')
-            .eq('challenges.grade_level', gradeLevel);
+            .eq('challenges.grade_level', gradeLevel)
+            .eq('challenges.is_exam', true); // STRICT FILTER
 
         if (topic != null && topic.isNotEmpty) {
           query = query.eq('challenges.topic', topic);

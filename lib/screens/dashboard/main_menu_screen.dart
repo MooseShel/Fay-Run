@@ -425,8 +425,12 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                         color: FayColors.gold,
                                         fontWeight: FontWeight.bold),
                                     underline: Container(),
-                                    items: ['Math', 'Science', 'Social Studies']
-                                        .map((t) {
+                                    items: [
+                                      'Math',
+                                      'Science',
+                                      'Social Studies',
+                                      'English'
+                                    ].map((t) {
                                       return DropdownMenuItem(
                                         value: t,
                                         child: Text(t),
