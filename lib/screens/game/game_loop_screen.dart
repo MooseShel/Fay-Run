@@ -70,6 +70,17 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     });
   }
 
+  void _updateFloatingScores(double dt) {
+    for (int i = _floatingScores.length - 1; i >= 0; i--) {
+      final fs = _floatingScores[i];
+      fs.animationTime += dt;
+      if (fs.animationTime > 1.0) {
+        // 1 second lifetime
+        _floatingScores.removeAt(i);
+      }
+    }
+  }
+
   bool _isLoading = true;
 
   @override
@@ -233,23 +244,34 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       }
 
       // Performance Optimization: Consolidate state updates into one setState call
-      setState(() {
-        // 2. Obstacle Update
-        _obstacleManager.update(
-          dt,
-          gameState.runSpeed,
-          gameState.currentLevel,
-          gameState.status == GameStatus.bonusRound,
-          (obs) {},
-        );
+      try {
+        setState(() {
+          // 2. Obstacle Update
+          _obstacleManager.update(
+            dt,
+            gameState.runSpeed,
+            gameState.currentLevel,
+            gameState.status == GameStatus.bonusRound,
+            (obs) => _handleCollision(obs, gameState),
+          );
 
-        // 3. Scenery Update
-        _sceneryManager.update(
-          dt,
-          gameState.runSpeed,
-          gameState.currentLevel,
-        );
-      });
+          // 3. Scenery Update
+          _sceneryManager.update(
+            dt,
+            gameState.runSpeed,
+            gameState.currentLevel,
+          );
+
+          // 4. Floating Scores
+          _updateFloatingScores(dt);
+        });
+      } catch (e, stack) {
+        debugPrint('Error in GameLoop update: $e');
+        // Prevent flooding logs
+        if (_random.nextDouble() < 0.01) {
+          debugPrint(stack.toString());
+        }
+      }
 
       final screenSize = MediaQuery.sizeOf(context);
 
@@ -517,6 +539,12 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                   break;
                 case SceneryType.butterfly:
                   baseName = 'butterfly';
+                  break;
+                case SceneryType.bird:
+                  baseName = 'bird';
+                  break;
+                case SceneryType.chicken:
+                  baseName = 'chicken';
                   break;
               }
 
@@ -1100,24 +1128,26 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     // Try current themed folder first
     assetName = 'assets/images/obstacles/$baseName$variantSuffix.png';
 
+    // Debug print for rewards to ensure path is correct
+    if (obs.type == ObstacleType.apple || obs.type == ObstacleType.burger) {
+      // debugPrint('Loading asset: $assetName');
+    }
+
     return Image.asset(
       assetName,
       fit: BoxFit.contain,
       alignment: Alignment.bottomCenter,
       errorBuilder: (context, error, stackTrace) {
+        debugPrint('Failed to load asset: $assetName, error: $error');
         // Fallback 1: try without variant
         return Image.asset(
           'assets/images/obstacles/$baseName.png',
           fit: BoxFit.contain,
           alignment: Alignment.bottomCenter,
           errorBuilder: (c, e, s) {
-            // Fallback 2: try base images folder
-            return Image.asset(
-              'assets/images/$baseName.png',
-              fit: BoxFit.contain,
-              alignment: Alignment.bottomCenter,
-              errorBuilder: (c, e, s) => const SizedBox(),
-            );
+            debugPrint(
+                'Failed to load fallback: assets/images/obstacles/$baseName.png');
+            return const SizedBox();
           },
         );
       },
