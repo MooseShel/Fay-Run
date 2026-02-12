@@ -107,7 +107,7 @@ class FayGatorRunApp extends StatelessWidget {
                           ),
                           const SizedBox(height: 12),
                           const Text(
-                            'THE GATOR RUNS BEST IN LANDSCAPE!',
+                            'ERNIE RUNS BEST IN LANDSCAPE!',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontFamily: 'BubblegumSans',

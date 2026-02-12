@@ -479,13 +479,40 @@ class GameState extends ChangeNotifier {
   // Helper to get random unique question
   QuizQuestion getNextQuestion() {
     if (_currentChallenge == null || _currentChallenge!.questions.isEmpty) {
-      // Fallback
-      return QuizQuestion(
-        id: 'fallback_math',
-        questionText: 'What is the alligator\'s favorite color?',
-        correctOptionIndex: 2,
-        options: ['Red', 'Blue', 'Green', 'Orange'],
-      );
+      // Fallback variety (Ernie themed)
+      final List<QuizQuestion> fallbacks = [
+        QuizQuestion(
+          id: 'fallback_ernie_1',
+          questionText: 'What is Ernie\'s favorite color?',
+          correctOptionIndex: 2,
+          options: ['Red', 'Blue', 'Green', 'Orange'],
+        ),
+        QuizQuestion(
+          id: 'fallback_ernie_2',
+          questionText: 'Which school does Ernie go to?',
+          correctOptionIndex: 0,
+          options: [
+            'The Fay School',
+            'Green Bayou Academy',
+            'Lush Forest High'
+          ],
+        ),
+        QuizQuestion(
+          id: 'fallback_ernie_3',
+          questionText: 'What is 5 + 7?',
+          correctOptionIndex: 1,
+          options: ['10', '12', '13', '15'],
+        ),
+        QuizQuestion(
+          id: 'fallback_ernie_4',
+          questionText: 'Ernie is a Gator. Where do gators live?',
+          correctOptionIndex: 3,
+          options: ['Desert', 'Mountains', 'Arctic', 'Bayou'],
+        ),
+      ];
+
+      final random = math.Random();
+      return fallbacks[random.nextInt(fallbacks.length)];
     }
 
     // Filter available questions (using ID for deterministic tracking)

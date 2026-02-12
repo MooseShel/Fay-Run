@@ -152,8 +152,8 @@ class ObstacleManager {
         if (_isPositionClear(1.1, 0.25)) {
           _spawnObstacle(level, false, isReward: true);
           _rewardTimer = 0;
-          // Education First: More frequent rewards (1.5 to 3.5 seconds)
-          _rewardInterval = 1.5 + _random.nextDouble() * 2.0;
+          // Education First: Balanced rewards (Reduced by ~25% from 1.5-3.5 range)
+          _rewardInterval = 2.0 + _random.nextDouble() * 2.5;
         }
       }
     }
@@ -341,8 +341,8 @@ class ObstacleManager {
         break;
       case ObstacleType.basketBall:
       case ObstacleType.soccerBall:
-        width = 0.14;
-        height = 0.14;
+        width = 0.17; // Increased by ~20% from 0.14
+        height = 0.17;
         break;
       case ObstacleType.gymMat:
         width = 0.43;
@@ -355,12 +355,12 @@ class ObstacleManager {
         height = 0.12;
         break;
       case ObstacleType.lunchTray:
-        width = 0.31;
-        height = 0.17;
+        width = 0.37; // Increased by ~20% from 0.31
+        height = 0.20; // Increased by ~20% from 0.17
         break;
       case ObstacleType.milkCarton:
-        width = 0.14;
-        height = 0.17;
+        width = 0.17; // Increased by ~20% from 0.14
+        height = 0.20; // Increased by ~20% from 0.17
         break;
       case ObstacleType.wildFlowers:
         width = 0.17;

@@ -139,31 +139,35 @@ class SupabaseService {
           questions: questions,
         );
       } else {
-        // --- NORMAL MODE LOGIC ---
-        // Prioritize difficulty_level, fallback to week_number
-        var query = _client!
+        // NORMAL MODE LOGIC
+        // We must create fresh queries for fallback to avoid accumulating filters (OR logic)
+
+        // 1. Try difficulty_level first
+        if (difficultyLevel != null) {
+          final diffResponse = await _client!
+              .from('challenges')
+              .select('*, questions(*)')
+              .eq('grade_level', gradeLevel)
+              .eq('difficulty_level', difficultyLevel)
+              .maybeSingle(); // Try to get the specific difficulty level
+
+          if (diffResponse != null) {
+            return Challenge.fromJson(diffResponse);
+          }
+        }
+
+        // 2. Fallback to week_number
+        final weekToUse = weekNumber ?? difficultyLevel ?? 1;
+        var weekQuery = _client!
             .from('challenges')
             .select('*, questions(*)')
             .eq('grade_level', gradeLevel);
 
         if (topic != null && topic.isNotEmpty) {
-          query = query.eq('topic', topic);
+          weekQuery = weekQuery.eq('topic', topic);
         }
 
-        // Try difficulty_level first if provided
-        if (difficultyLevel != null) {
-          final difficultyResponse =
-              await query.eq('difficulty_level', difficultyLevel);
-          if ((difficultyResponse as List).isNotEmpty) {
-            final List<dynamic> challenges = difficultyResponse;
-            return _processChallenges(
-                challenges, gradeLevel, null, difficultyLevel, topic);
-          }
-        }
-
-        // Fallback to week_number
-        final weekToUse = weekNumber ?? difficultyLevel ?? 1;
-        final weekResponse = await query.eq('week_number', weekToUse);
+        final weekResponse = await weekQuery.eq('week_number', weekToUse);
         final List<dynamic> challenges = weekResponse as List;
 
         if (challenges.isEmpty) {
