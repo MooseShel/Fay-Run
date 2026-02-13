@@ -247,13 +247,14 @@ class SupabaseService {
         insertData['challenge_id'] = challengeId;
       }
 
-      await _client!.from('student_progress').insert(insertData);
+      // Use upsert to handle duplicate keys (when student retakes a challenge)
+      await _client!.from('student_progress').upsert(insertData);
     } catch (e) {
       debugPrint('Supabase: submitQuizResult error: $e');
       // If we failed due to FK constraint even with non-aggregate, try one last time without ID
       if (e.toString().contains('23503')) {
         try {
-          await _client!.from('student_progress').insert({
+          await _client!.from('student_progress').upsert({
             'student_id': studentId,
             'score': score,
             'completed_at': DateTime.now().toIso8601String(),

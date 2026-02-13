@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/game_state.dart';
 import '../../core/constants.dart';
@@ -389,17 +388,18 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
     if (obs.type == ObstacleType.goldenBook) {
       gameState.startQuiz();
-      _showQuiz(gameState, obs, reward: 200); // Double Reward
+      _showQuiz(gameState, obs,
+          obstacleType: obs.type, reward: 200); // Double Reward
     } else if (obs.type == ObstacleType.burger ||
         obs.type == ObstacleType.apple ||
         obs.type == ObstacleType.banana) {
       gameState.startQuiz();
-      _showQuiz(gameState, obs, reward: 100); // Standard Reward
+      _showQuiz(gameState, obs,
+          obstacleType: obs.type, reward: 100); // Standard Reward
     } else {
       // obs.isCollected = true; // Regular obstacles no longer disappear on hit
       if (!gameState.isInvincible) {
         AudioService().playBonk();
-        HapticFeedback.mediumImpact(); // Tactile feedback for collision
         gameState.takeDamage();
 
         // Trigger crash animation
@@ -419,7 +419,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     }
   }
 
-  void _showQuiz(GameState gameState, Obstacle obs, {int reward = 100}) {
+  void _showQuiz(GameState gameState, Obstacle obs,
+      {required ObstacleType obstacleType, int reward = 100}) {
     // Use loaded challenge or fallback to a default one
     final challenge = gameState.currentChallenge ??
         Challenge(
@@ -463,17 +464,18 @@ class _GameLoopScreenState extends State<GameLoopScreen>
           if (isCorrect) {
             AudioService().playPowerup();
             gameState.addScore(reward);
-            gameState.setInvincible(true);
+
+            // Only grant invincibility for Golden Books
+            if (obstacleType == ObstacleType.goldenBook) {
+              gameState.setInvincible(true);
+            }
+
             obs.isCollected = true; // Disappear ONLY if correct
 
             // Spawn Floating Text
             _spawnFloatingScore(reward);
-          } else {
-            // Use haptic feedback instead of sound to avoid confusion with collision sounds
-            HapticFeedback.mediumImpact();
-            // User requested to remove punishment for missing a question
-            // gameState.takeDamage();
           }
+          // No haptic feedback or penalties for incorrect answers
 
           // submit result to backend
           gameState.recordQuizResult(challenge.id, isCorrect);
@@ -514,6 +516,9 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       offset = screenHeight * 0.06;
     } else if (obs.type == ObstacleType.bench) {
       // Benches were floating, lowering them by 3% of screen height
+      offset = screenHeight * 0.03;
+    } else if (obs.type == ObstacleType.log) {
+      // Logs have grass decoration at bottom of sprite, need offset to ground the log body
       offset = screenHeight * 0.03;
     }
 
