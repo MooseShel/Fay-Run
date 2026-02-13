@@ -399,6 +399,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       // obs.isCollected = true; // Regular obstacles no longer disappear on hit
       if (!gameState.isInvincible) {
         AudioService().playBonk();
+        HapticFeedback.mediumImpact(); // Tactile feedback for collision
         gameState.takeDamage();
 
         // Trigger crash animation
