@@ -2,25 +2,37 @@
 -- PRE-K 3 (Grade Level -2)
 -- ==========================================
 
--- Week 1: Math (Colors & Shapes)
-INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w1_prek3_Math', 'Math', -2) ON CONFLICT (id) DO NOTHING;
-INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
-('q_prek3_w1_1', 'ch_Spring_2025_w1_prek3_Math', 'What color is the sun?', 'Yellow', 'Blue', 'Green'),
-('q_prek3_w1_2', 'ch_Spring_2025_w1_prek3_Math', 'What shape is a ball?', 'Circle', 'Square', 'Triangle'),
-('q_prek3_w1_3', 'ch_Spring_2025_w1_prek3_Math', 'Which one is BIG?', 'Elephant', 'Ant', 'Mouse'),
-('q_prek3_w1_4', 'ch_Spring_2025_w1_prek3_Math', 'Count the eyes: 👀', 'Two', 'One', 'Three'),
-('q_prek3_w1_5', 'ch_Spring_2025_w1_prek3_Math', 'What color is an apple?', 'Red', 'Blue', 'Purple')
-ON CONFLICT (id) DO NOTHING;
+-- Week 1: Math (Colors & Shapes) -> Difficulty 1 & 2
+INSERT INTO challenges (id, topic, grade_level, difficulty_level) VALUES 
+('ch_prek3_d1_Math', 'Math', -2, 1),
+('ch_prek3_d2_Math', 'Math', -2, 2)
+ON CONFLICT (id) DO UPDATE SET difficulty_level = EXCLUDED.difficulty_level;
 
--- Week 2: Math (Counting & Sizes)
-INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w2_prek3_Math', 'Math', -2) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
-('q_prek3_w2_1', 'ch_Spring_2025_w2_prek3_Math', 'How many fingers?', 'Five', 'Two', 'Ten'),
-('q_prek3_w2_2', 'ch_Spring_2025_w2_prek3_Math', 'Which is Small?', 'Mouse', 'House', 'Tree'),
-('q_prek3_w2_3', 'ch_Spring_2025_w2_prek3_Math', 'Count: 🍎 🍎', 'Two', 'One', 'Three'),
-('q_prek3_w2_4', 'ch_Spring_2025_w2_prek3_Math', 'Shape with 4 sides?', 'Square', 'Circle', 'Star'),
-('q_prek3_w2_5', 'ch_Spring_2025_w2_prek3_Math', 'Which is heavier?', 'Car', 'Feather', 'Ball')
-ON CONFLICT (id) DO NOTHING;
+('q_prek3_w1_1', 'ch_prek3_d1_Math', 'What color is the sun?', 'Yellow', 'Blue', 'Green'),
+('q_prek3_w1_2', 'ch_prek3_d1_Math', 'What shape is a ball?', 'Circle', 'Square', 'Triangle'),
+('q_prek3_w1_3', 'ch_prek3_d2_Math', 'Which one is BIG?', 'Elephant', 'Ant', 'Mouse'),
+('q_prek3_w1_4', 'ch_prek3_d2_Math', 'Count the eyes: 👀', 'Two', 'One', 'Three'),
+('q_prek3_w1_5', 'ch_prek3_d2_Math', 'What color is an apple?', 'Red', 'Blue', 'Purple')
+ON CONFLICT (id) DO UPDATE SET 
+  question_text = EXCLUDED.question_text,
+  challenge_id = EXCLUDED.challenge_id;
+
+-- Week 2: Math (Counting & Sizes) -> Difficulty 3 & 4
+INSERT INTO challenges (id, topic, grade_level, difficulty_level) VALUES 
+('ch_prek3_d3_Math', 'Math', -2, 3),
+('ch_prek3_d4_Math', 'Math', -2, 4)
+ON CONFLICT (id) DO UPDATE SET difficulty_level = EXCLUDED.difficulty_level;
+
+INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
+('q_prek3_w2_1', 'ch_prek3_d3_Math', 'How many fingers?', 'Five', 'Two', 'Ten'),
+('q_prek3_w2_2', 'ch_prek3_d3_Math', 'Which is Small?', 'Mouse', 'House', 'Tree'),
+('q_prek3_w2_3', 'ch_prek3_d4_Math', 'Count: 🍎 🍎', 'Two', 'One', 'Three'),
+('q_prek3_w2_4', 'ch_prek3_d4_Math', 'Shape with 4 sides?', 'Square', 'Circle', 'Star'),
+('q_prek3_w2_5', 'ch_prek3_d4_Math', 'Which is heavier?', 'Car', 'Feather', 'Ball')
+ON CONFLICT (id) DO UPDATE SET 
+  question_text = EXCLUDED.question_text,
+  challenge_id = EXCLUDED.challenge_id;
 
 -- Week 3: Science (Animals)
 INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w3_prek3_Sci', 'Science', -2) ON CONFLICT (id) DO NOTHING;

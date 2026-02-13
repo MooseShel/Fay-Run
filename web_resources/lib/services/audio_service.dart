@@ -1,4 +1,4 @@
-﻿import 'package:audioplayers/audioplayers.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import '../models/staff_event.dart';
 import 'settings_service.dart';
@@ -64,16 +64,18 @@ class AudioService {
       'staff_prek2.mp3',
     ];
 
-    for (var s in sfx) {
+    // Use the SFX pool to "warm up" the players with the most common sounds
+    // This avoids rapid allocation/deallocation which triggers EXC_BAD_ACCESS
+    for (int i = 0; i < _sfxPool.length && i < sfx.length; i++) {
       try {
-        final player = AudioPlayer();
-        await player.setSource(AssetSource('audio/$s'));
-        await player.dispose();
+        await _sfxPool[i].setSource(AssetSource('audio/${sfx[i]}'));
       } catch (e) {
-        debugPrint('Error preloading $s: $e');
+        debugPrint('Error preloading ${sfx[i]}: $e');
       }
     }
   }
+
+  // ... (Toggle Mute, BGM methods same, just ensure _voicePlayer is handled)
 
   void toggleMute() {
     _isMuted = !_isMuted;
@@ -93,8 +95,13 @@ class AudioService {
     }
   }
 
+  // ... (BGM methods)
+
+  String? _currentBgmFile;
+  bool _isChangingBgm = false;
+
   Future<void> playBGM(int level) async {
-    if (_isMuted) return;
+    if (_isMuted || _isChangingBgm) return;
 
     String bgmFile = 'music_bayou_1.mp3';
     switch (level) {
@@ -130,12 +137,23 @@ class AudioService {
         break;
     }
 
+    // Don't restart if already playing the same file
+    if (_currentBgmFile == bgmFile && _bgmPlayer.state == PlayerState.playing) {
+      return;
+    }
+
+    _isChangingBgm = true;
     try {
+      _currentBgmFile = bgmFile;
+      await _bgmPlayer.stop();
       await _bgmPlayer.setReleaseMode(ReleaseMode.loop);
-      await _bgmPlayer.play(AssetSource('audio/$bgmFile'));
       await _bgmPlayer.setVolume(_isMuted ? 0 : 0.5);
+      await _bgmPlayer.play(AssetSource('audio/$bgmFile'));
     } catch (e) {
       debugPrint('Error playing BGM: $e');
+      _currentBgmFile = null;
+    } finally {
+      _isChangingBgm = false;
     }
   }
 
@@ -153,9 +171,10 @@ class AudioService {
     }
   }
 
-  Future<void> playSFX(String sfxName) async {
-    if (_isMuted) return;
+  void playSFX(String sfxName) {
+    if (_isMuted || _sfxPool.isEmpty) return;
     try {
+      // Find an idle player in the pool
       AudioPlayer? player;
       for (var p in _sfxPool) {
         if (p.state != PlayerState.playing) {
@@ -163,10 +182,12 @@ class AudioService {
           break;
         }
       }
+
+      // If all busy, reuse the first one
       player ??= _sfxPool.first;
 
-      await player.stop();
-      await player.play(AssetSource('audio/$sfxName'));
+      final p = player;
+      p.stop().then((_) => p.play(AssetSource('audio/$sfxName')));
     } catch (e) {
       debugPrint('Error playing SFX: $e');
     }
@@ -175,6 +196,7 @@ class AudioService {
   Future<void> playVoice(String voiceFile) async {
     if (_isMuted) return;
     try {
+      // Stop previous voice to prevent overlapping chaos
       await _voicePlayer.stop();
       await _voicePlayer.play(AssetSource('audio/$voiceFile'));
     } catch (e) {
@@ -188,6 +210,7 @@ class AudioService {
   void playPowerup() => playSFX('powerup.mp3');
 
   void playStaffSound(StaffEventType staffType) {
+    // Map staff type to sound file
     String? soundFile;
     switch (staffType) {
       case StaffEventType.coachWhistle:
