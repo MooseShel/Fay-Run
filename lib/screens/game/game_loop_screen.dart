@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/game_state.dart';
 import '../../core/constants.dart';
@@ -467,7 +468,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
             // Spawn Floating Text
             _spawnFloatingScore(reward);
           } else {
-            AudioService().playBonk();
+            // Use haptic feedback instead of sound to avoid confusion with collision sounds
+            HapticFeedback.mediumImpact();
             // User requested to remove punishment for missing a question
             // gameState.takeDamage();
           }
