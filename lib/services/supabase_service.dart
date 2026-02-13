@@ -187,6 +187,8 @@ class SupabaseService {
           .eq('grade_level', gradeLevel)
           .eq('topic', topic)
           .eq('is_exam', true)
+          .not('exam_name', 'is', null)
+          .neq('exam_name', '')
           .order('due_date', ascending: true);
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
@@ -216,7 +218,7 @@ class SupabaseService {
       allQuestions.shuffle();
 
       return Challenge(
-        id: 'challenge_${gradeLevel}_$difficultyLevel',
+        id: (challenges.first as Map<String, dynamic>)['id'] as String,
         topic: topic ?? 'General',
         gradeLevel: gradeLevel,
         difficultyLevel: difficultyLevel,

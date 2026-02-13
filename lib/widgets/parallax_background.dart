@@ -6,11 +6,13 @@ class ParallaxBackground extends StatefulWidget {
   final double runSpeed;
   final bool isPaused;
   final int level;
+  final double screenHeight; // Add screen height parameter
 
   const ParallaxBackground({
     super.key,
     required this.runSpeed,
     required this.isPaused,
+    required this.screenHeight,
     this.level = 1,
   });
 
@@ -81,13 +83,7 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
         ),
 
         // 2. Far Layer (Images with seamless tiling)
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: FayColors.kGroundHeight,
-          child: _buildScrollingImage(assetPath, 0.2),
-        ),
+        _buildScrollingImage(assetPath, 0.2),
 
         // 3. Near Layer / Ground
         _buildScrollingGround(),
@@ -151,10 +147,13 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
   Widget _buildCarouselTile(String assetPath, int index, double xPos,
       double width, double screenHeight) {
     // Mirroring logic removed as per user request
+    final double groundHeight = screenHeight * FayColors.kGroundHeightRatio;
+    final double backgroundHeight =
+        screenHeight - groundHeight; // Background fills from top to ground
     return Positioned(
       left: xPos,
       top: 0,
-      bottom: 0,
+      height: backgroundHeight, // Fill from top to where ground starts
       width: width +
           2.0, // Increased overlap to prevent sub-pixel gaps (flickering)
       child: Image.asset(
@@ -168,11 +167,13 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
   }
 
   Widget _buildScrollingGround() {
+    final double groundHeight =
+        widget.screenHeight * FayColors.kGroundHeightRatio;
     return Positioned(
       left: 0,
       right: 0,
       bottom: 0,
-      height: FayColors.kGroundHeight, // Ground height
+      height: groundHeight, // Dynamic ground height (15% of screen)
       child: RepaintBoundary(
         child: AnimatedBuilder(
           animation: _controller,

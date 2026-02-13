@@ -32,7 +32,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   // Game Physics State
   double _playerY = 0; // 0 = ground, positive = up
   double _verticalVelocity = 0;
-  final double _groundHeight = FayColors.kGroundHeight;
+  late double _groundHeight; // Calculated dynamically in build method
 
   bool _isJumping = false;
   int _jumpCount = 0;
@@ -518,9 +518,12 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     final gameState = context.watch<GameState>();
     final screenSize = MediaQuery.sizeOf(context);
+    _groundHeight = screenSize.height *
+        FayColors.kGroundHeightRatio; // Dynamic ground height
     final double baseSpeed = (4.0 + (gameState.currentLevel * 0.2)) * 1.1;
     final double targetDistance = baseSpeed * 12000;
 
@@ -569,6 +572,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
             ParallaxBackground(
               runSpeed: gameState.runSpeed,
               isPaused: gameState.status != GameStatus.playing,
+              screenHeight: screenSize.height,
               level: gameState.currentLevel,
             ),
 
@@ -630,7 +634,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
               return Positioned(
                 left: obj.x * screenSize.width,
                 // Align to top edge of walking area (Horizon)
-                bottom: _groundHeight +
+                bottom: _groundHeight -
+                    FayColors.kHorizonOverlap +
                     verticalOffset +
                     (obj.y * screenSize.height),
                 width: charSize,
@@ -657,7 +662,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
                 return Positioned(
                   left: obs.x * screenSize.width,
-                  bottom: _groundHeight +
+                  bottom: _groundHeight -
+                      FayColors.kHorizonOverlap +
                       (obs.y * screenSize.height) -
                       verticalOffset,
                   width: obs.width * screenSize.height, // Use Height as base
@@ -671,7 +677,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
             Positioned(
               left: screenSize.width * 0.30,
-              bottom: _groundHeight + _playerY,
+              bottom: _groundHeight - FayColors.kHorizonOverlap + _playerY,
               child: PlayerCharacter(
                 isJumping: _isJumping,
                 isInvincible: gameState.isInvincible,
