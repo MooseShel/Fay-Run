@@ -327,15 +327,6 @@ class GameState extends ChangeNotifier {
     _activeStaffEvent = StaffEvent.getEvent(type);
     AudioService().playStaffSound(type); // Play staff voice
 
-    // Apply speed modifications for specific staff events
-    /*
-    if (type == StaffEventType.coachWhistle) {
-      _runSpeed = 4.5; // Hurried!
-    } else if (type == StaffEventType.deanGlare) {
-      _runSpeed = 1.5; // Slow motion!
-    }
-    */
-
     notifyListeners();
 
     // Auto-clear event after duration
@@ -365,10 +356,6 @@ class GameState extends ChangeNotifier {
   }
 
   void _clearStaffEvent() {
-    if (_activeStaffEvent?.type == StaffEventType.coachWhistle ||
-        _activeStaffEvent?.type == StaffEventType.deanGlare) {
-      _resetLevelPhysics(); // Reset speed
-    }
     _activeStaffEvent = null;
     notifyListeners();
   }

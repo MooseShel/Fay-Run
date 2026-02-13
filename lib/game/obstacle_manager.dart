@@ -10,7 +10,6 @@ enum ObstacleType {
   beaker, // Level 3 (Scientific)
   flyingPizza, // Level 4 (Cafeteria)
   food, // Level 4 (Cafeteria)
-  car, // Level 5 (Car Pool - SUV)
   cone, // Level 5 (Car Pool - Traffic Cone)
   backpack, // Level 6 (Playground)
   trashCan, // New Campus Grounds
@@ -365,10 +364,6 @@ class ObstacleManager {
       case ObstacleType.wildFlowers:
         width = 0.17;
         height = 0.17;
-        break;
-      case ObstacleType.car:
-        width = 0.575;
-        height = 0.29;
         break;
       case ObstacleType.backpack:
         width = 0.17;

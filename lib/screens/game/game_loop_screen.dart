@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../../providers/game_state.dart';
 import '../../core/constants.dart';
@@ -40,7 +41,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
   // Progression & Chaos
   int? _lastLevel;
-  // double _chaosTimer = 0;
+  double _chaosTimer = 0;
   final Random _random = Random();
 
   // Animation State
@@ -112,9 +113,10 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       _cachedScreenWidth = size.width;
       _cachedScreenHeight = size.height;
       // Normalizing based on Height (which is the stable vertical dimension)
-      _cachedPlayerSize = size.height * 0.25; // Sized up for better reach
-      _cachedPlayerPadding = _cachedPlayerSize * 0.15;
-      _cachedPlayerBaseX = size.width * 0.25;
+      // Synchronized with UI Positioned(left: screenSize.width * 0.30)
+      _cachedPlayerSize = size.height * 0.21;
+      _cachedPlayerPadding = _cachedPlayerSize * 0.25;
+      _cachedPlayerBaseX = size.width * 0.30;
       debugPrint(
           'Please resize cache: $_cachedScreenWidth x $_cachedScreenHeight');
     }
@@ -203,10 +205,6 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       }
 
       // Run Animation
-
-      // _chaosTimer += dt;
-
-      // Run Animation
       _runAnimationTimer += dt;
       if (_runAnimationTimer > 0.15) {
         // Back to 0.15 for better feel at 3.0 speed
@@ -214,35 +212,21 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         _runFrame = (_runFrame + 1) % 3;
       }
 
-      // Level Completion is now handled in GameState.updateProgress
-      /*
-      final double baseSpeed = (4.0 + (gameState.currentLevel * 0.2)) * 1.1;
-      final targetDistance = baseSpeed * 12000;
-      if (_distanceRun > targetDistance) {
-        _distanceRun = 0;
-        gameState.completeLevel();
-        // ...
-      }
-      */
+      _chaosTimer += dt;
 
-      // Chaos Threshold
-      /*
-      // Chaos Threshold
+      // Chaos Threshold: Every 20-30 seconds or so
       final double chaosThreshold = kDebugMode
           ? 10.0
           : (gameState.currentLevel >= 6
               ? 35.0 + _random.nextInt(15)
               : 20.0 + _random.nextInt(10));
-      */
 
-      /*
       if (_chaosTimer > chaosThreshold) {
         _chaosTimer = 0;
         if (gameState.activeStaffEvent == null) {
           gameState.triggerStaffChaos();
         }
       }
-      */
 
       // 1. Physics Update (Applying dt to gravity and velocity)
       if (_isJumping || _playerY > 0) {
@@ -299,8 +283,6 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       */
 
       for (var obs in _obstacleManager.obstacles) {
-        bool isGoldenBook = obs.type == ObstacleType.goldenBook;
-
         // Convert relative coordinates to pixels for accurate collision
         // All dimensions (width/height) are now relative to Screen Height
         // Use cached pixel values
@@ -312,10 +294,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         double verticalOffset =
             _getObstacleVerticalOffset(obs, _cachedScreenHeight);
 
-        double obsPaddingX =
-            isGoldenBook ? obsPixelWidth * 0.15 : obsPixelWidth * 0.20;
-        double obsPaddingY =
-            isGoldenBook ? obsPixelHeight * 0.15 : obsPixelHeight * 0.20;
+        double obsPaddingX = _getObstaclePaddingX(obs, obsPixelWidth);
+        double obsPaddingY = _getObstaclePaddingY(obs, obsPixelHeight);
 
         double obsLeft = obsPixelX + obsPaddingX;
         double obsRight = obsPixelX + obsPixelWidth - obsPaddingX;
@@ -358,6 +338,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   }
 
   void _handleCollision(Obstacle obs, GameState gameState) {
+    if (obs.type == ObstacleType.bench)
+      return; // Bench is now a background object
     obs.hasEngaged = true; // Prevent multi-trigger
 
     if (obs.type == ObstacleType.goldenBook) {
@@ -448,8 +430,9 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
             // Spawn Floating Text
             _spawnFloatingScore(reward);
+          } else {
+            AudioService().playBonk();
           }
-          // No haptic feedback or penalties for incorrect answers
 
           // submit result to backend
           gameState.recordQuizResult(challenge.id, isCorrect);
@@ -481,14 +464,43 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     }
   }
 
+  double _getObstaclePaddingX(Obstacle obs, double width) {
+    if (obs.type == ObstacleType.goldenBook) return width * 0.15;
+
+    switch (obs.type) {
+      case ObstacleType.puddle:
+      case ObstacleType.gymMat:
+      case ObstacleType.wildFlowers:
+        return width * 0.05; // Wide objects need thin side padding
+      case ObstacleType.apple:
+      case ObstacleType.banana:
+      case ObstacleType.burger:
+        return width * 0.05; // Collectibles are easy to hit (generous hitbox)
+      default:
+        return width * 0.25; // Standard padding (tighter hitbox)
+    }
+  }
+
+  double _getObstaclePaddingY(Obstacle obs, double height) {
+    if (obs.type == ObstacleType.goldenBook) return height * 0.15;
+
+    switch (obs.type) {
+      case ObstacleType.puddle:
+      case ObstacleType.gymMat:
+        return height * 0.05; // Flat objects
+      case ObstacleType.apple:
+      case ObstacleType.banana:
+      case ObstacleType.burger:
+        return height * 0.05;
+      default:
+        return height * 0.20;
+    }
+  }
+
   double _getObstacleVerticalOffset(Obstacle obs, double screenHeight) {
     // Regular obstacles should sit exactly on the ground line
     double offset = 0.0;
-
-    if (obs.type == ObstacleType.car && obs.direction == 1.0) {
-      // Left-to-Right cars are in the nearer lane (closer to camera), need more drop
-      offset = screenHeight * 0.06;
-    } else if (obs.type == ObstacleType.bench) {
+    if (obs.type == ObstacleType.bench) {
       // Benches were floating, lowering them by 3% of screen height
       offset = screenHeight * 0.03;
     } else if (obs.type == ObstacleType.log) {
@@ -827,8 +839,6 @@ class _GameLoopScreenState extends State<GameLoopScreen>
               ),
             ),
 
-            Positioned(top: 40, left: 20, child: _buildHUD(gameState)),
-
             // Pause Button
             if (gameState.status == GameStatus.playing)
               Positioned(
@@ -1089,9 +1099,6 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       case ObstacleType.food:
         baseName = 'obstacle_food';
         break;
-      case ObstacleType.car:
-        baseName = obs.direction == 1.0 ? 'obstacle_suv_2' : 'obstacle_suv';
-        break;
       case ObstacleType.cone:
         baseName = 'obstacle_cone';
         break;
@@ -1174,7 +1181,11 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     }
 
     // Try current themed folder first
-    assetName = 'assets/images/obstacles/$baseName$variantSuffix.png';
+    if (obs.type == ObstacleType.bench) {
+      assetName = 'assets/images/bg_characters/$baseName$variantSuffix.png';
+    } else {
+      assetName = 'assets/images/obstacles/$baseName$variantSuffix.png';
+    }
 
     // Debug print for rewards to ensure path is correct
     if (obs.type == ObstacleType.apple || obs.type == ObstacleType.burger) {
@@ -1199,71 +1210,6 @@ class _GameLoopScreenState extends State<GameLoopScreen>
           },
         );
       },
-    );
-  }
-
-  Widget _buildHUD(GameState state) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(Icons.favorite, color: FayColors.brickRed),
-            const SizedBox(width: 8),
-            Text(
-              'x ${state.lives}',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: FayColors.navy,
-                shadows: const [
-                  Shadow(
-                    offset: Offset(1, 1),
-                    blurRadius: 2,
-                    color: Colors.white,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        Text(
-          'Score: ${state.score}',
-          style: TextStyle(
-            fontSize: 20,
-            color: FayColors.navy,
-            fontWeight: FontWeight.bold,
-            shadows: const [
-              Shadow(offset: Offset(1, 1), blurRadius: 2, color: Colors.white),
-            ],
-          ),
-        ),
-        Text(
-          'Level: ${state.currentLevel}',
-          style: TextStyle(
-            fontSize: 16,
-            color: FayColors.navy,
-            fontWeight: FontWeight.bold,
-            shadows: const [
-              Shadow(offset: Offset(1, 1), blurRadius: 2, color: Colors.white),
-            ],
-          ),
-        ),
-        if (state.comboCount >= 5)
-          Text(
-            'COMBO x${(state.comboCount ~/ 5) + 1}',
-            style: TextStyle(
-              fontSize: 18,
-              color: FayColors.gold,
-              fontWeight: FontWeight.w900,
-              fontStyle: FontStyle.italic,
-              shadows: const [
-                Shadow(
-                    offset: Offset(1, 1), blurRadius: 4, color: Colors.black),
-              ],
-            ),
-          ),
-      ],
     );
   }
 }

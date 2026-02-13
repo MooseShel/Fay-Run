@@ -45,8 +45,6 @@ class Assets {
   static const String obsBurger2 = 'obstacles/obstacle_burger_2.png';
   static const String obsBucket = 'obstacles/obstacle_bucket.png';
   static const String obsFood = 'obstacles/obstacle_food.png';
-  static const String obsSuv = 'obstacles/obstacle_suv.png';
-  static const String obsSuv2 = 'obstacles/obstacle_suv_2.png';
   static const String obsCone = 'obstacles/obstacle_cone.png';
   static const String obsBackpack = 'obstacles/obstacle_backpack.png';
 
