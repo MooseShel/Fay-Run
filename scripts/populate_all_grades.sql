@@ -3,7 +3,7 @@
 -- ==========================================
 
 -- Week 1: Math (Colors & Shapes)
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w1_prek3_Math', 'Math', 'Spring 2025', 1, -2) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w1_prek3_Math', 'Math', -2) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_prek3_w1_1', 'ch_Spring_2025_w1_prek3_Math', 'What color is the sun?', 'Yellow', 'Blue', 'Green'),
 ('q_prek3_w1_2', 'ch_Spring_2025_w1_prek3_Math', 'What shape is a ball?', 'Circle', 'Square', 'Triangle'),
@@ -13,7 +13,7 @@ INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_op
 ON CONFLICT (id) DO NOTHING;
 
 -- Week 2: Math (Counting & Sizes)
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w2_prek3_Math', 'Math', 'Spring 2025', 2, -2) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w2_prek3_Math', 'Math', -2) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_prek3_w2_1', 'ch_Spring_2025_w2_prek3_Math', 'How many fingers?', 'Five', 'Two', 'Ten'),
 ('q_prek3_w2_2', 'ch_Spring_2025_w2_prek3_Math', 'Which is Small?', 'Mouse', 'House', 'Tree'),
@@ -23,7 +23,7 @@ INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_op
 ON CONFLICT (id) DO NOTHING;
 
 -- Week 3: Science (Animals)
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w3_prek3_Sci', 'Science', 'Spring 2025', 3, -2) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w3_prek3_Sci', 'Science', -2) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_prek3_w3_1', 'ch_Spring_2025_w3_prek3_Sci', 'What says "Meow"?', 'Cat', 'Dog', 'Cow'),
 ('q_prek3_w3_2', 'ch_Spring_2025_w3_prek3_Sci', 'What says "Woof"?', 'Dog', 'Cat', 'Bird'),
@@ -33,7 +33,7 @@ INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_op
 ON CONFLICT (id) DO NOTHING;
 
 -- Week 4: Science (Nature)
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w4_prek3_Sci', 'Science', 'Spring 2025', 4, -2) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w4_prek3_Sci', 'Science', -2) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_prek3_w4_1', 'ch_Spring_2025_w4_prek3_Sci', 'The sun is?', 'Hot', 'Cold', 'Wet'),
 ('q_prek3_w4_2', 'ch_Spring_2025_w4_prek3_Sci', 'Ice is?', 'Cold', 'Hot', 'Dry'),
@@ -43,7 +43,7 @@ INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_op
 ON CONFLICT (id) DO NOTHING;
 
 -- Week 5: Social Studies (Me & Family)
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w5_prek3_Soc', 'Social Studies', 'Spring 2025', 5, -2) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w5_prek3_Soc', 'Social Studies', -2) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_prek3_w5_1', 'ch_Spring_2025_w5_prek3_Soc', 'We hold hands to be?', 'Safe', 'Fast', 'Loud'),
 ('q_prek3_w5_2', 'ch_Spring_2025_w5_prek3_Soc', 'When we share we count?', 'Friends', 'Toes', 'Cars'),
@@ -58,7 +58,7 @@ ON CONFLICT (id) DO NOTHING;
 -- ==========================================
 
 -- Week 1: Math (Counting 1-10)
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w1_prek4_Math', 'Math', 'Spring 2025', 1, -1) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w1_prek4_Math', 'Math', -1) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_prek4_w1_1', 'ch_Spring_2025_w1_prek4_Math', 'Count: ⭐️ ⭐️ ⭐️', '3', '2', '4'),
 ('q_prek4_w1_2', 'ch_Spring_2025_w1_prek4_Math', 'What comes after 4?', '5', '3', '6'),
@@ -68,7 +68,7 @@ INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_op
 ON CONFLICT (id) DO NOTHING;
 
 -- Week 2: Math (Shapes & Patterns)
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w2_prek4_Math', 'Math', 'Spring 2025', 2, -1) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w2_prek4_Math', 'Math', -1) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_prek4_w2_1', 'ch_Spring_2025_w2_prek4_Math', 'Red, Blue, Red...?', 'Blue', 'Green', 'Yellow'),
 ('q_prek4_w2_2', 'ch_Spring_2025_w2_prek4_Math', 'Shape with 3 sides?', 'Triangle', 'Square', 'Circle'),
@@ -78,7 +78,7 @@ INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_op
 ON CONFLICT (id) DO NOTHING;
 
 -- Week 3: Science (Senses)
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w3_prek4_Sci', 'Science', 'Spring 2025', 3, -1) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w3_prek4_Sci', 'Science', -1) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_prek4_w3_1', 'ch_Spring_2025_w3_prek4_Sci', 'We see with our?', 'Eyes', 'Ears', 'Nose'),
 ('q_prek4_w3_2', 'ch_Spring_2025_w3_prek4_Sci', 'We smell with our?', 'Nose', 'Eyes', 'Mouth'),
@@ -88,7 +88,7 @@ INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_op
 ON CONFLICT (id) DO NOTHING;
 
 -- Week 4: Science (Weather)
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w4_prek4_Sci', 'Science', 'Spring 2025', 4, -1) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w4_prek4_Sci', 'Science', -1) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_prek4_w4_1', 'ch_Spring_2025_w4_prek4_Sci', 'Wear this in rain?', 'Raincoat', 'Swimsuit', 'Pajamas'),
 ('q_prek4_w4_2', 'ch_Spring_2025_w4_prek4_Sci', 'White fluffy thing in sky?', 'Cloud', 'Cotton', 'Sheep'),
@@ -98,7 +98,7 @@ INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_op
 ON CONFLICT (id) DO NOTHING;
 
 -- Week 5: Social Studies (Helpers)
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w5_prek4_Soc', 'Social Studies', 'Spring 2025', 5, -1) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w5_prek4_Soc', 'Social Studies', -1) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_prek4_w5_1', 'ch_Spring_2025_w5_prek4_Soc', 'Who puts out fires?', 'Firefighter', 'Baker', 'Artist'),
 ('q_prek4_w5_2', 'ch_Spring_2025_w5_prek4_Soc', 'Who helps when sick?', 'Doctor', 'Chef', 'Farmer'),
@@ -113,7 +113,7 @@ ON CONFLICT (id) DO NOTHING;
 -- ==========================================
 
 -- Week 1: Math (Numbers 1-20)
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w1_K_Math', 'Math', 'Spring 2025', 1, 0) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w1_K_Math', 'Math', 0) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_k_w1_1', 'ch_Spring_2025_w1_K_Math', 'Count fingers on 2 hands?', '10', '5', '8'),
 ('q_k_w1_2', 'ch_Spring_2025_w1_K_Math', 'What comes after 9?', '10', '8', '11'),
@@ -123,7 +123,7 @@ INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_op
 ON CONFLICT (id) DO NOTHING;
 
 -- Week 2: Math (Comparison)
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w2_K_Math', 'Math', 'Spring 2025', 2, 0) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w2_K_Math', 'Math', 0) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_k_w2_1', 'ch_Spring_2025_w2_K_Math', 'Which is heavier?', 'Desk', 'Pencil', 'Paper'),
 ('q_k_w2_2', 'ch_Spring_2025_w2_K_Math', 'Which is longer?', 'Snake', 'Worm', 'Caterpillar'),
@@ -133,7 +133,7 @@ INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_op
 ON CONFLICT (id) DO NOTHING;
 
 -- Week 3: Science (Living Things)
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w3_K_Sci', 'Science', 'Spring 2025', 3, 0) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w3_K_Sci', 'Science', 0) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_k_w3_1', 'ch_Spring_2025_w3_K_Sci', 'Do plants grow?', 'Yes', 'No', 'Maybe'),
 ('q_k_w3_2', 'ch_Spring_2025_w3_K_Sci', 'A rock is?', 'Non-living', 'Living', 'Asleep'),
@@ -143,7 +143,7 @@ INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_op
 ON CONFLICT (id) DO NOTHING;
 
 -- Week 4: Science (Seasons)
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w4_K_Sci', 'Science', 'Spring 2025', 4, 0) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w4_K_Sci', 'Science', 0) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_k_w4_1', 'ch_Spring_2025_w4_K_Sci', 'Snow falls in?', 'Winter', 'Summer', 'Fall'),
 ('q_k_w4_2', 'ch_Spring_2025_w4_K_Sci', 'Flowers bloom in?', 'Spring', 'Winter', 'Fall'),
@@ -153,7 +153,7 @@ INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_op
 ON CONFLICT (id) DO NOTHING;
 
 -- Week 5: Social Studies (Citizenship)
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w5_K_Soc', 'Social Studies', 'Spring 2025', 5, 0) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w5_K_Soc', 'Social Studies', 0) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_k_w5_1', 'ch_Spring_2025_w5_K_Soc', 'A good rule is?', 'Be Kind', 'Hit', 'Yell'),
 ('q_k_w5_2', 'ch_Spring_2025_w5_K_Soc', 'Voting means?', 'Choosing', 'Running', 'Sleeping'),
@@ -168,7 +168,7 @@ ON CONFLICT (id) DO NOTHING;
 -- ==========================================
 
 -- Week 1: Math
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w1_g2_Math', 'Math', 'Spring 2025', 1, 2) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w1_g2_Math', 'Math', 2) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_g2_w1_1', 'ch_Spring_2025_w1_g2_Math', '15 + 10 = ?', '25', '20', '30'),
 ('q_g2_w1_2', 'ch_Spring_2025_w1_g2_Math', '100 - 10 = ?', '90', '80', '110'),
@@ -178,7 +178,7 @@ INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_op
 ON CONFLICT (id) DO NOTHING;
 
 -- Week 2: Math
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w2_g2_Math', 'Math', 'Spring 2025', 2, 2) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w2_g2_Math', 'Math', 2) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_g2_w2_1', 'ch_Spring_2025_w2_g2_Math', '25 cents is a?', 'Quarter', 'Dime', 'Nickel'),
 ('q_g2_w2_2', 'ch_Spring_2025_w2_g2_Math', 'How many mins in hour?', '60', '100', '30'),
@@ -188,7 +188,7 @@ INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_op
 ON CONFLICT (id) DO NOTHING;
 
 -- Week 3: Science
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w3_g2_Sci', 'Science', 'Spring 2025', 3, 2) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w3_g2_Sci', 'Science', 2) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_g2_w3_1', 'ch_Spring_2025_w3_g2_Sci', 'Solid turning to liquid?', 'Melting', 'Freezing', 'Evaporating'),
 ('q_g2_w3_2', 'ch_Spring_2025_w3_g2_Sci', 'Gas we breathe?', 'Oxygen', 'Helium', 'Water'),
@@ -198,7 +198,7 @@ INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_op
 ON CONFLICT (id) DO NOTHING;
 
 -- Week 4: Science
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w4_g2_Sci', 'Science', 'Spring 2025', 4, 2) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w4_g2_Sci', 'Science', 2) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_g2_w4_1', 'ch_Spring_2025_w4_g2_Sci', 'Animal with pouch?', 'Kangaroo', 'Lion', 'Bear'),
 ('q_g2_w4_2', 'ch_Spring_2025_w4_g2_Sci', 'Frog life cycle start?', 'Egg', 'Tadpole', 'Froglet'),
@@ -208,7 +208,7 @@ INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_op
 ON CONFLICT (id) DO NOTHING;
 
 -- Week 5: Social Studies
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w5_g2_Soc', 'Social Studies', 'Spring 2025', 5, 2) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w5_g2_Soc', 'Social Studies', 2) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_g2_w5_1', 'ch_Spring_2025_w5_g2_Soc', 'Services are?', 'Things people do', 'Things counting', 'Things eating'),
 ('q_g2_w5_2', 'ch_Spring_2025_w5_g2_Soc', 'Buyer and Seller?', 'Market', 'School', 'Park'),
@@ -223,7 +223,7 @@ ON CONFLICT (id) DO NOTHING;
 -- ==========================================
 
 -- Week 1: Math
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w1_g3_Math', 'Math', 'Spring 2025', 1, 3) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w1_g3_Math', 'Math', 3) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_g3_w1_1', 'ch_Spring_2025_w1_g3_Math', '3 x 4 = ?', '12', '7', '15'),
 ('q_g3_w1_2', 'ch_Spring_2025_w1_g3_Math', '15 / 3 = ?', '5', '3', '6'),
@@ -233,7 +233,7 @@ INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_op
 ON CONFLICT (id) DO NOTHING;
 
 -- Week 2: Math
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w2_g3_Math', 'Math', 'Spring 2025', 2, 3) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w2_g3_Math', 'Math', 3) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_g3_w2_1', 'ch_Spring_2025_w2_g3_Math', 'Top number of fraction?', 'Numerator', 'Denominator', 'Middle'),
 ('q_g3_w2_2', 'ch_Spring_2025_w2_g3_Math', '1/2 is equal to?', '2/4', '1/3', '1/5'),
@@ -243,7 +243,7 @@ INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_op
 ON CONFLICT (id) DO NOTHING;
 
 -- Week 3: Science
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w3_g3_Sci', 'Science', 'Spring 2025', 3, 3) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w3_g3_Sci', 'Science', 3) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_g3_w3_1', 'ch_Spring_2025_w3_g3_Sci', 'Forces are?', 'Pushes/Pulls', 'Colors', 'Sounds'),
 ('q_g3_w3_2', 'ch_Spring_2025_w3_g3_Sci', 'Simple machine?', 'Lever', 'Rock', 'Water'),
@@ -253,7 +253,7 @@ INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_op
 ON CONFLICT (id) DO NOTHING;
 
 -- Week 4: Science
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w4_g3_Sci', 'Science', 'Spring 2025', 4, 3) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w4_g3_Sci', 'Science', 3) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_g3_w4_1', 'ch_Spring_2025_w4_g3_Sci', 'Adaptation helps?', 'Survive', 'Play', 'Sleep'),
 ('q_g3_w4_2', 'ch_Spring_2025_w4_g3_Sci', 'Predator eats?', 'Prey', 'Plants', 'Rocks'),
@@ -263,7 +263,7 @@ INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_op
 ON CONFLICT (id) DO NOTHING;
 
 -- Week 5: Social Studies
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w5_g3_Soc', 'Social Studies', 'Spring 2025', 5, 3) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w5_g3_Soc', 'Social Studies', 3) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_g3_w5_1', 'ch_Spring_2025_w5_g3_Soc', 'Community plan?', 'Map', 'Book', 'Photo'),
 ('q_g3_w5_2', 'ch_Spring_2025_w5_g3_Soc', 'Government branch?', 'Judicial', 'School', 'Store'),
@@ -278,7 +278,7 @@ ON CONFLICT (id) DO NOTHING;
 -- ==========================================
 
 -- Week 1: Math
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w1_g5_Math', 'Math', 'Spring 2025', 1, 5) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w1_g5_Math', 'Math', 5) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_g5_w1_1', 'ch_Spring_2025_w1_g5_Math', '0.5 x 10 = ?', '5', '0.05', '50'),
 ('q_g5_w1_2', 'ch_Spring_2025_w1_g5_Math', '1/4 + 1/2 = ?', '3/4', '2/6', '1/8'),
@@ -288,7 +288,7 @@ INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_op
 ON CONFLICT (id) DO NOTHING;
 
 -- Week 2: Math
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w2_g5_Math', 'Math', 'Spring 2025', 2, 5) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w2_g5_Math', 'Math', 5) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_g5_w2_1', 'ch_Spring_2025_w2_g5_Math', '100 / 4 = ?', '25', '20', '30'),
 ('q_g5_w2_2', 'ch_Spring_2025_w2_g5_Math', '0.75 as percent?', '75%', '7.5%', '750%'),
@@ -298,7 +298,7 @@ INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_op
 ON CONFLICT (id) DO NOTHING;
 
 -- Week 3: Science
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w3_g5_Sci', 'Science', 'Spring 2025', 3, 5) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w3_g5_Sci', 'Science', 5) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_g5_w3_1', 'ch_Spring_2025_w3_g5_Sci', 'Matter State Change?', 'Physical Change', 'Chemical Change', 'Magic'),
 ('q_g5_w3_2', 'ch_Spring_2025_w3_g5_Sci', 'Light bouncing?', 'Reflection', 'Refraction', 'Absorption'),
@@ -308,7 +308,7 @@ INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_op
 ON CONFLICT (id) DO NOTHING;
 
 -- Week 4: Science
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w4_g5_Sci', 'Science', 'Spring 2025', 4, 5) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w4_g5_Sci', 'Science', 5) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_g5_w4_1', 'ch_Spring_2025_w4_g5_Sci', 'Earth Layer?', 'Crust', 'Shell', 'Skin'),
 ('q_g5_w4_2', 'ch_Spring_2025_w4_g5_Sci', 'Weathering?', 'Breaking Rocks', 'Moving Rocks', 'Dropping Rocks'),
@@ -318,7 +318,7 @@ INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_op
 ON CONFLICT (id) DO NOTHING;
 
 -- Week 5: Social Studies
-INSERT INTO challenges (id, topic, season, week_number, grade_level) VALUES ('ch_Spring_2025_w5_g5_Soc', 'Social Studies', 'Spring 2025', 5, 5) ON CONFLICT (id) DO NOTHING;
+INSERT INTO challenges (id, topic, grade_level) VALUES ('ch_Spring_2025_w5_g5_Soc', 'Social Studies', 5) ON CONFLICT (id) DO NOTHING;
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES 
 ('q_g5_w5_1', 'ch_Spring_2025_w5_g5_Soc', 'Colonists fought?', 'British', 'French', 'Spanish'),
 ('q_g5_w5_2', 'ch_Spring_2025_w5_g5_Soc', 'Bill of Rights?', 'First 10 Amendments', 'First 5 Laws', 'Declaration'),

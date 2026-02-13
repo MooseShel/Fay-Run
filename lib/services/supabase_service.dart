@@ -96,10 +96,10 @@ class SupabaseService {
 
   Future<Challenge?> getCurrentChallenge({
     int gradeLevel = 4,
-    int? weekNumber,
     String? topic,
     bool isExam = false,
     int? difficultyLevel,
+    String? examId, // Add specific exam selection
   }) async {
     if (_client == null) {
       debugPrint('Supabase: Client not initialized');
@@ -114,9 +114,13 @@ class SupabaseService {
             .from('questions')
             .select('*, challenges!inner(*)')
             .eq('challenges.grade_level', gradeLevel)
-            .eq('challenges.is_exam', true); // STRICT FILTER
+            .eq('challenges.is_exam', true);
 
-        if (topic != null && topic.isNotEmpty) {
+        // If a specific exam is selected, filter by that ID
+        if (examId != null && examId.isNotEmpty) {
+          query = query.eq('challenges.id', examId);
+        } else if (topic != null && topic.isNotEmpty) {
+          // Otherwise fall back to topic-level filter
           query = query.eq('challenges.topic', topic);
         }
 
@@ -125,7 +129,7 @@ class SupabaseService {
 
         if (data.isEmpty) {
           debugPrint(
-              'Supabase: No exam questions found for Grade $gradeLevel, Topic $topic');
+              'Supabase: No exam questions found for Grade $gradeLevel, Exam $examId / Topic $topic');
           return null;
         }
 
@@ -133,52 +137,38 @@ class SupabaseService {
             data.map((json) => QuizQuestion.fromJson(json)).toList();
         questions.shuffle();
 
+        // Get the exam info from the first question if we don't have a specific examName
+        final challengeData = data.first['challenges'];
+        final examName =
+            challengeData['exam_name'] ?? topic ?? 'Extra Practice';
+
         return Challenge(
-          id: 'exam_${gradeLevel}_${topic ?? "all"}',
-          topic: topic ?? 'All Subjects',
+          id: examId ?? 'exam_${gradeLevel}_${topic ?? "all"}',
+          topic: examName,
           gradeLevel: gradeLevel,
           questions: questions,
         );
       } else {
-        // NORMAL MODE LOGIC
-        // We must create fresh queries for fallback to avoid accumulating filters (OR logic)
-
-        // 1. Try difficulty_level first
-        if (difficultyLevel != null) {
-          final diffResponse = await _client!
-              .from('challenges')
-              .select('*, questions(*)')
-              .eq('grade_level', gradeLevel)
-              .eq('difficulty_level', difficultyLevel)
-              .maybeSingle(); // Try to get the specific difficulty level
-
-          if (diffResponse != null) {
-            return Challenge.fromJson(diffResponse);
-          }
-        }
-
-        // 2. Fallback to week_number
-        final weekToUse = weekNumber ?? difficultyLevel ?? 1;
-        var weekQuery = _client!
+        // --- NORMAL MODE LOGIC ---
+        // Fetch questions for the given grade and difficulty level
+        final query = _client!
             .from('challenges')
             .select('*, questions(*)')
-            .eq('grade_level', gradeLevel);
+            .eq('grade_level', gradeLevel)
+            .eq('is_exam', false);
 
-        if (topic != null && topic.isNotEmpty) {
-          weekQuery = weekQuery.eq('topic', topic);
-        }
+        // Apply difficulty filter if provided
+        final result = await query.eq('difficulty_level', difficultyLevel ?? 1);
+        final List<dynamic> challengesList = result as List;
 
-        final weekResponse = await weekQuery.eq('week_number', weekToUse);
-        final List<dynamic> challenges = weekResponse as List;
-
-        if (challenges.isEmpty) {
+        if (challengesList.isEmpty) {
           debugPrint(
-              'Supabase: No challenge found for Grade $gradeLevel, Diff $difficultyLevel, Week $weekNumber');
+              'Supabase: No challenges found for Grade $gradeLevel, Difficulty $difficultyLevel');
           return null;
         }
 
         return _processChallenges(
-            challenges, gradeLevel, weekToUse, difficultyLevel, topic);
+            challengesList, gradeLevel, difficultyLevel ?? 1, topic);
       }
     } catch (e) {
       debugPrint('Supabase: Error fetching challenge: $e');
@@ -186,13 +176,32 @@ class SupabaseService {
     }
   }
 
+  /// Fetches all available exams for a specific grade and topic
+  Future<List<Map<String, dynamic>>> getAvailableExams(
+      int gradeLevel, String topic) async {
+    if (_client == null) return [];
+    try {
+      final response = await _client!
+          .from('challenges')
+          .select('id, exam_name, topic, due_date')
+          .eq('grade_level', gradeLevel)
+          .eq('topic', topic)
+          .eq('is_exam', true)
+          .order('due_date', ascending: true);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      debugPrint('Supabase: getAvailableExams error: $e');
+      return [];
+    }
+  }
+
   Challenge? _processChallenges(List<dynamic> challenges, int gradeLevel,
-      int? weekNumber, int? difficultyLevel, String? topic) {
+      int difficultyLevel, String? topic) {
     if (challenges.length == 1 && topic != null && topic.isNotEmpty) {
       // Single specific topic challenge
       return Challenge.fromJson(challenges.first as Map<String, dynamic>);
     } else {
-      // Aggregate questions from multiple challenges (e.g., all topics for the level/week)
+      // Aggregate questions from multiple challenges (e.g., all topics for the level)
       final List<QuizQuestion> allQuestions = [];
       for (var c in challenges) {
         final challengeData = c as Map<String, dynamic>;
@@ -207,8 +216,8 @@ class SupabaseService {
       allQuestions.shuffle();
 
       return Challenge(
-        id: 'challenge_${gradeLevel}_${difficultyLevel ?? weekNumber}_all',
-        topic: topic ?? 'All Subjects',
+        id: 'challenge_${gradeLevel}_$difficultyLevel',
+        topic: topic ?? 'General',
         gradeLevel: gradeLevel,
         difficultyLevel: difficultyLevel,
         questions: allQuestions,

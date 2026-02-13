@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/game_state.dart';
@@ -33,8 +32,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   // Game Physics State
   double _playerY = 0; // 0 = ground, positive = up
   double _verticalVelocity = 0;
-  final double _groundHeight =
-      20.0; // Lowered from 50.0 to shift everything down towards the "walking way"
+  final double _groundHeight = FayColors.kGroundHeight;
 
   bool _isJumping = false;
   int _jumpCount = 0;
@@ -119,7 +117,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       _cachedPlayerPadding = _cachedPlayerSize * 0.15;
       _cachedPlayerBaseX = size.width * 0.25;
       debugPrint(
-          'Please resize cache: ${_cachedScreenWidth}x${_cachedScreenHeight}');
+          'Please resize cache: $_cachedScreenWidth x $_cachedScreenHeight');
     }
   }
 
@@ -626,12 +624,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
               }
 
               // Vertical Offset for specific characters (Horizon alignment)
+              // They should sit exactly on the ground line now that it is synchronized
               double verticalOffset = 0.0;
-              if (obj.type == SceneryType.boy ||
-                  obj.type == SceneryType.girl ||
-                  obj.type == SceneryType.janitor) {
-                verticalOffset = 25.0; // Raise them up to the horizon line
-              }
 
               return Positioned(
                 left: obj.x * screenSize.width,

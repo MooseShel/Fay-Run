@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/assets.dart';
+import '../core/constants.dart';
 
 class ParallaxBackground extends StatefulWidget {
   final double runSpeed;
@@ -80,7 +81,11 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
         ),
 
         // 2. Far Layer (Images with seamless tiling)
-        Positioned.fill(
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: FayColors.kGroundHeight,
           child: _buildScrollingImage(assetPath, 0.2),
         ),
 
@@ -154,9 +159,9 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
           2.0, // Increased overlap to prevent sub-pixel gaps (flickering)
       child: Image.asset(
         assetPath,
-        fit: BoxFit
-            .cover, // Changed from fitHeight to cover to ensure full bleed
-        alignment: Alignment.center,
+        fit: BoxFit.cover,
+        alignment: Alignment
+            .bottomCenter, // Ensure house/ground in image sits on the bottom
         cacheHeight: screenHeight.toInt(), // Memory Optimization
       ),
     );
@@ -167,7 +172,7 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
       left: 0,
       right: 0,
       bottom: 0,
-      height: 100, // Ground height
+      height: FayColors.kGroundHeight, // Ground height
       child: RepaintBoundary(
         child: AnimatedBuilder(
           animation: _controller,

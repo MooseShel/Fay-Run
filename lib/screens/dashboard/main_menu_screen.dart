@@ -415,7 +415,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   const Text(
-                                    'Select Topic:',
+                                    'Topic:',
                                     style: TextStyle(color: Colors.white70),
                                   ),
                                   DropdownButton<String>(
@@ -442,6 +442,66 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                   ),
                                 ],
                               ),
+                              if (gameState.availableExams.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text(
+                                      'Select Exam:',
+                                      style: TextStyle(color: Colors.white70),
+                                    ),
+                                    DropdownButton<String>(
+                                      value: gameState.selectedExamId,
+                                      dropdownColor: FayColors.navy,
+                                      style: const TextStyle(
+                                          color: FayColors.gold,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12),
+                                      underline: Container(),
+                                      items: gameState.availableExams
+                                          .map<DropdownMenuItem<String>>(
+                                              (exam) {
+                                        final name =
+                                            exam['exam_name'] ?? 'Unnamed Exam';
+                                        final date = exam['due_date'] != null
+                                            ? ' (Due: ${DateTime.parse(exam['due_date']).month}/${DateTime.parse(exam['due_date']).day})'
+                                            : '';
+                                        return DropdownMenuItem<String>(
+                                          value: exam['id'] as String?,
+                                          child: Text('$name$date'),
+                                        );
+                                      }).toList(),
+                                      onChanged: (val) {
+                                        gameState.setExamMode(true,
+                                            topic: gameState.examTopic,
+                                            examId: val);
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ] else if (gameState.isLoading) ...[
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                                  child: Center(
+                                      child: SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: FayColors.gold))),
+                                ),
+                              ] else ...[
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                                  child: Text(
+                                    'No specific exams found for this topic.',
+                                    style: TextStyle(
+                                        color: Colors.white38, fontSize: 12),
+                                  ),
+                                ),
+                              ],
                             ],
                           ],
                         ),

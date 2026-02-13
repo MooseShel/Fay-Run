@@ -4,14 +4,11 @@
 -- Represents a weekly or seasonal set of questions specific to a grade/topic.
 CREATE TABLE challenges (
     id TEXT PRIMARY KEY,
-    topic TEXT NOT NULL,          -- e.g., "Geometry", "Fractions", "Louisiana History"
-    season TEXT NOT NULL,         -- e.g., "Fall 2023", "Spring 2024"
-    week_number INTEGER NOT NULL, -- e.g., 1, 2, ... 52
+    topic TEXT NOT NULL DEFAULT 'General', -- e.g., "Geometry", "Fractions", "Western Region"
     grade_level INTEGER NOT NULL DEFAULT 4, -- 1 or 4
-    difficulty_level INTEGER DEFAULT 1, -- 1-5, matching game levels?
-    is_exam BOOLEAN DEFAULT FALSE,      -- Whether this is part of an Exam Week
-    active_start_date TIMESTAMPTZ,   -- When this challenge becomes available
-    active_end_date TIMESTAMPTZ      -- When it expires
+    difficulty_level INTEGER DEFAULT 1, -- 1-10, matching game levels
+    is_exam BOOLEAN DEFAULT FALSE,      -- Whether this is part of a focus Exam
+    exam_name TEXT                      -- Display name for the exam
 );
 
 -- Table: questions

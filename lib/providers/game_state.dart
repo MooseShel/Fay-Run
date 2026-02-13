@@ -47,8 +47,13 @@ class GameState extends ChangeNotifier {
   // Exam Mode
   bool _isExamMode = false;
   String? _examTopic;
+  String? _selectedExamId;
+  List<Map<String, dynamic>> _availableExams = [];
+
   bool get isExamMode => _isExamMode;
   String? get examTopic => _examTopic;
+  String? get selectedExamId => _selectedExamId;
+  List<Map<String, dynamic>> get availableExams => _availableExams;
 
   // Getters
   List<Map<String, dynamic>> get students => _students;
@@ -61,6 +66,7 @@ class GameState extends ChangeNotifier {
   String get studentName => _currentStudent?['first_name'] ?? _studentName;
   String get generatedNickname =>
       _currentStudent?['nickname'] ?? _generatedNickname;
+
   int get currentGrade {
     final gradeStr = _currentStudent?['grade']?.toString() ?? '1st';
 
@@ -71,7 +77,6 @@ class GameState extends ChangeNotifier {
     return int.tryParse(gradeStr.replaceAll(RegExp(r'[^0-9]'), '')) ?? 1;
   }
 
-  // ... existing getters ...
   int get score => _score;
   int get lives => _lives;
   int get currentLevel => _currentLevel;
@@ -101,16 +106,16 @@ class GameState extends ChangeNotifier {
 
       _currentChallenge = await service.getCurrentChallenge(
         gradeLevel: grade,
-        weekNumber: _currentLevel, // Keep for backward compatibility
         topic: _isExamMode ? _examTopic : null,
         isExam: _isExamMode,
         difficultyLevel: difficulty,
+        examId: _isExamMode ? _selectedExamId : null,
       );
 
       if (_currentChallenge != null) {
         debugPrint(
           'Loaded challenge: ${_currentChallenge!.topic} '
-          'for Level $_currentLevel (Diff $difficulty), Grade $grade, Exam: $_isExamMode',
+          'for Level $_currentLevel (Diff $difficulty), Grade $grade, Exam: $_isExamMode, ExamID: $_selectedExamId',
         );
       }
     } catch (e) {
@@ -185,20 +190,12 @@ class GameState extends ChangeNotifier {
 
       // Auto-select the newly created student (most recent one)
       if (_students.isNotEmpty) {
-        // Since we order by created_at ascending in getStudents, the last one *should* be the new one.
-        // But to be safe, let's find it by nickname/name or just take the last one.
-        // Given the low volume, taking the last one is a reasonable heuristic for now.
         final newStudent = _students.last;
         selectStudent(newStudent);
       }
     } catch (e) {
       debugPrint('Error adding student: $e');
     }
-  }
-
-  // Legacy/Fallback Profile Load (Parent Profile)
-  Future<void> loadStudentProfile() async {
-    // ... keep or deprecated ...
   }
 
   // Setters/Actions
@@ -208,11 +205,33 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setExamMode(bool active, {String? topic}) {
+  void setExamMode(bool active, {String? topic, String? examId}) async {
     _isExamMode = active;
     _examTopic = topic;
+    _selectedExamId = examId;
+
+    if (active && topic != null) {
+      _isLoading = true;
+      notifyListeners();
+      try {
+        final service = SupabaseService();
+        _availableExams = await service.getAvailableExams(currentGrade, topic);
+
+        // Auto-select first exam if none selected and list not empty
+        if (_selectedExamId == null && _availableExams.isNotEmpty) {
+          _selectedExamId = _availableExams.first['id'];
+        }
+      } catch (e) {
+        debugPrint('Error fetching available exams: $e');
+      } finally {
+        _isLoading = false;
+      }
+    } else if (!active) {
+      _selectedExamId = null;
+      _availableExams = [];
+    }
+
     notifyListeners();
-    // Reload challenge if we are in a state where it matters (e.g., menu)
     loadChallenge();
   }
 

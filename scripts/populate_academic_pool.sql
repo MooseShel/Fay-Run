@@ -6,34 +6,35 @@
 
 -- Populate Challenges (Grade 4 example)
 -- Normal Challenges (Difficulty 1-10)
-INSERT INTO challenges (id, topic, season, week_number, grade_level, difficulty_level, is_exam) VALUES
-('ch_g4_math_d1', 'Math', 'Spring 2025', 1, 4, 1, false),
-('ch_g4_math_d2', 'Math', 'Spring 2025', 2, 4, 2, false),
-('ch_g4_math_d3', 'Math', 'Spring 2025', 3, 4, 3, false),
-('ch_g4_math_d4', 'Math', 'Spring 2025', 4, 4, 4, false),
-('ch_g4_math_d5', 'Math', 'Spring 2025', 5, 4, 5, false),
-('ch_g4_math_d6', 'Math', 'Spring 2025', 6, 4, 6, false),
-('ch_g4_math_d7', 'Math', 'Spring 2025', 7, 4, 7, false),
-('ch_g4_math_d8', 'Math', 'Spring 2025', 8, 4, 8, false),
-('ch_g4_math_d9', 'Math', 'Spring 2025', 9, 4, 9, false),
-('ch_g4_math_d10', 'Math', 'Spring 2025', 10, 4, 10, false),
+-- Normal Challenges (Difficulty 1-10)
+INSERT INTO challenges (id, topic, grade_level, difficulty_level, is_exam) VALUES
+('ch_g4_math_d1', 'Math', 4, 1, false),
+('ch_g4_math_d2', 'Math', 4, 2, false),
+('ch_g4_math_d3', 'Math', 4, 3, false),
+('ch_g4_math_d4', 'Math', 4, 4, false),
+('ch_g4_math_d5', 'Math', 4, 5, false),
+('ch_g4_math_d6', 'Math', 4, 6, false),
+('ch_g4_math_d7', 'Math', 4, 7, false),
+('ch_g4_math_d8', 'Math', 4, 8, false),
+('ch_g4_math_d9', 'Math', 4, 9, false),
+('ch_g4_math_d10', 'Math', 4, 10, false),
 
 -- Exam Challenges (Difficulty 1-10)
-('exam_g4_math_d1', 'Math', 'Spring 2025', 1, 4, 1, true),
-('exam_g4_math_d3', 'Math', 'Spring 2025', 3, 4, 3, true),
-('exam_g4_math_d5', 'Math', 'Spring 2025', 5, 4, 5, true),
-('exam_g4_math_d7', 'Math', 'Spring 2025', 7, 4, 7, true),
-('exam_g4_math_d10', 'Math', 'Spring 2025', 10, 4, 10, true),
+('exam_g4_math_d1', 'Math', 4, 1, true),
+('exam_g4_math_d3', 'Math', 4, 3, true),
+('exam_g4_math_d5', 'Math', 4, 5, true),
+('exam_g4_math_d7', 'Math', 4, 7, true),
+('exam_g4_math_d10', 'Math', 4, 10, true),
 
 -- Science Challenges
-('ch_g4_sci_d1', 'Science', 'Spring 2025', 1, 4, 1, false),
-('ch_g4_sci_d5', 'Science', 'Spring 2025', 5, 4, 5, false),
-('ch_g4_sci_d10', 'Science', 'Spring 2025', 10, 4, 10, false),
+('ch_g4_sci_d1', 'Science', 4, 1, false),
+('ch_g4_sci_d5', 'Science', 4, 5, false),
+('ch_g4_sci_d10', 'Science', 4, 10, false),
 
 -- Social Studies Challenges
-('ch_g4_soc_d1', 'Social Studies', 'Spring 2025', 1, 4, 1, false),
-('ch_g4_soc_d5', 'Social Studies', 'Spring 2025', 5, 4, 5, false),
-('ch_g4_soc_d10', 'Social Studies', 'Spring 2025', 10, 4, 10, false)
+('ch_g4_soc_d1', 'Social Studies', 4, 1, false),
+('ch_g4_soc_d5', 'Social Studies', 4, 5, false),
+('ch_g4_soc_d10', 'Social Studies', 4, 10, false)
 ON CONFLICT (id) DO UPDATE SET 
   topic = EXCLUDED.topic,
   difficulty_level = EXCLUDED.difficulty_level,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class FayColors {
+  static const double kGroundHeight = 100.0;
   static const Color navy = Color(0xFF1565C0); // Brighter Navy (Blue 800)
   static const Color navyDark = Color(0xFF0D47A1); // Deep Navy background
   static const Color gold = Color(0xFFFFC107); // Amber 500 (Vibrant Gold)

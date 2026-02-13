@@ -10,10 +10,13 @@ ALTER TABLE challenges ADD COLUMN IF NOT EXISTS difficulty_level INTEGER DEFAULT
 ALTER TABLE challenges ADD COLUMN IF NOT EXISTS is_exam BOOLEAN DEFAULT FALSE;
 
 -- 2. Create Challenge Records for Exams
-INSERT INTO challenges (id, topic, season, week_number, grade_level, difficulty_level, is_exam) VALUES 
-('exam_g4_western_region', 'Social Studies', 'Spring 2026', 1, 4, 1, TRUE),
-('exam_g4_unit5_math', 'Math', 'Spring 2026', 1, 4, 1, TRUE)
-ON CONFLICT (id) DO UPDATE SET is_exam = TRUE;
+INSERT INTO challenges (id, topic, grade_level, difficulty_level, is_exam, exam_name, due_date) VALUES 
+('exam_g4_western_region', 'Social Studies', 4, 1, TRUE, 'Western Region Social Studies', '2026-02-28 23:59:59+00'),
+('exam_g4_unit5_math', 'Math', 4, 1, TRUE, 'Unit 5 Math (Geometry)', '2026-02-28 23:59:59+00')
+ON CONFLICT (id) DO UPDATE SET 
+  is_exam = TRUE,
+  exam_name = EXCLUDED.exam_name,
+  due_date = EXCLUDED.due_date;
 
 -- 3. Social Studies: Western Region Questions (30)
 INSERT INTO questions (id, challenge_id, question_text, correct_option, wrong_option_1, wrong_option_2) VALUES
