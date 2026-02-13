@@ -40,7 +40,6 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
   // Progression & Chaos
   int? _lastLevel;
-  double _distanceRun = 0;
   // double _chaosTimer = 0;
   final Random _random = Random();
 
@@ -181,7 +180,6 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       if (_lastLevel != null && _lastLevel != gameState.currentLevel) {
         _obstacleManager.clear();
         _sceneryManager.clear();
-        _distanceRun = 0;
       }
       _lastLevel = gameState.currentLevel;
 
@@ -200,25 +198,11 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       _lastFrameTime = now;
 
       if (gameState.status == GameStatus.playing) {
-        // NORMALIZATION: Speed is logical units per second relative to Height
-        // Convert to relative X units (as a fraction of screen width)
-        double logicalWidth = _cachedScreenWidth / _cachedScreenHeight;
-        double speedX = (gameState.runSpeed * 1.5 * dt) / logicalWidth;
-        _distanceRun += speedX * 100; // Multiplier for progress tracking scale
+        // NORMALIZATION: Update level progress based on time (dt)
+        gameState.updateProgress(dt);
       }
 
-      // Score based on distance
-      if (gameState.status == GameStatus.playing) {
-        // Add roughly 60 points per second if runSpeed is ~3.0
-        gameState.addScore(
-            ((gameState.runSpeed / 3.0) * 60 * dt).round().clamp(0, 10));
-
-        // Update Floating Scores
-        for (var fs in _floatingScores) {
-          fs.animationTime += dt * 2.0; // Speed of animation
-        }
-        _floatingScores.removeWhere((fs) => fs.animationTime >= 1.0);
-      }
+      // Run Animation
 
       // _chaosTimer += dt;
 
@@ -230,26 +214,16 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         _runFrame = (_runFrame + 1) % 3;
       }
 
-      // Level Completion
-      // Fix: Use BASE speed for target calculation so temporary speed changes don't shorten/lengthen the level dynamically.
-      // Base Speed Formula matches GameState._resetLevelPhysics: (4.0 + (level * 0.2)) * 1.1
+      // Level Completion is now handled in GameState.updateProgress
+      /*
       final double baseSpeed = (4.0 + (gameState.currentLevel * 0.2)) * 1.1;
-
-      // Target 120 seconds duration: BaseSpeed * 1200 (since distance is Speed * 10 * Time)
-      // Calculation matches the new scaled _distanceRun logic
       final targetDistance = baseSpeed * 12000;
-
       if (_distanceRun > targetDistance) {
         _distanceRun = 0;
         gameState.completeLevel();
-        AudioService().stopBGM();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Level ${gameState.currentLevel} Complete!'),
-            duration: const Duration(seconds: 1),
-          ),
-        );
+        // ...
       }
+      */
 
       // Chaos Threshold
       /*
@@ -389,13 +363,13 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     if (obs.type == ObstacleType.goldenBook) {
       gameState.startQuiz();
       _showQuiz(gameState, obs,
-          obstacleType: obs.type, reward: 200); // Double Reward
+          obstacleType: obs.type, reward: 50); // Simplified Golden Book Reward
     } else if (obs.type == ObstacleType.burger ||
         obs.type == ObstacleType.apple ||
         obs.type == ObstacleType.banana) {
       gameState.startQuiz();
       _showQuiz(gameState, obs,
-          obstacleType: obs.type, reward: 100); // Standard Reward
+          obstacleType: obs.type, reward: 10); // Simplified Food Reward
     } else {
       // obs.isCollected = true; // Regular obstacles no longer disappear on hit
       if (!gameState.isInvincible) {
@@ -420,7 +394,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   }
 
   void _showQuiz(GameState gameState, Obstacle obs,
-      {required ObstacleType obstacleType, int reward = 100}) {
+      {required ObstacleType obstacleType, int reward = 10}) {
     // Use loaded challenge or fallback to a default one
     final challenge = gameState.currentChallenge ??
         Challenge(
@@ -532,8 +506,6 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     final screenSize = MediaQuery.sizeOf(context);
     _groundHeight = screenSize.height *
         FayColors.kGroundHeightRatio; // Dynamic ground height
-    final double baseSpeed = (4.0 + (gameState.currentLevel * 0.2)) * 1.1;
-    final double targetDistance = baseSpeed * 12000;
 
     if (_isLoading) {
       return Scaffold(
@@ -819,8 +791,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                       ),
                       // Progress Fill
                       FractionallySizedBox(
-                        widthFactor:
-                            (_distanceRun / targetDistance).clamp(0.001, 1.0),
+                        widthFactor: gameState.levelProgress.clamp(0.001, 1.0),
                         child: Container(
                           height: 16,
                           decoration: BoxDecoration(
@@ -841,8 +812,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                       // Animated Gator Marker
                       Positioned(
                         left: (screenSize.width - 40) *
-                                (_distanceRun / targetDistance)
-                                    .clamp(0.0, 1.0) -
+                                gameState.levelProgress.clamp(0.0, 1.0) -
                             20,
                         top: -12,
                         child: Image.asset(

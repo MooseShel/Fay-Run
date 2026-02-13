@@ -24,6 +24,11 @@ class GameState extends ChangeNotifier {
   int _maxLevel = kDebugMode ? 10 : 1;
   List<Map<String, dynamic>> _leaderboard = [];
 
+  // Level Timing
+  static const double kLevelDurationSeconds = 120.0;
+  double _levelProgress = 0.0; // 0.0 to 1.0
+  double get levelProgress => _levelProgress;
+
   // Player Data (Legacy/Fallback)
   String _studentName = '';
   String _generatedNickname = '';
@@ -241,17 +246,29 @@ class GameState extends ChangeNotifier {
     _currentLevel = level;
     _goldenBooksCollectedCurrentLevel = 0; // Reset counter
     _comboCount = 0;
+    _levelProgress = 0.0; // Reset progress
     _answeredQuestions.clear(); // Clear history
     _resetLevelPhysics();
     _status = GameStatus.playing;
     notifyListeners();
   }
 
+  void updateProgress(double dt) {
+    if (_status == GameStatus.playing) {
+      _levelProgress += dt / kLevelDurationSeconds;
+      if (_levelProgress >= 1.0) {
+        _levelProgress = 1.0;
+        completeLevel();
+      }
+      notifyListeners();
+    }
+  }
+
   void _resetLevelPhysics() {
-    // Increase speed with level scaling: Base 4.0 + 0.2 per level
+    // Increase speed with level scaling: Base 4.0 + 0.1 per level
     // Increased by 10% per user request
     // Balanced speed curve: Steady manageable growth (1.05x multiplier)
-    _runSpeed = (4.0 + (_currentLevel * 0.15)) * 1.05;
+    _runSpeed = (4.0 + (_currentLevel * 0.10)) * 1.05;
 
     debugPrint('Level $_currentLevel Physics Reset: Speed = $_runSpeed');
   }
@@ -300,10 +317,8 @@ class GameState extends ChangeNotifier {
         _status != GameStatus.quiz) {
       return;
     }
-    // Apply combo multiplier (max x5)
-    int multiplier = (_comboCount ~/ 5) + 1;
-    if (multiplier > 5) multiplier = 5;
-    _score += points * multiplier;
+    // Simplified scoring for children: No multipliers, just add points
+    _score += points;
     notifyListeners();
   }
 
@@ -456,6 +471,7 @@ class GameState extends ChangeNotifier {
 
       _currentLevel++;
       _resetLevelPhysics();
+      _levelProgress = 0.0; // Reset for next level
 
       // Reload challenge for the new level (new questions)
       await loadChallenge();

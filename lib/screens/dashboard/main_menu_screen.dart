@@ -309,7 +309,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                           const SizedBox(height: 8),
                           // Top Score
                           Text(
-                            'Top Score: ${student?['high_score'] ?? 0}',
+                            'Top Score: ${student?['high_score'] ?? 0} PTS',
                             style: const TextStyle(
                               color: FayColors.gold,
                               fontSize: 18,

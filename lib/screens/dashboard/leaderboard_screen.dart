@@ -66,7 +66,7 @@ class LeaderboardScreen extends StatelessWidget {
                       border: Border.all(color: FayColors.gold),
                     ),
                     child: Text(
-                      '${entry['high_score']}',
+                      '${entry['high_score']} PTS',
                       style: const TextStyle(
                         color: FayColors.gold,
                         fontWeight: FontWeight.bold,
