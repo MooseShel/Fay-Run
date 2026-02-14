@@ -598,59 +598,59 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                     if (gameState.status == GameStatus.bonusRound &&
                         gameState.currentBonusType ==
                             BonusRoundType.eggCatch) ...[
-                      // Stationary Background Chickens (Animated, Spread on ground)
+                      // Stationary Background Row (Animated, Spread on ground)
                       Positioned(
                         bottom: _groundHeight - FayColors.kHorizonOverlap - 10,
                         left: 0,
                         right: 0,
                         child: Center(
                           child: SizedBox(
-                            width: screenSize.width * 0.9,
+                            width: screenSize.width * 0.95,
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: List.generate(5, (index) {
-                                final variants = ["", "c", "b", "w", ""];
-                                String variant =
-                                    variants[index % variants.length];
-                                int frame =
-                                    _chickenSurpriseTimers[index] > 0 ? 2 : 1;
-                                return Image.asset(
-                                  'assets/images/${Assets.chickenSprite(variant, frame)}',
+                              children: [
+                                // Dog (Fixed Left-ish in Row)
+                                Image.asset(
+                                  'assets/images/${Assets.bgCharacter("dog", _bgAnimFrameDog)}',
                                   height: 80,
                                   fit: BoxFit.contain,
-                                );
-                              }),
+                                ),
+                                // Chickens
+                                ...List.generate(5, (index) {
+                                  final variants = ["", "c", "b", "w", ""];
+                                  String variant =
+                                      variants[index % variants.length];
+                                  int frame =
+                                      _chickenSurpriseTimers[index] > 0 ? 2 : 1;
+                                  return Image.asset(
+                                    'assets/images/${Assets.chickenSprite(variant, frame)}',
+                                    height: 80,
+                                    fit: BoxFit.contain,
+                                  );
+                                }),
+                              ],
                             ),
                           ),
-                        ),
-                      ),
-                      // Stationary Background Dog (Animated, Left)
-                      Positioned(
-                        left: screenSize.width * 0.02,
-                        bottom: _groundHeight - FayColors.kHorizonOverlap - 15,
-                        child: Image.asset(
-                          'assets/images/${Assets.bgCharacter("dog", _bgAnimFrameDog)}',
-                          height: 80,
                         ),
                       ),
                       // Flying Bird 1 (L-to-R)
                       Positioned(
                         left: _bird1X * screenSize.width,
-                        top: screenSize.height * 0.25,
+                        top: screenSize.height * 0.20,
                         child: Image.asset(
                           'assets/images/${Assets.bgCharacter("bird", _bgAnimFrameBird)}',
-                          height: 40,
+                          height: screenSize.height * 0.12,
                         ),
                       ),
                       // Flying Bird 2 (R-to-L)
                       Positioned(
                         left: _bird2X * screenSize.width,
-                        top: screenSize.height * 0.40,
+                        top: screenSize.height * 0.35,
                         child: Transform.flip(
                           flipX: true,
                           child: Image.asset(
                             'assets/images/${Assets.bgCharacter("bird", _bgAnimFrameBird)}',
-                            height: 40,
+                            height: screenSize.height * 0.12,
                           ),
                         ),
                       ),
