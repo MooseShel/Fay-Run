@@ -768,12 +768,43 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                     ),
                     if (gameState.status == GameStatus.paused)
                       Container(
-                          color: Colors.black54,
-                          child: Center(
-                              child: ElevatedButton(
-                                  onPressed: () =>
-                                      context.read<GameState>().resumeGame(),
-                                  child: const Text("RESUME")))),
+                        color: Colors.black54,
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text("PAUSED",
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 40),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.amber,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 40, vertical: 15),
+                                ),
+                                onPressed: () =>
+                                    context.read<GameState>().resumeGame(),
+                                child: const Text("RESUME GAME",
+                                    style: TextStyle(
+                                        fontSize: 20, color: Colors.black)),
+                              ),
+                              const SizedBox(height: 20),
+                              TextButton(
+                                onPressed: () {
+                                  context.read<GameState>().forfeitGame();
+                                  Navigator.pop(context);
+                                },
+                                child: const Text("EXIT LEVEL",
+                                    style: TextStyle(
+                                        color: Colors.white70, fontSize: 18)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     if (gameState.status == GameStatus.levelComplete)
                       Container(
                         color: Colors.black87,
