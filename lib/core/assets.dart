@@ -22,19 +22,35 @@ class Assets {
     return 'bgs/bg_fay_$level.webp';
   }
 
+  static const String chickenCoopBg =
+      'bonus_rounds/chicken_coop/chicken_coop.webp';
+  static const String chickenCoopMusic =
+      'images/bonus_rounds/chicken_coop/chicken_coop.aac';
+
+  static String chickenSprite(String variant, int frame) {
+    if (variant.isEmpty) return 'bonus_rounds/chicken_coop/chicken_$frame.png';
+    // Handle the double underscore issue for variant 'c' if that's what's on disk
+    String prefix = variant == "c" ? "chicken__" : "chicken_";
+    return 'bonus_rounds/chicken_coop/$prefix${variant}_$frame.png';
+  }
+
+  static String eggSprite(bool isCracked) {
+    return 'bonus_rounds/chicken_coop/egg_${isCracked ? 2 : 1}.png';
+  }
+
   static const String itemGoldenBook = 'obstacles/item_golden_book.png';
 
   // Audio - Background Music
-  static const String musicBayou1 = 'audio/music_bayou_1.mp3';
-  static const String musicBayou2 = 'audio/music_bayou_2.mp3';
-  static const String musicBayou3 = 'audio/music_bayou_3.mp3';
-  static const String musicBayou4 = 'audio/music_bayou_4.mp3';
-  static const String musicBayou5 = 'audio/music_bayou_5.mp3';
-  static const String musicBayou6 = 'audio/music_bayou_6.mp3';
-  static const String musicGarden = 'audio/music_garden.mp3';
-  static const String musicMedow = 'audio/music_medow.mp3';
-  static const String musicPlayground = 'audio/music_playground.mp3';
-  static const String musicCafeteria = 'audio/music_cafeteria.mp3';
+  static const String musicBayou1 = 'audio/music_bayou_1.aac';
+  static const String musicBayou2 = 'audio/music_bayou_2.aac';
+  static const String musicBayou3 = 'audio/music_bayou_3.aac';
+  static const String musicBayou4 = 'audio/music_bayou_4.aac';
+  static const String musicBayou5 = 'audio/music_bayou_5.aac';
+  static const String musicBayou6 = 'audio/music_bayou_6.aac';
+  static const String musicGarden = 'audio/music_garden.aac';
+  static const String musicMedow = 'audio/music_medow.aac';
+  static const String musicPlayground = 'audio/music_playground.aac';
+  static const String musicCafeteria = 'audio/music_cafeteria.aac';
 
   // Images - Obstacles
   static const String obsLog = 'obstacles/obstacle_log.png';
@@ -75,21 +91,23 @@ class Assets {
   static const String obsWildFlowers2 = 'obstacles/obstacle_wild_flowers_2.png';
 
   // Audio - SFX
-  static const String sfxJump = 'audio/jump.mp3';
-  static const String sfxBonk = 'audio/bonk.mp3';
-  static const String sfxCoin = 'audio/ding.mp3';
-  static const String sfxPowerup = 'audio/powerup.mp3';
+  static const String sfxJump = 'audio/jump.aac';
+  static const String sfxBonk = 'audio/bonk.aac';
+  static const String sfxCoin = 'audio/ding.aac';
+  static const String sfxPowerup = 'audio/powerup.aac';
 
   // Audio - Staff Voices
-  static const String voiceHead = 'audio/staff_head.mp3';
-  static const String voiceCoach = 'audio/staff_coach.mp3';
-  static const String voiceLibrarian = 'audio/staff_librarian.mp3';
-  static const String voiceScience = 'audio/staff_science.mp3';
-  static const String voiceDean = 'audio/staff_dean.mp3';
-  static const String voicePe = 'audio/staff_pe.mp3';
+  static const String voiceHead = 'audio/staff_head.aac';
+  static const String voiceCoach = 'audio/staff_coach.aac';
+  static const String voiceLibrarian = 'audio/staff_librarian.aac';
+  static const String voiceScience = 'audio/staff_science.aac';
+  static const String voiceDean = 'audio/staff_dean.aac';
+  static const String voicePe = 'audio/staff_pe.aac';
 
   // Background Characters
   static String bgCharacter(String name, int frame) {
-    return 'bg_characters/${name}_$frame.png';
+    // Map dogStanding/dogSitting to base dog asset
+    String baseName = name.startsWith('dog') ? 'dog' : name;
+    return 'bg_characters/${baseName}_$frame.png';
   }
 }

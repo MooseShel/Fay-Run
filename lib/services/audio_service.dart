@@ -49,19 +49,19 @@ class AudioService {
 
   Future<void> _preloadAssets() async {
     final sfx = [
-      'jump.mp3',
-      'bonk.mp3',
-      'ding.mp3',
-      'powerup.mp3',
-      'staff_coach.mp3',
-      'staff_librarian.mp3',
-      'staff_dean.mp3',
-      'staff_head.mp3',
-      'staff_pe.mp3',
-      'staff_science.mp3',
-      'staff_english.mp3',
-      'staff_firstg.mp3',
-      'staff_prek2.mp3',
+      'jump.aac',
+      'bonk.aac',
+      'ding.aac',
+      'powerup.aac',
+      'staff_coach.aac',
+      'staff_librarian.aac',
+      'staff_dean.aac',
+      'staff_head.aac',
+      'staff_pe.aac',
+      'staff_science.aac',
+      'staff_english.aac',
+      'staff_firstg.aac',
+      'staff_prek2.aac',
     ];
 
     // Use the SFX pool to "warm up" the players with the most common sounds
@@ -103,37 +103,37 @@ class AudioService {
   Future<void> playBGM(int level) async {
     if (_isMuted || _isChangingBgm) return;
 
-    String bgmFile = 'music_bayou_1.mp3';
+    String bgmFile = 'music_bayou_1.aac';
     switch (level) {
       case 1:
-        bgmFile = 'music_bayou_1.mp3';
+        bgmFile = 'music_bayou_1.aac';
         break;
       case 2:
-        bgmFile = 'music_bayou_2.mp3';
+        bgmFile = 'music_bayou_2.aac';
         break;
       case 3:
-        bgmFile = 'music_bayou_3.mp3';
+        bgmFile = 'music_bayou_3.aac';
         break;
       case 4:
-        bgmFile = 'music_bayou_4.mp3';
+        bgmFile = 'music_bayou_4.aac';
         break;
       case 5:
-        bgmFile = 'music_bayou_5.mp3';
+        bgmFile = 'music_bayou_5.aac';
         break;
       case 6:
-        bgmFile = 'music_bayou_6.mp3';
+        bgmFile = 'music_bayou_6.aac';
         break;
       case 7:
-        bgmFile = 'music_garden.mp3';
+        bgmFile = 'music_garden.aac';
         break;
       case 8:
-        bgmFile = 'music_medow.mp3';
+        bgmFile = 'music_medow.aac';
         break;
       case 9:
-        bgmFile = 'music_playground.mp3';
+        bgmFile = 'music_playground.aac';
         break;
       case 10:
-        bgmFile = 'music_cafeteria.mp3';
+        bgmFile = 'music_cafeteria.aac';
         break;
     }
 
@@ -150,7 +150,12 @@ class AudioService {
       await _bgmPlayer.setVolume(_isMuted ? 0 : 0.5);
       await _bgmPlayer.play(AssetSource('audio/$bgmFile'));
     } catch (e) {
-      debugPrint('Error playing BGM: $e');
+      if (e.toString().contains('NotAllowedError')) {
+        debugPrint(
+            'BGM playback blocked by browser/platform. Waiting for user interaction.');
+      } else {
+        debugPrint('Error playing BGM: $e');
+      }
       _currentBgmFile = null;
     } finally {
       _isChangingBgm = false;
@@ -159,6 +164,30 @@ class AudioService {
 
   Future<void> stopBGM() async {
     await _bgmPlayer.stop();
+    _currentBgmFile = null;
+  }
+
+  Future<void> playCustomBGM(String assetPath) async {
+    if (_isMuted || _isChangingBgm) return;
+
+    if (_currentBgmFile == assetPath &&
+        _bgmPlayer.state == PlayerState.playing) {
+      return;
+    }
+
+    _isChangingBgm = true;
+    try {
+      _currentBgmFile = assetPath;
+      await _bgmPlayer.stop();
+      await _bgmPlayer.setReleaseMode(ReleaseMode.loop);
+      await _bgmPlayer.setVolume(_isMuted ? 0 : 0.5);
+      await _bgmPlayer.play(AssetSource(assetPath));
+    } catch (e) {
+      debugPrint('Error playing custom BGM: $e');
+      _currentBgmFile = null;
+    } finally {
+      _isChangingBgm = false;
+    }
   }
 
   Future<void> pauseBGM() async {
@@ -171,7 +200,7 @@ class AudioService {
     }
   }
 
-  void playSFX(String sfxName) {
+  Future<void> playSFX(String sfxName) async {
     if (_isMuted || _sfxPool.isEmpty) return;
     try {
       // Find an idle player in the pool
@@ -187,9 +216,13 @@ class AudioService {
       player ??= _sfxPool.first;
 
       final p = player;
-      p.stop().then((_) => p.play(AssetSource('audio/$sfxName')));
+      await p.stop();
+      await p.play(AssetSource('audio/$sfxName'));
     } catch (e) {
-      debugPrint('Error playing SFX: $e');
+      // Silently catch audio errors (e.g. NotAllowedError on web)
+      // These are non-critical and shouldn't crash or report as uncaught
+      debugPrint(
+          'AudioService: Non-critical SFX playback error ($sfxName): $e');
     }
   }
 
@@ -204,41 +237,41 @@ class AudioService {
     }
   }
 
-  void playJump() => playSFX('jump.mp3');
-  void playBonk() => playSFX('bonk.mp3');
-  void playCoin() => playSFX('ding.mp3');
-  void playPowerup() => playSFX('powerup.mp3');
+  void playJump() => playSFX('jump.aac');
+  void playBonk() => playSFX('bonk.aac');
+  void playCoin() => playSFX('ding.aac');
+  void playPowerup() => playSFX('powerup.aac');
 
   void playStaffSound(StaffEventType staffType) {
     // Map staff type to sound file
     String? soundFile;
     switch (staffType) {
       case StaffEventType.coachWhistle:
-        soundFile = 'staff_coach.mp3';
+        soundFile = 'staff_coach.aac';
         break;
       case StaffEventType.librarianShush:
-        soundFile = 'staff_librarian.mp3';
+        soundFile = 'staff_librarian.aac';
         break;
       case StaffEventType.deanGlare:
-        soundFile = 'staff_dean.mp3';
+        soundFile = 'staff_dean.aac';
         break;
       case StaffEventType.scienceSplat:
-        soundFile = 'staff_science.mp3';
+        soundFile = 'staff_science.aac';
         break;
       case StaffEventType.shoeTie:
-        soundFile = 'staff_head.mp3';
+        soundFile = 'staff_head.aac';
         break;
       case StaffEventType.peDrill:
-        soundFile = 'staff_pe.mp3';
+        soundFile = 'staff_pe.aac';
         break;
       case StaffEventType.englishTeacher:
-        soundFile = 'staff_english.mp3';
+        soundFile = 'staff_english.aac';
         break;
       case StaffEventType.firstGradeTeacher:
-        soundFile = 'staff_firstg.mp3';
+        soundFile = 'staff_firstg.aac';
         break;
       case StaffEventType.prekTeacher:
-        soundFile = 'staff_prek2.mp3';
+        soundFile = 'staff_prek2.aac';
         break;
     }
 

@@ -69,6 +69,7 @@ flutter:
     - assets/images/bgs/
     - assets/images/obstacles/
     - assets/images/bg_characters/
+    - assets/images/bonus_rounds/chicken_coop/
     - assets/audio/
 
   # An image asset can refer to one or more resolution-specific "variants", see

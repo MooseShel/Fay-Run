@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants.dart';
 import '../../services/supabase_service.dart';
@@ -541,13 +542,29 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                         crossAxisSpacing: 20,
                         childAspectRatio: 1.6, // Landscape ratio
                       ),
-                      itemCount: 10,
+                      itemCount: kDebugMode ? 11 : 10,
                       itemBuilder: (context, index) {
-                        final level = index + 1;
-                        final isUnlocked = level <= gameState.maxLevel;
-                        final isCurrentLevel = level == gameState.maxLevel;
-                        final String assetPath =
-                            'assets/images/${Assets.background(level)}';
+                        int level;
+                        bool isBonusTest = false;
+
+                        if (kDebugMode) {
+                          if (index == 2) {
+                            isBonusTest = true;
+                            level = 2; // Reference level for theme/icons
+                          } else {
+                            level = index < 2 ? index + 1 : index;
+                          }
+                        } else {
+                          level = index + 1;
+                        }
+
+                        final isUnlocked =
+                            isBonusTest || level <= gameState.maxLevel;
+                        final isCurrentLevel =
+                            !isBonusTest && level == gameState.maxLevel;
+                        final String assetPath = isBonusTest
+                            ? 'assets/images/${Assets.chickenCoopBg}'
+                            : 'assets/images/${Assets.background(level)}';
 
                         return TweenAnimationBuilder<double>(
                           duration: const Duration(milliseconds: 300),
@@ -558,9 +575,16 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                               child: InkWell(
                                 onTap: isUnlocked
                                     ? () {
-                                        context
-                                            .read<GameState>()
-                                            .startGame(level: level);
+                                        if (isBonusTest) {
+                                          context
+                                              .read<GameState>()
+                                              .startBonusTest(
+                                                  BonusRoundType.eggCatch);
+                                        } else {
+                                          context
+                                              .read<GameState>()
+                                              .startGame(level: level);
+                                        }
                                         Navigator.pushNamed(context, '/game');
                                       }
                                     : null,
@@ -634,13 +658,15 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                             ),
                                             const SizedBox(height: 8),
                                             Text(
-                                              'LEVEL $level',
+                                              isBonusTest
+                                                  ? 'BONUS TEST'
+                                                  : 'LEVEL $level',
                                               style: TextStyle(
                                                 color: isUnlocked
                                                     ? Colors.white
                                                     : Colors.white38,
                                                 fontWeight: FontWeight.w900,
-                                                fontSize: 18,
+                                                fontSize: isBonusTest ? 14 : 18,
                                                 letterSpacing: 1,
                                               ),
                                             ),

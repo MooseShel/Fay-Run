@@ -28,6 +28,7 @@ enum ObstacleType {
   goldenBook, // Quiz Gate (Special)
   apple,
   banana,
+  egg,
 }
 
 class Obstacle {
@@ -38,9 +39,11 @@ class Obstacle {
   double width;
   double height;
   double direction;
+  double dy; // Vertical velocity
   int variant;
   bool isCollected;
   bool hasEngaged;
+  bool isCracked;
 
   Obstacle({
     required this.id,
@@ -50,9 +53,11 @@ class Obstacle {
     required this.width,
     required this.height,
     this.direction = -1.0,
+    this.dy = 0.0,
     this.variant = 1,
     this.isCollected = false,
     this.hasEngaged = false,
+    this.isCracked = false,
   });
 
   void reset({
@@ -63,6 +68,7 @@ class Obstacle {
     required double width,
     required double height,
     required double direction,
+    double dy = 0.0,
     required int variant,
   }) {
     this.id = id;
@@ -72,9 +78,11 @@ class Obstacle {
     this.width = width;
     this.height = height;
     this.direction = direction;
+    this.dy = dy;
     this.variant = variant;
     isCollected = false;
     hasEngaged = false;
+    isCracked = false;
   }
 }
 
@@ -86,18 +94,27 @@ class ObstacleManager {
   double _rewardInterval = 0; // Dynamic interval for rewards
 
   ObstacleManager() {
-    _rewardInterval = 3.0 + _random.nextDouble() * 3.0; // 3-6 seconds start
+    _rewardInterval = 3.75 +
+        _random.nextDouble() *
+            3.75; // Increased by 25% to reduce frequency by 20%
   }
 
   void update(double dt, double runSpeed, int level, bool isBonusRound,
       Function(Obstacle) onHit,
-      {required Size screenSize}) {
+      {required Size screenSize, double bonusTimeElapsed = 0}) {
     // 1. Regular Obstacle Spawn Logic
     _spawnTimer += dt;
 
     double spawnInterval;
     if (isBonusRound) {
-      spawnInterval = 0.4; // Rapid spawning
+      // Rapid spawning in bonus rounds
+      if (level == 2) {
+        // Start at 0.8s, decrease to 0.4s over 15 seconds
+        spawnInterval = 0.8 - (bonusTimeElapsed / 15.0) * 0.4;
+        if (spawnInterval < 0.4) spawnInterval = 0.4;
+      } else {
+        spawnInterval = 0.4;
+      }
     } else {
       switch (level) {
         case 1:
@@ -136,7 +153,12 @@ class ObstacleManager {
     // Check if an obstacle SHOULD spawn
     if (_spawnTimer > spawnInterval) {
       // Check if space is clear offscreen (startX is roughly 1.1 to 1.5 usually)
-      if (_isPositionClear(1.1, 0.4)) {
+      if (isBonusRound && level == 2) {
+        // Chicken Coop: Always spawn if timer allows, horizontal space check
+        _spawnObstacle(level, isBonusRound,
+            isReward: false, bonusTimeElapsed: bonusTimeElapsed);
+        _spawnTimer = 0;
+      } else if (_isPositionClear(1.1, 0.4)) {
         _spawnObstacle(level, isBonusRound, isReward: false);
         _spawnTimer = 0;
       }
@@ -151,8 +173,8 @@ class ObstacleManager {
         if (_isPositionClear(1.1, 0.25)) {
           _spawnObstacle(level, false, isReward: true);
           _rewardTimer = 0;
-          // Education First: Balanced rewards (Reduced by ~25% from 1.5-3.5 range)
-          _rewardInterval = 2.0 + _random.nextDouble() * 2.5;
+          // Education First: Balanced rewards (Further reduced by 20% per user request)
+          _rewardInterval = 2.5 + _random.nextDouble() * 3.125;
         }
       }
     }
@@ -166,9 +188,35 @@ class ObstacleManager {
 
     for (var i = obstacles.length - 1; i >= 0; i--) {
       var obs = obstacles[i];
-      obs.x += moveAmt * obs.direction;
 
-      if (obs.x < -1.5 || obs.x > 2.5) {
+      if (obs.type == ObstacleType.egg) {
+        if (!obs.isCracked) {
+          // Eggs fall downwards with acceleration
+          // Even slower acceleration
+          obs.dy += 0.4 * dt; // Slowed down from 0.6
+          obs.y -= obs.dy * dt;
+
+          // Check for ground hit
+          if (obs.y <= 0) {
+            obs.y = 0;
+            obs.dy = 0;
+            obs.isCracked = true;
+            obs.hasEngaged = true; // Prevent collision now
+
+            // Start removal timer (1 second)
+            Future.delayed(const Duration(seconds: 1), () {
+              obs.isCollected = true;
+            });
+          }
+        }
+      } else {
+        obs.x += moveAmt * obs.direction;
+      }
+
+      if (obs.x < -1.5 || obs.x > 2.5 || (obs.y < -0.2 && !obs.isCracked)) {
+        obstacles.removeAt(i);
+      } else if (obs.isCollected) {
+        // Collectible vanished
         obstacles.removeAt(i);
       }
     }
@@ -177,12 +225,15 @@ class ObstacleManager {
   // Object Pooling
   final List<Obstacle> _obstaclePool = [];
 
-  void _spawnObstacle(int level, bool isBonusRound, {bool isReward = false}) {
+  void _spawnObstacle(int level, bool isBonusRound,
+      {bool isReward = false, double bonusTimeElapsed = 0}) {
     List<ObstacleType> obstaclePool = [];
 
     if (isBonusRound) {
-      // Bonus round themes remains unchanged
       switch (level) {
+        case 2:
+          obstaclePool = [ObstacleType.egg];
+          break;
         case 3:
           obstaclePool = [ObstacleType.goldenBook, ObstacleType.books];
           break;
@@ -200,7 +251,7 @@ class ObstacleManager {
           obstaclePool = [ObstacleType.apple];
       }
     } else {
-      // Regular floor obstacle pools (All rewards removed from here)
+      // Regular floor obstacle pools
       switch (level) {
         case 1:
         case 2:
@@ -279,7 +330,6 @@ class ObstacleManager {
       type = obstaclePool[_random.nextInt(obstaclePool.length)];
     }
 
-    // Realistic sizing logic remains same ...
     double width = 0.1;
     double height = 0.1;
 
@@ -340,7 +390,7 @@ class ObstacleManager {
         break;
       case ObstacleType.basketBall:
       case ObstacleType.soccerBall:
-        width = 0.17; // Increased by ~20% from 0.14
+        width = 0.17;
         height = 0.17;
         break;
       case ObstacleType.gymMat:
@@ -354,12 +404,12 @@ class ObstacleManager {
         height = 0.12;
         break;
       case ObstacleType.lunchTray:
-        width = 0.37; // Increased by ~20% from 0.31
-        height = 0.20; // Increased by ~20% from 0.17
+        width = 0.37;
+        height = 0.20;
         break;
       case ObstacleType.milkCarton:
-        width = 0.17; // Increased by ~20% from 0.14
-        height = 0.20; // Increased by ~20% from 0.17
+        width = 0.17;
+        height = 0.20;
         break;
       case ObstacleType.wildFlowers:
         width = 0.17;
@@ -373,18 +423,36 @@ class ObstacleManager {
         width = 0.207;
         height = 0.207;
         break;
+      case ObstacleType.egg:
+        width = 0.12;
+        height = 0.12;
+        break;
     }
 
     double y = 0.0;
+    double dy = 0.0;
+    double startX = 1.1; // Offscreen Right
+    double direction = -1.0;
+    int variant = _random.nextBool() ? 1 : 2;
+
     if (isBonusRound) {
-      final heights = [0.0, 0.25, 0.5];
-      y = heights[_random.nextInt(heights.length)];
+      if (type == ObstacleType.egg) {
+        y = 0.82; // Lowered to matching chickens' bodies
+        // Tighter fixed chicken positions to match steel cover
+        const chickenXs = [0.28, 0.39, 0.5, 0.61, 0.72];
+        int chickenIdx = _random.nextInt(5);
+        startX = chickenXs[chickenIdx];
+        variant = chickenIdx; // Store which chicken spawned it (0-4)
+        // Even slower initial fall speed (will accelerate in update)
+        dy = 0.12 + (bonusTimeElapsed / 20.0) * 0.15;
+        direction = 0.0; // Stationary horizontally
+      } else {
+        final heights = [0.0, 0.25, 0.5];
+        y = heights[_random.nextInt(heights.length)];
+      }
     } else if (type == ObstacleType.goldenBook) {
       y = 0.25; // Only Golden Book floats now
     }
-
-    double startX = 1.1; // Offscreen Right
-    double direction = -1.0;
 
     if (level >= 4 && type != ObstacleType.goldenBook && !isBonusRound) {
       if (_random.nextBool()) {
@@ -393,9 +461,7 @@ class ObstacleManager {
       }
     }
 
-    int variant = _random.nextBool() ? 1 : 2;
-
-    // POOLING: Get from pool or create new
+    // POOLING
     Obstacle obs;
     if (_obstaclePool.isNotEmpty) {
       obs = _obstaclePool.removeLast();
@@ -407,6 +473,7 @@ class ObstacleManager {
         width: width,
         height: height,
         direction: direction,
+        dy: dy,
         variant: variant,
       );
     } else {
@@ -418,6 +485,7 @@ class ObstacleManager {
         width: width,
         height: height,
         direction: direction,
+        dy: dy,
         variant: variant,
       );
     }
@@ -427,7 +495,6 @@ class ObstacleManager {
 
   bool _isPositionClear(double x, double safeDistance) {
     for (var obs in obstacles) {
-      // If obstacle is within the safe distance of the checked x position
       if ((obs.x - x).abs() < safeDistance) {
         return false;
       }
@@ -436,7 +503,6 @@ class ObstacleManager {
   }
 
   void clear() {
-    // Return all active obstacles to pool
     _obstaclePool.addAll(obstacles);
     obstacles.clear();
   }

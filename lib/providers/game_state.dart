@@ -16,6 +16,12 @@ enum GameStatus {
   quiz
 }
 
+enum BonusRoundType {
+  none,
+  goldenDash, // Existing high-speed run
+  eggCatch, // Level 2 Chicken Coop
+}
+
 class GameState extends ChangeNotifier {
   // Multi-Student Data
   List<Map<String, dynamic>> _students = [];
@@ -25,7 +31,7 @@ class GameState extends ChangeNotifier {
   List<Map<String, dynamic>> _leaderboard = [];
 
   // Level Timing
-  static const double kLevelDurationSeconds = 120.0;
+  static const double kLevelDurationSeconds = 60.0;
   double _levelProgress = 0.0; // 0.0 to 1.0
   double get levelProgress => _levelProgress;
 
@@ -39,6 +45,9 @@ class GameState extends ChangeNotifier {
   int _currentLevel = 1;
   double _runSpeed = 4.0; // Increased base speed
   GameStatus _status = GameStatus.menu;
+  BonusRoundType _currentBonusType = BonusRoundType.none;
+
+  BonusRoundType get currentBonusType => _currentBonusType;
 
   // Events
   StaffEvent? _activeStaffEvent;
@@ -94,7 +103,8 @@ class GameState extends ChangeNotifier {
   Challenge? get currentChallenge => _currentChallenge;
 
   bool get isBonusRoundEarned {
-    // Completely disabled as requested
+    // Enabled for level 2 as requested, others keep disabled for now
+    if (_currentLevel == 2) return true;
     return false;
   }
 
@@ -250,6 +260,7 @@ class GameState extends ChangeNotifier {
     _answeredQuestions.clear(); // Clear history
     _resetLevelPhysics();
     _status = GameStatus.playing;
+    _currentBonusType = BonusRoundType.none;
     notifyListeners();
   }
 
@@ -481,10 +492,32 @@ class GameState extends ChangeNotifier {
   void startBonusRound() {
     _status = GameStatus.bonusRound;
     _isInvincible = true; // No damage in bonus round
+
+    // Select bonus round type based on level
+    if (_currentLevel == 2) {
+      _currentBonusType = BonusRoundType.eggCatch;
+    } else {
+      _currentBonusType = BonusRoundType.goldenDash;
+    }
+
     notifyListeners();
 
-    // Bonus round lasts 15 seconds
-    Future.delayed(const Duration(seconds: 15), () {
+    // Bonus round lasts 20 seconds
+    Future.delayed(const Duration(seconds: 20), () {
+      endBonusRound();
+    });
+  }
+
+  void startBonusTest(BonusRoundType type, {int level = 2}) {
+    _status = GameStatus.bonusRound;
+    _isInvincible = true;
+    _currentBonusType = type;
+    _currentLevel = level;
+    _score = 0;
+    _lives = 5;
+    notifyListeners();
+
+    Future.delayed(const Duration(seconds: 20), () {
       endBonusRound();
     });
   }
@@ -492,6 +525,7 @@ class GameState extends ChangeNotifier {
   void endBonusRound() {
     if (_status == GameStatus.bonusRound) {
       _isInvincible = false;
+      _currentBonusType = BonusRoundType.none;
       _status = GameStatus
           .levelComplete; // Go back to level complete screen to proceed
       notifyListeners();

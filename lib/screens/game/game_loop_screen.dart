@@ -1,8 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../../providers/game_state.dart';
+import '../../models/staff_event.dart';
 import '../../core/constants.dart';
 import '../../models/challenge.dart'; // Needed for fallback
 import '../../widgets/parallax_background.dart';
@@ -55,6 +55,25 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   // Floating Score Logic
   final List<FloatingScore> _floatingScores = [];
 
+  // Horizontal Movement (for Egg Catch)
+  double _playerXOffset = 0; // 0 = default (0.3 of screen width)
+  double _horizontalVelocity = 0;
+  int _moveDirection = 0; // -1 for left, 1 for right, 0 for none
+
+  // Chicken Surprise Timers (Level 2 Bonus)
+  // Chicken Surprise Timers (Level 2 Bonus)
+  final List<double> _chickenSurpriseTimers = [0, 0, 0, 0, 0];
+  final List<String> _chickenLastEggIds = ["", "", "", "", ""];
+
+  // Bonus Animation State
+  double _bgAnimTimer = 0;
+  int _bgAnimFrameDog = 1;
+  int _bgAnimFrameChicken = 1;
+  int _bgAnimFrameBird = 1;
+  double _bird1X = -0.2;
+  double _bird2X = 1.2;
+  double _bonusRoundTimer = 0;
+
   void _spawnFloatingScore(int amount) {
     if (!mounted) return;
     setState(() {
@@ -85,19 +104,16 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   void initState() {
     super.initState();
     _gameLoopController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 16),
-    )
+        vsync: this, duration: const Duration(milliseconds: 16))
       ..addListener(_gameLoop)
       ..repeat();
 
-    // Defers loading until context is ready to safely use precacheImage
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadAssets();
     });
   }
 
-  // Cache screen dimensions to avoid recalculation every frame
+  // Cache screen dimensions
   double _cachedScreenWidth = 0;
   double _cachedScreenHeight = 0;
   double _cachedPlayerSize = 0;
@@ -112,44 +128,29 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         size.height != _cachedScreenHeight) {
       _cachedScreenWidth = size.width;
       _cachedScreenHeight = size.height;
-      // Normalizing based on Height (which is the stable vertical dimension)
-      // Synchronized with UI Positioned(left: screenSize.width * 0.30)
       _cachedPlayerSize = size.height * 0.21;
       _cachedPlayerPadding = _cachedPlayerSize * 0.25;
       _cachedPlayerBaseX = size.width * 0.30;
-      debugPrint(
-          'Please resize cache: $_cachedScreenWidth x $_cachedScreenHeight');
     }
   }
 
   Future<void> _loadAssets() async {
-    final startTime = DateTime.now();
-    debugPrint('🎬 Starting optimized level loading...');
-
     try {
       final state = context.read<GameState>();
       final level = state.currentLevel;
-
-      // UX goal: 4 seconds "Preparing Level" screen to ensure assets (images/sound) are fully loaded
       final minDelayFuture = Future.delayed(const Duration(milliseconds: 4000));
-
-      // 1. Ensure essential assets are loaded (likely already done in StudentSelect)
       final essentialPreload = AssetManager().precacheEssentialAssets(context);
-
-      // 2. Precache current level background (others preloaded in MainMenu)
       final bgPreload = AssetManager().precacheLevelAssets(context, level);
 
-      // 3. Audio - Play BGM early to mask loading
-      AudioService().playBGM(level);
+      if (state.status == GameStatus.bonusRound &&
+          state.currentBonusType == BonusRoundType.eggCatch) {
+        AudioService().playCustomBGM(Assets.chickenCoopMusic);
+      } else {
+        AudioService().playBGM(level);
+      }
 
-      // 4. Data
       await state.loadChallenge();
-
-      // Wait for visuals to be ready and min delay
       await Future.wait([minDelayFuture, essentialPreload, bgPreload]);
-
-      final elapsed = DateTime.now().difference(startTime).inMilliseconds;
-      debugPrint('🏁 Optimized loading finished in ${elapsed}ms');
     } catch (e) {
       debugPrint('⚠️ Error during loading: $e');
     } finally {
@@ -164,7 +165,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   @override
   void dispose() {
     _gameLoopController.dispose();
-    AudioService().stopBGM(); // Stop music on exit
+    AudioService().stopBGM();
     super.dispose();
   }
 
@@ -174,24 +175,20 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     try {
       final gameState = context.read<GameState>();
       final screenSize = MediaQuery.sizeOf(context);
-
-      // Stability Fix: Prevent layout crashes if context/screen is not ready
       if (screenSize.width <= 0 || screenSize.height <= 0) return;
 
-      // Level Transition Logic: Clear obstacles when the level changes
       if (_lastLevel != null && _lastLevel != gameState.currentLevel) {
         _obstacleManager.clear();
         _sceneryManager.clear();
       }
       _lastLevel = gameState.currentLevel;
 
-      if (gameState.status != GameStatus.playing) {
-        _lastFrameTime = null; // Reset when not playing
+      if (gameState.status == GameStatus.paused ||
+          gameState.status == GameStatus.quiz) {
+        _lastFrameTime = null;
         return;
       }
 
-      // 0. Timers & Progression - Calculate Delta Time
-      // 0. Timers & Progression - Calculate Delta Time
       final now = DateTime.now();
       double dt = 0.016;
       if (_lastFrameTime != null) {
@@ -200,42 +197,32 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       _lastFrameTime = now;
 
       if (gameState.status == GameStatus.playing) {
-        // NORMALIZATION: Update level progress based on time (dt)
         gameState.updateProgress(dt);
       }
 
-      // Run Animation
       _runAnimationTimer += dt;
       if (_runAnimationTimer > 0.15) {
-        // Back to 0.15 for better feel at 3.0 speed
         _runAnimationTimer = 0;
         _runFrame = (_runFrame + 1) % 3;
       }
 
       _chaosTimer += dt;
-
-      // Chaos Threshold: Every 20-30 seconds or so
-      final double chaosThreshold = kDebugMode
-          ? 10.0
-          : (gameState.currentLevel >= 6
-              ? 35.0 + _random.nextInt(15)
-              : 20.0 + _random.nextInt(10));
-
+      final double chaosThreshold = 15.0 + _random.nextInt(5);
       if (_chaosTimer > chaosThreshold) {
         _chaosTimer = 0;
-        if (gameState.activeStaffEvent == null) {
-          gameState.triggerStaffChaos();
+        // ONLY trigger chaos in normal play
+        if (gameState.status == GameStatus.playing &&
+            gameState.activeStaffEvent == null) {
+          final type = StaffEventType
+              .values[_random.nextInt(StaffEventType.values.length)];
+          gameState.triggerStaffEvent(type);
         }
       }
 
-      // 1. Physics Update (Applying dt to gravity and velocity)
       if (_isJumping || _playerY > 0) {
-        // NORMALIZATION: Gravity relative to ScreenHeight
         double gravityAccel = -_cachedScreenHeight * 4.5;
-
         _playerY += _verticalVelocity * dt;
         _verticalVelocity += gravityAccel * dt;
-
         if (_playerY <= 0) {
           _playerY = 0;
           _verticalVelocity = 0;
@@ -244,56 +231,102 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         }
       }
 
-      // Performance Optimization: Consolidate state updates into one setState call
-      try {
-        setState(() {
-          // 2. Obstacle Update
-          _obstacleManager.update(
-            dt,
-            gameState.runSpeed,
-            gameState.currentLevel,
-            gameState.status == GameStatus.bonusRound,
-            (obs) => _handleCollision(obs, gameState),
-            screenSize: screenSize,
-          );
+      if (gameState.status == GameStatus.bonusRound &&
+          gameState.currentBonusType == BonusRoundType.eggCatch) {
+        _bonusRoundTimer += dt;
 
-          // 3. Scenery Update
-          _sceneryManager.update(
-            dt,
-            gameState.runSpeed,
-            gameState.currentLevel,
-          );
+        // Background Character & Bird Animations
+        _bgAnimTimer += dt;
+        if (_bgAnimTimer > 0.2) {
+          _bgAnimTimer = 0;
+          _bgAnimFrameDog = (_bgAnimFrameDog % 4) + 1;
+          _bgAnimFrameChicken = (_bgAnimFrameChicken % 2) + 1;
+          _bgAnimFrameBird = (_bgAnimFrameBird % 2) + 1;
+        }
 
-          // 4. Floating Scores
-          _updateFloatingScores(dt);
-        });
-      } catch (e, stack) {
-        debugPrint('Error in GameLoop update: $e');
-        // Prevent flooding logs
-        if (_random.nextDouble() < 0.01) {
-          debugPrint(stack.toString());
+        // Bird movement
+        _bird1X += 0.4 * dt; // L-to-R
+        if (_bird1X > 1.2) _bird1X = -0.2;
+        _bird2X -= 0.35 * dt; // R-to-L
+        if (_bird2X < -0.2) _bird2X = 1.2;
+
+        // Apply hold-to-move acceleration
+        if (_moveDirection != 0) {
+          double accel = screenSize.width * 8.0;
+          _horizontalVelocity += _moveDirection * accel * dt;
+          // Clamp velocity
+          double maxVel = screenSize.width * 1.5;
+          if (_horizontalVelocity.abs() > maxVel) {
+            _horizontalVelocity = _horizontalVelocity.sign * maxVel;
+          }
+        } else {
+          // Friction/Deceleration
+          _horizontalVelocity *= 0.85;
+        }
+
+        _playerXOffset += _horizontalVelocity * dt;
+        double minX = -0.2 * screenSize.width;
+        double maxX = 0.6 * screenSize.width;
+        if (_playerXOffset < minX) {
+          _playerXOffset = minX;
+          _horizontalVelocity = 0;
+        } else if (_playerXOffset > maxX) {
+          _playerXOffset = maxX;
+          _horizontalVelocity = 0;
+        }
+      } else {
+        _playerXOffset = 0;
+        _bonusRoundTimer = 0; // Reset timer when NOT in bonus round
+      }
+
+      // Update Chicken Surprise Timers
+      for (int i = 0; i < 5; i++) {
+        if (_chickenSurpriseTimers[i] > 0) {
+          _chickenSurpriseTimers[i] -= dt;
         }
       }
 
-      /*
-      final screenSize = MediaQuery.sizeOf(context);
+      // Check for new eggs to trigger surprise
+      for (var obs in _obstacleManager.obstacles) {
+        if (obs.type == ObstacleType.egg && obs.y > 0.8) {
+          int idx = obs.variant;
+          if (idx >= 0 && idx < 5 && _chickenLastEggIds[idx] != obs.id) {
+            _chickenSurpriseTimers[idx] = 0.5; // Show surprise for 0.5s
+            _chickenLastEggIds[idx] = obs.id;
+          }
+        }
+      }
 
-      // Stability Fix: Prevent layout crashes if context/screen is not ready
-      if (screenSize.width <= 0 || screenSize.height <= 0) return;
-      */
+      setState(() {
+        double currentRunSpeed = (gameState.status == GameStatus.bonusRound &&
+                gameState.currentBonusType == BonusRoundType.eggCatch)
+            ? 0.0
+            : gameState.runSpeed;
+
+        _obstacleManager.update(
+          dt,
+          currentRunSpeed,
+          gameState.currentLevel,
+          gameState.status == GameStatus.bonusRound,
+          (obs) => _handleCollision(obs, gameState),
+          screenSize: screenSize,
+          bonusTimeElapsed: _bonusRoundTimer,
+        );
+        _sceneryManager.update(
+          dt,
+          currentRunSpeed,
+          gameState.currentLevel,
+        );
+        _updateFloatingScores(dt);
+      });
 
       for (var obs in _obstacleManager.obstacles) {
-        // Convert relative coordinates to pixels for accurate collision
-        // All dimensions (width/height) are now relative to Screen Height
-        // Use cached pixel values
         double obsPixelWidth = obs.width * _cachedScreenHeight;
         double obsPixelHeight = obs.height * _cachedScreenHeight;
         double obsPixelX = obs.x * _cachedScreenWidth;
         double obsPixelY = obs.y * _cachedScreenHeight;
-
         double verticalOffset =
             _getObstacleVerticalOffset(obs, _cachedScreenHeight);
-
         double obsPaddingX = _getObstaclePaddingX(obs, obsPixelWidth);
         double obsPaddingY = _getObstaclePaddingY(obs, obsPixelHeight);
 
@@ -303,73 +336,73 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         double obsTop =
             obsPixelY - verticalOffset + obsPixelHeight - obsPaddingY;
 
-        // Player Hitbox (Cached)
-        double playerLeft = _cachedPlayerBaseX + _cachedPlayerPadding;
-        double playerRight =
-            _cachedPlayerBaseX + _cachedPlayerSize - _cachedPlayerPadding;
-
-        double playerBottom =
-            _playerY + (_cachedPlayerSize * 0.1); // Slightly lower
+        double playerLeft =
+            (_cachedPlayerBaseX + _playerXOffset) + _cachedPlayerPadding;
+        double playerRight = (_cachedPlayerBaseX + _playerXOffset) +
+            _cachedPlayerSize -
+            _cachedPlayerPadding;
+        double playerBottom = _playerY + (_cachedPlayerSize * 0.1);
         double playerTop =
             _playerY + _cachedPlayerSize - (_cachedPlayerSize * 0.2);
 
-        // X overlap
         bool xOverlap = (obsLeft < playerRight) && (obsRight > playerLeft);
-
-        // Y overlap
         bool yOverlap = (playerBottom < obsTop) && (playerTop > obsBottom);
 
         if (xOverlap && yOverlap && !obs.hasEngaged) {
           _handleCollision(obs, gameState);
-          // CRITICAL: Stop processing other collisions if the first one triggers a quiz
-          if (gameState.status == GameStatus.quiz) {
-            break;
-          }
+          if (gameState.status == GameStatus.quiz) break;
         }
       }
     } catch (e, stack) {
       CrashReportService().logError(
-        message: 'GameLoopCrash: $e',
-        stackTrace: stack.toString(),
-        level: 'critical',
-        context: 'GameLoopScreen',
-      );
+          message: 'GameLoopCrash: $e',
+          stackTrace: stack.toString(),
+          level: 'critical',
+          context: 'GameLoopScreen');
     }
   }
 
   void _handleCollision(Obstacle obs, GameState gameState) {
-    if (obs.type == ObstacleType.bench)
-      return; // Bench is now a background object
-    obs.hasEngaged = true; // Prevent multi-trigger
+    if (obs.type == ObstacleType.bench) return;
+    obs.hasEngaged = true;
 
     if (obs.type == ObstacleType.goldenBook) {
-      gameState.startQuiz();
-      _showQuiz(gameState, obs,
-          obstacleType: obs.type, reward: 50); // Simplified Golden Book Reward
+      if (gameState.status == GameStatus.bonusRound) {
+        // Immediate collection in bonus round
+        obs.isCollected = true;
+        AudioService().playPowerup();
+        gameState.addScore(50);
+        _spawnFloatingScore(50);
+      } else {
+        gameState.startQuiz();
+        _showQuiz(gameState, obs, obstacleType: obs.type, reward: 50);
+      }
     } else if (obs.type == ObstacleType.burger ||
         obs.type == ObstacleType.apple ||
         obs.type == ObstacleType.banana) {
-      gameState.startQuiz();
-      _showQuiz(gameState, obs,
-          obstacleType: obs.type, reward: 10); // Simplified Food Reward
+      if (gameState.status == GameStatus.bonusRound) {
+        // Immediate collection in bonus round
+        obs.isCollected = true;
+        AudioService().playPowerup();
+        gameState.addScore(10);
+        _spawnFloatingScore(10);
+      } else {
+        gameState.startQuiz();
+        _showQuiz(gameState, obs, obstacleType: obs.type, reward: 10);
+      }
+    } else if (obs.type == ObstacleType.egg) {
+      obs.isCollected = true;
+      AudioService().playPowerup();
+      gameState.addScore(10);
+      _spawnFloatingScore(10);
+      gameState.recordQuizResult('egg_catch', true);
     } else {
-      // obs.isCollected = true; // Regular obstacles no longer disappear on hit
       if (!gameState.isInvincible) {
         AudioService().playBonk();
         gameState.takeDamage();
-
-        // Trigger crash animation
-        setState(() {
-          _isCrashed = true;
-        });
-
-        // Reset crash state after 500ms
+        setState(() => _isCrashed = true);
         Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted) {
-            setState(() {
-              _isCrashed = false;
-            });
-          }
+          if (mounted) setState(() => _isCrashed = false);
         });
       }
     }
@@ -377,86 +410,75 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
   void _showQuiz(GameState gameState, Obstacle obs,
       {required ObstacleType obstacleType, int reward = 10}) {
-    // Use loaded challenge or fallback to a default one
     final challenge = gameState.currentChallenge ??
         Challenge(
-          id: 'fallback_math',
-          topic: 'Math',
-          gradeLevel: 1,
-          questions: [
-            QuizQuestion(
-              id: 'q_fallback_1',
-              questionText: 'What is 5 + 5?',
-              options: ['10', '12', '8', '20'],
-              correctOptionIndex: 0,
-            ),
-            QuizQuestion(
-              id: 'q_fallback_2',
-              questionText: 'What is 10 - 3?',
-              options: ['7', '6', '5', '4'],
-              correctOptionIndex: 0,
-            ),
-            QuizQuestion(
-              id: 'q_fallback_3',
-              questionText: 'What is 3 x 3?',
-              options: ['9', '6', '12', '15'],
-              correctOptionIndex: 0,
-            ),
-          ],
-        );
-
-    // Get Unique Question or Random from fallback
+            id: 'fallback_math',
+            topic: 'Math',
+            gradeLevel: 1,
+            questions: [
+              QuizQuestion(
+                  id: 'q_fallback_1',
+                  questionText: 'What is 5 + 5?',
+                  options: ['10', '12', '8', '20'],
+                  correctOptionIndex: 0)
+            ]);
     final question = gameState.getNextQuestion();
 
     showDialog(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.black.withValues(alpha: 0.7), // Darker overlay
       builder: (context) => QuizOverlay(
         challenge: challenge,
         question: question,
         onAnswered: (isCorrect) {
-          Navigator.pop(context); // Close dialog
+          Navigator.pop(context);
           if (isCorrect) {
             AudioService().playPowerup();
             gameState.addScore(reward);
-
-            // Only grant invincibility for Golden Books
             if (obstacleType == ObstacleType.goldenBook) {
               gameState.setInvincible(true);
             }
-
-            obs.isCollected = true; // Disappear ONLY if correct
-
-            // Spawn Floating Text
+            obs.isCollected = true;
             _spawnFloatingScore(reward);
           } else {
             AudioService().playBonk();
           }
-
-          // submit result to backend
           gameState.recordQuizResult(challenge.id, isCorrect);
-
           gameState.resumeGame();
         },
       ),
     );
   }
 
+  void _handleTapDown(TapDownDetails details) {
+    final gameState = context.read<GameState>();
+    final screenSize = MediaQuery.sizeOf(context);
+    if (gameState.status == GameStatus.bonusRound &&
+        gameState.currentBonusType == BonusRoundType.eggCatch) {
+      if (details.localPosition.dx < screenSize.width / 2) {
+        _moveDirection = -1;
+      } else {
+        _moveDirection = 1;
+      }
+    } else {
+      _jump();
+    }
+  }
+
+  void _handleTapUp(TapUpDetails details) {
+    _moveDirection = 0;
+  }
+
+  void _handleTapCancel() {
+    _moveDirection = 0;
+  }
+
   void _jump() {
     final gameState = context.read<GameState>();
-
-    // Fix: Block jump input if not playing (exactly playing)
-    if (gameState.status != GameStatus.playing) {
-      return;
-    }
-
+    if (gameState.status != GameStatus.playing) return;
     if (_jumpCount < _maxJumps) {
-      if (gameState.status == GameStatus.playing) {
-        AudioService().playJump();
-      }
+      AudioService().playJump();
       setState(() {
-        // NORMALIZATION: Jump velocity relative to Height
         _verticalVelocity = _cachedScreenHeight * 1.95;
         _isJumping = true;
         _jumpCount++;
@@ -466,28 +488,26 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
   double _getObstaclePaddingX(Obstacle obs, double width) {
     if (obs.type == ObstacleType.goldenBook) return width * 0.15;
-
     switch (obs.type) {
       case ObstacleType.puddle:
       case ObstacleType.gymMat:
       case ObstacleType.wildFlowers:
-        return width * 0.05; // Wide objects need thin side padding
+        return width * 0.05;
       case ObstacleType.apple:
       case ObstacleType.banana:
       case ObstacleType.burger:
-        return width * 0.05; // Collectibles are easy to hit (generous hitbox)
+        return width * 0.05;
       default:
-        return width * 0.25; // Standard padding (tighter hitbox)
+        return width * 0.25;
     }
   }
 
   double _getObstaclePaddingY(Obstacle obs, double height) {
     if (obs.type == ObstacleType.goldenBook) return height * 0.15;
-
     switch (obs.type) {
       case ObstacleType.puddle:
       case ObstacleType.gymMat:
-        return height * 0.05; // Flat objects
+        return height * 0.05;
       case ObstacleType.apple:
       case ObstacleType.banana:
       case ObstacleType.burger:
@@ -498,26 +518,16 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   }
 
   double _getObstacleVerticalOffset(Obstacle obs, double screenHeight) {
-    // Regular obstacles should sit exactly on the ground line
-    double offset = 0.0;
-    if (obs.type == ObstacleType.bench) {
-      // Benches were floating, lowering them by 3% of screen height
-      offset = screenHeight * 0.03;
-    } else if (obs.type == ObstacleType.log) {
-      // Logs have grass decoration at bottom of sprite, need offset to ground the log body
-      offset = screenHeight * 0.03;
-    }
-
-    return offset;
+    if (obs.type == ObstacleType.bench) return screenHeight * 0.03;
+    if (obs.type == ObstacleType.log) return screenHeight * 0.03;
+    return 0.0;
   }
 
-  @override
   @override
   Widget build(BuildContext context) {
     final gameState = context.watch<GameState>();
     final screenSize = MediaQuery.sizeOf(context);
-    _groundHeight = screenSize.height *
-        FayColors.kGroundHeightRatio; // Dynamic ground height
+    _groundHeight = screenSize.height * FayColors.kGroundHeightRatio;
 
     if (_isLoading) {
       return Scaffold(
@@ -526,30 +536,10 @@ class _GameLoopScreenState extends State<GameLoopScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset(
-                'assets/images/ernie_run.png',
-                width: 120,
-                height: 120,
-              ),
+              Image.asset('assets/images/ernie_run.png', width: 120),
               const SizedBox(height: 32),
-              const SizedBox(
-                width: 200,
-                child: LinearProgressIndicator(
-                  color: Colors.blue,
-                  backgroundColor: Color(0xFFE3F2FD),
-                  minHeight: 6,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                "PREPARING LEVEL...",
-                style: TextStyle(
-                  fontFamily: 'BubblegumSans',
-                  color: Colors.blue,
-                  fontSize: 18,
-                  letterSpacing: 1.2,
-                ),
-              ),
+              const Text("PREPARING LEVEL...",
+                  style: TextStyle(color: Colors.blue, fontSize: 18)),
             ],
           ),
         ),
@@ -558,156 +548,160 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
     return Scaffold(
       body: GestureDetector(
-        onTap: _jump,
+        onTapDown: _handleTapDown,
+        onTapUp: _handleTapUp,
+        onTapCancel: _handleTapCancel,
         child: Stack(
           children: [
             ParallaxBackground(
-              runSpeed: gameState.runSpeed,
+              runSpeed: (gameState.status == GameStatus.bonusRound &&
+                      gameState.currentBonusType == BonusRoundType.eggCatch)
+                  ? 0.0
+                  : gameState.runSpeed,
               isPaused: gameState.status != GameStatus.playing,
               screenHeight: screenSize.height,
               level: gameState.currentLevel,
             ),
+            if (gameState.status == GameStatus.bonusRound &&
+                gameState.currentBonusType == BonusRoundType.eggCatch) ...[
+              Positioned.fill(
+                child: Image.asset(
+                  'assets/images/${Assets.chickenCoopBg}',
+                  fit: BoxFit.cover,
+                ),
+              ),
+              // Steel Frame Chickens (Aligned to coop structure)
+              // Steel Frame Chickens (Aligned to centered steel cover)
+              Positioned(
+                top: screenSize.height * 0.12,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: SizedBox(
+                    width: screenSize.width * 0.6, // Tighter container
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: List.generate(5, (index) {
+                        final variants = ["", "c", "b", "w", ""];
+                        String variant = variants[index % variants.length];
+                        int frame = _chickenSurpriseTimers[index] > 0 ? 2 : 1;
 
-            // Background Scenery
+                        return Image.asset(
+                          'assets/images/${Assets.chickenSprite(variant, frame)}',
+                          height: 75, // Slightly smaller to fit tighter
+                        );
+                      }),
+                    ),
+                  ),
+                ),
+              ),
+              // Stationary Background Dog (Animated, Left)
+              Positioned(
+                left: screenSize.width * 0.05,
+                bottom:
+                    _groundHeight - FayColors.kHorizonOverlap - 15, // Lowered
+                child: Image.asset(
+                  'assets/images/${Assets.bgCharacter("dog", _bgAnimFrameDog)}',
+                  height: 80, // Increased size
+                ),
+              ),
+              // Stationary Background Chicken (Animated, Right)
+              Positioned(
+                right: screenSize.width * 0.05,
+                bottom:
+                    _groundHeight - FayColors.kHorizonOverlap - 15, // Lowered
+                child: Image.asset(
+                  'assets/images/${Assets.chickenSprite("w", _bgAnimFrameChicken)}',
+                  height: 80, // Increased size
+                ),
+              ),
+              // Flying Bird 1 (L-to-R)
+              Positioned(
+                left: _bird1X * screenSize.width,
+                top: screenSize.height * 0.25,
+                child: Image.asset(
+                  'assets/images/${Assets.bgCharacter("bird", _bgAnimFrameBird)}',
+                  height: 40,
+                ),
+              ),
+              // Flying Bird 2 (R-to-L)
+              Positioned(
+                left: _bird2X * screenSize.width,
+                top: screenSize.height * 0.40,
+                child: Transform.flip(
+                  flipX: true,
+                  child: Image.asset(
+                    'assets/images/${Assets.bgCharacter("bird", _bgAnimFrameBird)}',
+                    height: 40,
+                  ),
+                ),
+              ),
+            ],
             ..._sceneryManager.objects.map((obj) {
-              String assetName = '';
-              String baseName = '';
-              switch (obj.type) {
-                case SceneryType.boy:
-                  baseName = 'boy';
-                  break;
-                case SceneryType.girl:
-                  baseName = 'girl';
-                  break;
-                case SceneryType.dogSitting:
-                  baseName = 'dog';
-                  // dog_1 and dog_2 are sitting/blinking
-                  break;
-                case SceneryType.dogStanding:
-                  baseName = 'dog';
-                  // dog_3 and dog_4 are standing/blinking
-                  break;
-                case SceneryType.squirrel:
-                  baseName = 'squirrel';
-                  break;
-                case SceneryType.janitor:
-                  baseName = 'janitor';
-                  break;
-                case SceneryType.butterfly:
-                  baseName = 'butterfly';
-                  break;
-                case SceneryType.bird:
-                  baseName = 'bird';
-                  break;
-                case SceneryType.chicken:
-                  baseName = 'chicken';
-                  break;
-              }
-
+              String baseName = obj.type.name;
               int frame = obj.currentFrame;
-              if (obj.type == SceneryType.dogStanding) {
-                frame += 2; // dog_3, dog_4
-              }
-
-              assetName = Assets.bgCharacter(baseName, frame);
-
-              // Dynamic scaling based on type
-              double charSize = screenSize.height * 0.19; // Increased from 0.16
-              if (obj.type == SceneryType.boy ||
-                  obj.type == SceneryType.girl ||
-                  obj.type == SceneryType.janitor) {
-                charSize = screenSize.height * 0.34; // Increased from 0.28
-              }
-
-              // Vertical Offset for specific characters (Horizon alignment)
-              // They should sit exactly on the ground line now that it is synchronized
-              double verticalOffset = 0.0;
-
+              if (obj.type == SceneryType.dogStanding) frame += 2;
+              String assetName = Assets.bgCharacter(baseName, frame);
+              double charSize = (obj.type == SceneryType.boy ||
+                      obj.type == SceneryType.girl ||
+                      obj.type == SceneryType.janitor)
+                  ? screenSize.height * 0.34
+                  : screenSize.height * 0.19;
               return Positioned(
                 left: obj.x * screenSize.width,
-                // Align to top edge of walking area (Horizon)
                 bottom: _groundHeight -
                     FayColors.kHorizonOverlap +
-                    verticalOffset +
                     (obj.y * screenSize.height),
                 width: charSize,
                 height: charSize,
-                child: RepaintBoundary(
-                  child: Image.asset(
-                    'assets/images/$assetName',
-                    fit: BoxFit.contain,
-                    cacheHeight: charSize.toInt(), // Memory Optimization
-                  ),
-                ),
+                child: Image.asset('assets/images/$assetName',
+                    fit: BoxFit.contain),
               );
             }),
-
-            // 4. Ambient Effects (Level-specific particles)
             AmbientEffects(level: gameState.currentLevel),
-
-            ..._obstacleManager.obstacles.map(
-              (obs) {
-                // Background perspective correction
-                // Road lanes require objects to be slightly lower to look grounded
-                double verticalOffset =
-                    _getObstacleVerticalOffset(obs, screenSize.height);
-
-                return Positioned(
-                  left: obs.x * screenSize.width,
-                  bottom: _groundHeight -
-                      FayColors.kHorizonOverlap +
-                      (obs.y * screenSize.height) -
-                      verticalOffset,
-                  width: obs.width * screenSize.height, // Use Height as base
-                  height: obs.height * screenSize.height,
-                  child: RepaintBoundary(
-                    child: _buildObstacleWidget(obs),
-                  ),
-                );
-              },
-            ),
-
+            ..._obstacleManager.obstacles.map((obs) {
+              double verticalOffset =
+                  _getObstacleVerticalOffset(obs, screenSize.height);
+              return Positioned(
+                left: obs.x * screenSize.width,
+                bottom: _groundHeight -
+                    FayColors.kHorizonOverlap +
+                    (obs.y * screenSize.height) -
+                    verticalOffset,
+                width: obs.width * screenSize.height,
+                height: obs.height * screenSize.height,
+                child: _buildObstacleWidget(obs),
+              );
+            }),
             Positioned(
-              left: screenSize.width * 0.30,
-              bottom: _groundHeight - FayColors.kHorizonOverlap + _playerY,
+              left: screenSize.width * 0.30 + _playerXOffset,
+              bottom: _groundHeight -
+                  FayColors.kHorizonOverlap -
+                  15 +
+                  _playerY, // Lowered
               child: PlayerCharacter(
                 isJumping: _isJumping,
                 isInvincible: gameState.isInvincible,
                 isCrashed: _isCrashed,
                 runFrame: _runFrame,
-                size: screenSize.height * 0.21, // Increased from 0.18
+                size: screenSize.height * 0.21,
               ),
             ),
-
-            // Floating Scores
             ..._floatingScores.map((fs) => Positioned(
                   left: fs.x,
-                  bottom: fs.y + (fs.animationTime * 100), // Float up
-                  child: Text(
-                    '+${fs.amount}',
-                    style: TextStyle(
-                      fontFamily: 'BubblegumSans',
-                      fontSize: 40,
-                      fontWeight: FontWeight.bold,
-                      color: FayColors.gold,
-                      shadows: [
-                        Shadow(
-                          blurRadius: 10.0,
-                          color: Colors.black,
-                          offset: Offset(2.0, 2.0),
-                        ),
-                      ],
-                    ),
-                  ),
+                  bottom: fs.y + (fs.animationTime * 100),
+                  child: Text('+${fs.amount}',
+                      style: const TextStyle(
+                          fontSize: 40,
+                          color: Colors.amber,
+                          fontWeight: FontWeight.bold)),
                 )),
-
-            // Staff Chaos - Animated center screen appearance
             if (gameState.activeStaffEvent != null)
               AnimatedStaffChaos(event: gameState.activeStaffEvent!),
 
-            // Premium Game HUD
+            // RESTORED HUD
             Positioned(
-              top: MediaQuery.paddingOf(context).top + 10,
+              top: MediaQuery.of(context).padding.top + 10,
               left: 20,
               right: 20,
               child: Column(
@@ -715,353 +709,114 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Lives Display
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.black26,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.white24),
-                        ),
-                        child: Row(
-                          children: List.generate(5, (index) {
-                            return Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 2.0),
-                              child: Icon(
-                                index < gameState.lives
-                                    ? Icons.favorite
-                                    : Icons.favorite_border,
-                                color: FayColors.brickRed,
-                                size: 24,
-                              ),
-                            );
-                          }),
-                        ),
-                      ),
-                      // Level Indicator
+                      // Score
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
-                          color: FayColors.navy.withValues(alpha: 0.8),
+                          color: Colors.black54,
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: FayColors.gold, width: 2),
                         ),
                         child: Text(
-                          'LEVEL ${gameState.currentLevel}',
+                          'Score: ${gameState.score}',
                           style: const TextStyle(
-                            color: FayColors.gold,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.5,
-                          ),
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18),
                         ),
                       ),
-                      // Score Display
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.black26,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.white24),
-                        ),
-                        child: TweenAnimationBuilder<int>(
-                          duration: const Duration(milliseconds: 500),
-                          tween: IntTween(begin: 0, end: gameState.score),
-                          builder: (context, value, child) {
-                            return Text(
-                              value.toString().padLeft(6, '0'),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontFamily: 'BubblegumSans',
-                                fontSize: 24,
-                                letterSpacing: 2,
-                              ),
-                            );
-                          },
-                        ),
+                      // Lives
+                      Row(
+                        children: List.generate(
+                            5,
+                            (i) => Icon(
+                                  i < gameState.lives
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  color: Colors.red,
+                                  size: 24,
+                                )),
+                      ),
+                      // Pause Button
+                      IconButton(
+                        icon: const Icon(Icons.pause_circle,
+                            color: Colors.white, size: 36),
+                        onPressed: () => gameState.pauseGame(),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 10),
                   // Progress Bar
-                  Stack(
-                    alignment: Alignment.centerLeft,
-                    clipBehavior: Clip.none,
-                    children: [
-                      // Track
-                      Container(
-                        height: 16,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Colors.black38,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.white10),
-                        ),
-                      ),
-                      // Progress Fill
-                      FractionallySizedBox(
-                        widthFactor: gameState.levelProgress.clamp(0.001, 1.0),
-                        child: Container(
-                          height: 16,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [FayColors.gold, Color(0xFFFFD54F)],
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: [
-                              BoxShadow(
-                                color: FayColors.gold.withValues(alpha: 0.4),
-                                blurRadius: 10,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      // Animated Gator Marker
-                      Positioned(
-                        left: (screenSize.width - 40) *
-                                gameState.levelProgress.clamp(0.0, 1.0) -
-                            20,
-                        top: -12,
-                        child: Image.asset(
-                          'assets/images/ernie_run.png',
-                          width: 40,
-                          height: 40,
-                        ),
-                      ),
-                    ],
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: LinearProgressIndicator(
+                      value: gameState.levelProgress,
+                      minHeight: 12,
+                      backgroundColor: Colors.white24,
+                      color: Colors.amber,
+                    ),
                   ),
                 ],
               ),
             ),
-
-            // Pause Button
-            if (gameState.status == GameStatus.playing)
-              Positioned(
-                top: 40,
-                right: 20,
-                child: IconButton(
-                  icon: const Icon(
-                    Icons.pause,
-                    color: FayColors.navy,
-                    size: 32,
-                  ),
-                  onPressed: () => context.read<GameState>().pauseGame(),
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.white.withValues(alpha: 0.5),
-                  ),
-                ),
-              ),
-
-            // 6. Pause/Menu Overlay
             if (gameState.status == GameStatus.paused)
               Container(
-                color: Colors.black54,
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        'PAUSED',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 40,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      ElevatedButton(
-                        onPressed: () => context.read<GameState>().resumeGame(),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: FayColors.gold,
-                          foregroundColor: FayColors.navy,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 32,
-                            vertical: 12,
-                          ),
-                        ),
-                        child: const Text('RESUME'),
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () {
-                          // Stop music
-                          AudioService().stopBGM();
-                          // Forfeit score and return to menu
-                          context.read<GameState>().forfeitGame();
-                          Navigator.pop(context);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red[400],
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 32,
-                            vertical: 12,
-                          ),
-                        ),
-                        child: const Text('EXIT LEVEL'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-            // 7. Level Complete Overlay
+                  color: Colors.black54,
+                  child: Center(
+                      child: ElevatedButton(
+                          onPressed: () =>
+                              context.read<GameState>().resumeGame(),
+                          child: const Text("RESUME")))),
             if (gameState.status == GameStatus.levelComplete)
-              Container(
-                color: FayColors.navy.withValues(alpha: 0.9),
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.school, size: 80, color: FayColors.gold),
-                      const SizedBox(height: 20),
-                      Text(
-                        'Level ${gameState.currentLevel - 1} Complete!',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const Text(
-                        'Class Dismissed!',
-                        style: TextStyle(color: Colors.white70, fontSize: 20),
-                      ),
-                      const SizedBox(height: 40),
-                      if (gameState.isBonusRoundEarned) ...[
-                        Text(
-                          'GOLDEN DASH UNLOCKED!',
-                          style: TextStyle(
-                            color: FayColors.gold,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 2,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            _obstacleManager.clear();
-                            _sceneryManager.clear();
-                            setState(() => _isLoading = true);
-                            gameState.startBonusRound();
-                            _loadAssets();
-                          },
-                          icon: const Icon(Icons.flash_on),
-                          label: const Text('START GOLDEN DASH'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: FayColors.gold,
-                            foregroundColor: FayColors.navy,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 40,
-                              vertical: 20,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        TextButton(
-                          onPressed: () {
-                            _obstacleManager.clear();
-                            _sceneryManager.clear();
-                            setState(() => _isLoading = true);
-                            gameState.startNextLevel();
-                            _loadAssets();
-                          },
-                          child: const Text(
-                            'SKIP TO NEXT CLASS',
-                            style: TextStyle(color: Colors.white70),
-                          ),
-                        ),
-                      ] else
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            _obstacleManager.clear();
-                            _sceneryManager.clear();
-                            setState(() => _isLoading = true);
-                            gameState.startNextLevel();
-                            _loadAssets();
-                          },
-                          icon: const Icon(Icons.arrow_forward),
-                          label: const Text('GO TO NEXT CLASS'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: FayColors.gold,
-                            foregroundColor: FayColors.navy,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 32,
-                              vertical: 16,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-
-            // 8. Bonus Round Overlay (HUD)
-            if (gameState.status == GameStatus.bonusRound)
-              Positioned(
-                top: 40,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: Column(
-                    children: [
-                      Text(
-                        'GOLDEN DASH',
-                        style: TextStyle(
-                          color: FayColors.gold,
-                          fontSize: 40,
-                          fontWeight: FontWeight.w900,
-                          fontStyle: FontStyle.italic,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black,
-                              offset: Offset(4, 4),
-                              blurRadius: 10,
-                            )
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      // We can add a progress bar here for the 15s timer
-                    ],
-                  ),
-                ),
-              ),
-
-            // 9. Game Over Overlay (HUD)
-            if (gameState.status == GameStatus.gameOver)
               Container(
                 color: Colors.black87,
                 child: Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text(
-                        'GAME OVER',
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontSize: 50,
-                          fontWeight: FontWeight.bold,
+                      const Text("LEVEL COMPLETE!",
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 40),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.amber,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 40, vertical: 15),
                         ),
+                        onPressed: () {
+                          _obstacleManager.clear();
+                          _sceneryManager.clear();
+                          setState(() => _isLoading = true);
+                          gameState.startNextLevel();
+                          _loadAssets();
+                        },
+                        child: const Text("CONTINUE GAME",
+                            style:
+                                TextStyle(fontSize: 20, color: Colors.black)),
                       ),
                       const SizedBox(height: 20),
-                      ElevatedButton(
+                      TextButton(
                         onPressed: () {
-                          // Stop music when returning to menu
-                          AudioService().stopBGM();
-                          Navigator.pop(context); // Go back to menu
+                          Navigator.pop(context);
                         },
-                        child: const Text('RETURN TO MENU'),
+                        child: const Text("EXIT LEVEL",
+                            style:
+                                TextStyle(color: Colors.white70, fontSize: 18)),
                       ),
                     ],
                   ),
                 ),
               ),
+            if (gameState.status == GameStatus.gameOver)
+              Container(
+                  color: Colors.black87,
+                  child: Center(
+                      child: ElevatedButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text("GAME OVER - RETURN")))),
           ],
         ),
       ),
@@ -1070,147 +825,40 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
   Widget _buildObstacleWidget(Obstacle obs) {
     if (obs.isCollected) return const SizedBox.shrink();
-    String assetName = '';
-    // New assets have _1 and _2, old have nothing and _2.
-    // We'll try to build a path and handle fallbacks in the errorBuilder.
-    String baseName = '';
-    bool useNumericVariant = false;
 
+    // Use Assets class more consistently
+    if (obs.type == ObstacleType.egg) {
+      return Image.asset('assets/images/${Assets.eggSprite(obs.isCracked)}',
+          errorBuilder: (c, e, s) =>
+              const Icon(Icons.egg, color: Colors.white));
+    }
+    if (obs.type == ObstacleType.goldenBook) {
+      return Image.asset('assets/images/${Assets.itemGoldenBook}');
+    }
+
+    // Handle generic obstacles with possible variants
+    String assetName;
     switch (obs.type) {
-      case ObstacleType.log:
-        baseName = 'obstacle_log';
-        break;
-      case ObstacleType.puddle:
-        baseName = 'obstacle_puddle';
-        break;
-      case ObstacleType.rock:
-        baseName = 'obstacle_rock';
-        break;
-      case ObstacleType.janitorBucket:
-        baseName = 'obstacle_bucket';
-        break;
-      case ObstacleType.books:
-        baseName = 'obstacle_books';
-        break;
-      case ObstacleType.beaker:
-        baseName = 'obstacle_bucket';
-        break;
-      case ObstacleType.flyingPizza:
-      case ObstacleType.food:
-        baseName = 'obstacle_food';
-        break;
-      case ObstacleType.cone:
-        baseName = 'obstacle_cone';
-        break;
-      case ObstacleType.backpack:
-        baseName = 'obstacle_backpack';
-        break;
-      case ObstacleType.trashCan:
-        baseName = 'obstacle_trash_can';
-        useNumericVariant = true;
-        break;
-      case ObstacleType.hydrant:
-        baseName = 'obstacle_hydrant';
-        useNumericVariant = true;
-        break;
-      case ObstacleType.bench:
-        baseName = 'obstacle_bench';
-        useNumericVariant = true;
-        break;
-      case ObstacleType.tire:
-        baseName = 'obstacle_tire';
-        useNumericVariant = true;
-        break;
-      case ObstacleType.flowerPot:
-        baseName = 'obstacle_flower_pot';
-        useNumericVariant = true;
-        break;
-      case ObstacleType.gnome:
-        baseName = 'obstacle_gnome';
-        useNumericVariant = true;
-        break;
-      case ObstacleType.basketBall:
-        baseName = 'obstacle_basket_ball';
-        useNumericVariant = true;
-        break;
-      case ObstacleType.soccerBall:
-        baseName = 'obstacle_soccer_ball';
-        useNumericVariant = true;
-        break;
-      case ObstacleType.gymMat:
-        baseName = 'obstacle_gym_mat';
-        useNumericVariant = true;
+      case ObstacleType.burger:
+        assetName =
+            'obstacles/obstacle_burger_${obs.variant == 0 ? 1 : obs.variant}.png';
         break;
       case ObstacleType.apple:
-        baseName = 'obstacle_apple';
+        assetName = 'obstacles/obstacle_apple.png';
         break;
       case ObstacleType.banana:
-        baseName = 'obstacle_banana';
+        assetName = 'obstacles/obstacle_banana.png';
         break;
-      case ObstacleType.burger:
-        baseName = 'obstacle_burger';
-        useNumericVariant = true;
+      case ObstacleType.food:
+        assetName = 'obstacles/obstacle_food.png';
         break;
-      case ObstacleType.lunchTray:
-        baseName = 'obstacle_lunch_tray';
-        useNumericVariant = true;
-        break;
-      case ObstacleType.milkCarton:
-        baseName = 'obstacle_milk_cart';
-        useNumericVariant = true;
-        break;
-      case ObstacleType.wildFlowers:
-        baseName = 'obstacle_wild_flowers';
-        useNumericVariant = true;
-        break;
-      case ObstacleType.goldenBook:
-        return Image.asset(
-          'assets/images/${Assets.itemGoldenBook}',
-          fit: BoxFit.contain,
-          alignment: Alignment.bottomCenter,
-        );
+      default:
+        // Attempt generic name, but most have variants now
+        assetName = 'obstacles/obstacle_${obs.type.name}.png';
     }
 
-    if (baseName.isEmpty) return const SizedBox();
-
-    String variantSuffix = '';
-    if (useNumericVariant) {
-      variantSuffix = '_${obs.variant}';
-    } else if (obs.variant == 2) {
-      variantSuffix = '_2';
-    }
-
-    // Try current themed folder first
-    if (obs.type == ObstacleType.bench) {
-      assetName = 'assets/images/bg_characters/$baseName$variantSuffix.png';
-    } else {
-      assetName = 'assets/images/obstacles/$baseName$variantSuffix.png';
-    }
-
-    // Debug print for rewards to ensure path is correct
-    if (obs.type == ObstacleType.apple || obs.type == ObstacleType.burger) {
-      // debugPrint('Loading asset: $assetName');
-    }
-
-    return Image.asset(
-      assetName,
-      fit: BoxFit.contain,
-      alignment: Alignment.bottomCenter,
-      errorBuilder: (context, error, stackTrace) {
-        debugPrint('Failed to load asset: $assetName, error: $error');
-        // Fallback 1: try without variant
-        return Image.asset(
-          'assets/images/obstacles/$baseName.png',
-          fit: BoxFit.contain,
-          alignment: Alignment.bottomCenter,
-          errorBuilder: (c, e, s) {
-            debugPrint(
-                'Failed to load fallback: assets/images/obstacles/$baseName.png');
-            return const SizedBox();
-          },
-        );
-      },
-    );
+    return Image.asset('assets/images/$assetName',
+        errorBuilder: (c, e, s) => const SizedBox());
   }
 }
 
@@ -1218,7 +866,6 @@ class FloatingScore {
   final int amount;
   final double x;
   final double y;
-  double animationTime = 0; // 0.0 to 1.0
-
+  double animationTime = 0;
   FloatingScore({required this.amount, required this.x, required this.y});
 }

@@ -55,27 +55,28 @@ GeneratedChallenge generateChallengeSql(
   String topic = "Math";
 
   if (gradeVal < 0) {
-    if (level <= 4)
+    if (level <= 4) {
       topic = "Math";
-    else if (level <= 7)
+    } else if (level <= 7)
       topic = "Science";
     else
       topic = "Social Studies";
 
-    if (gradeVal == -1 && level <= 10)
+    if (gradeVal == -1 && level <= 10) {
       topic = "Science"; // Ocean/Nature theme often used
+    }
   } else {
-    if (level <= 5)
+    if (level <= 5) {
       topic = "Math";
-    else if (level <= 8)
+    } else if (level <= 8)
       topic = "Science";
     else
       topic = "Social Studies";
   }
 
-  String challengeId = "gen_${gradeVal}_${level}";
+  String challengeId = "gen_${gradeVal}_$level";
   if (gradeVal < 0) {
-    challengeId = "gen_neg${gradeVal.abs()}_${level}";
+    challengeId = "gen_neg${gradeVal.abs()}_$level";
   }
 
   String sql =
@@ -211,9 +212,9 @@ void main() async {
       sink.write(challenge.sql);
 
       String topic = "Math";
-      if (challenge.sql.contains("'Math'"))
+      if (challenge.sql.contains("'Math'")) {
         topic = "Math";
-      else if (challenge.sql.contains("'Science'"))
+      } else if (challenge.sql.contains("'Science'"))
         topic = "Science";
       else
         topic = "Social Studies";
