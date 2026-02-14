@@ -56,6 +56,7 @@ class GameState extends ChangeNotifier {
   int get goldenBooksCollectedCurrentLevel => _goldenBooksCollectedCurrentLevel;
   int _comboCount = 0;
   int get comboCount => _comboCount;
+  bool _playedBonusInCurrentLevel = false;
   Timer? _invincibilityTimer;
 
   // Exam Mode
@@ -104,7 +105,7 @@ class GameState extends ChangeNotifier {
 
   bool get isBonusRoundEarned {
     // Enabled for level 2 as requested, others keep disabled for now
-    if (_currentLevel == 2) return true;
+    if (_currentLevel == 2 && !_playedBonusInCurrentLevel) return true;
     return false;
   }
 
@@ -259,8 +260,8 @@ class GameState extends ChangeNotifier {
     _levelProgress = 0.0; // Reset progress
     _answeredQuestions.clear(); // Clear history
     _resetLevelPhysics();
-    _status = GameStatus.playing;
     _currentBonusType = BonusRoundType.none;
+    _playedBonusInCurrentLevel = false;
     notifyListeners();
   }
 
@@ -476,6 +477,7 @@ class GameState extends ChangeNotifier {
 
       _status = GameStatus.playing; // Directly set to playing
       _goldenBooksCollectedCurrentLevel = 0; // Reset for next level
+      _playedBonusInCurrentLevel = false; // Reset for next level
       notifyListeners();
     } else {
       _status = GameStatus.gameOver;
@@ -492,6 +494,7 @@ class GameState extends ChangeNotifier {
   void startBonusRound() {
     _status = GameStatus.bonusRound;
     _isInvincible = true; // No damage in bonus round
+    _playedBonusInCurrentLevel = true;
 
     // Select bonus round type based on level
     if (_currentLevel == 2) {

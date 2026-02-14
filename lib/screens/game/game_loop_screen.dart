@@ -796,12 +796,19 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                                 onPressed: () {
                                   _obstacleManager.clear();
                                   _sceneryManager.clear();
-                                  setState(() => _isLoading = true);
-                                  gameState.startNextLevel();
-                                  _loadAssets();
+                                  if (gameState.isBonusRoundEarned) {
+                                    gameState.startBonusRound();
+                                  } else {
+                                    setState(() => _isLoading = true);
+                                    gameState.startNextLevel();
+                                    _loadAssets();
+                                  }
                                 },
-                                child: const Text("CONTINUE GAME",
-                                    style: TextStyle(
+                                child: Text(
+                                    gameState.isBonusRoundEarned
+                                        ? "START BONUS ROUND"
+                                        : "CONTINUE GAME",
+                                    style: const TextStyle(
                                         fontSize: 20, color: Colors.black)),
                               ),
                               const SizedBox(height: 20),
