@@ -150,7 +150,10 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         AudioService().playBGM(level);
       }
 
-      await state.loadChallenge();
+      if (!(state.status == GameStatus.bonusRound &&
+          state.currentBonusType == BonusRoundType.eggCatch)) {
+        await state.loadChallenge();
+      }
       await Future.wait([minDelayFuture, essentialPreload, bgPreload]);
     } catch (e) {
       debugPrint('⚠️ Error during loading: $e');
@@ -239,7 +242,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
         // Background Character & Bird Animations
         _bgAnimTimer += dt;
-        if (_bgAnimTimer > 0.2) {
+        if (_bgAnimTimer > 2.0) {
           _bgAnimTimer = 0;
           _bgAnimFrameDog = (_bgAnimFrameDog % 4) + 1;
           _bgAnimFrameChicken = (_bgAnimFrameChicken % 2) + 1;
@@ -623,7 +626,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                       ),
                       // Stationary Background Dog (Animated, Left)
                       Positioned(
-                        left: screenSize.width * 0.05,
+                        left: screenSize.width * 0.02,
                         bottom: _groundHeight - FayColors.kHorizonOverlap - 15,
                         child: Image.asset(
                           'assets/images/${Assets.bgCharacter("dog", _bgAnimFrameDog)}',

@@ -177,32 +177,32 @@ class SceneryManager {
         y = 0.0; // Reverted to ground level
         speedMult = 0.2; // Stationary relative to background
         frames = 2;
-        animSpeed = 0.6; // Slower animation for standing/idle look
+        animSpeed = 2.0;
         break;
       case SceneryType.dogSitting:
       case SceneryType.dogStanding:
         y = 0.0;
         speedMult = 0.2;
         frames = 2;
-        animSpeed = 0.6;
+        animSpeed = 2.0;
         break;
       case SceneryType.squirrel:
         y = 0.0;
         speedMult = 0.2;
         frames = 4;
-        animSpeed = 0.6;
+        animSpeed = 2.0;
         break;
       case SceneryType.janitor:
         y = 0.0;
         speedMult = 0.2;
         frames = 2;
-        animSpeed = 0.6;
+        animSpeed = 2.0;
         break;
       case SceneryType.chicken:
         y = 0.0; // Ground
         speedMult = 0.2; // Stationary
         frames = 2;
-        animSpeed = 0.6;
+        animSpeed = 2.0;
         break;
       case SceneryType.bird:
         y = 0.25 +
@@ -210,14 +210,14 @@ class SceneryManager {
         // Negative speed to move Right against the scroll
         speedMult = -0.8;
         frames = 2;
-        animSpeed = 0.2; // Flapping fast
+        animSpeed = 2.0;
         startX = -0.2; // Spawn left
         break;
       case SceneryType.butterfly:
         y = 0.4 + _random.nextDouble() * 0.3; // Sky
         speedMult = 0.5; // Very far background relative movement
         frames = 2;
-        animSpeed = 0.35; // Fluttering
+        animSpeed = 2.0;
         break;
     }
 
