@@ -7,7 +7,7 @@ class PlayerCharacter extends StatelessWidget {
   final bool isInvincible;
   final bool isCrashed;
   final int runFrame;
-
+  final bool flipX;
   final double size;
 
   const PlayerCharacter({
@@ -16,6 +16,7 @@ class PlayerCharacter extends StatelessWidget {
     required this.isInvincible,
     this.isCrashed = false,
     this.runFrame = 0,
+    this.flipX = false,
     this.size = 210.0,
   });
 
@@ -55,21 +56,25 @@ class PlayerCharacter extends StatelessWidget {
               ]
             : [],
       ),
-      child: Image.asset(
-        assetName,
-        fit: BoxFit.contain,
-        alignment: Alignment.bottomCenter,
-        errorBuilder: (context, error, stackTrace) {
-          // Fallback if image fails - keeping the old green box look as backup
-          return Container(
-            decoration: BoxDecoration(
-              color: FayColors.bayouGreen,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: FayColors.navy, width: 2),
-            ),
-            child: const Center(child: Icon(Icons.person, color: Colors.white)),
-          );
-        },
+      child: Transform.flip(
+        flipX: flipX,
+        child: Image.asset(
+          assetName,
+          fit: BoxFit.contain,
+          alignment: Alignment.bottomCenter,
+          errorBuilder: (context, error, stackTrace) {
+            // Fallback if image fails - keeping the old green box look as backup
+            return Container(
+              decoration: BoxDecoration(
+                color: FayColors.bayouGreen,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: FayColors.navy, width: 2),
+              ),
+              child:
+                  const Center(child: Icon(Icons.person, color: Colors.white)),
+            );
+          },
+        ),
       ),
     );
   }

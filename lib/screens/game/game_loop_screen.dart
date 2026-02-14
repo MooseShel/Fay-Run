@@ -58,6 +58,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
   // Horizontal Movement (for Egg Catch)
   double _playerXOffset = 0; // 0 = default (0.3 of screen width)
+  bool _isFacingLeft = false;
   double _horizontalVelocity = 0;
   int _moveDirection = 0; // -1 for left, 1 for right, 0 for none
 
@@ -279,8 +280,16 @@ class _GameLoopScreenState extends State<GameLoopScreen>
           _playerXOffset = maxX;
           _horizontalVelocity = 0;
         }
+
+        // Update orientation based on velocity
+        if (_horizontalVelocity < -screenSize.width * 0.1) {
+          _isFacingLeft = true;
+        } else if (_horizontalVelocity > screenSize.width * 0.1) {
+          _isFacingLeft = false;
+        }
       } else {
         _playerXOffset = 0;
+        _isFacingLeft = false; // Reset to face right in normal run
         _bonusRoundTimer = 0; // Reset timer when NOT in bonus round
       }
 
@@ -669,7 +678,9 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                           : screenSize.height * 0.19;
                       return Positioned(
                         left: obj.x * screenSize.width,
-                        bottom: _groundHeight - FayColors.kHorizonOverlap,
+                        bottom: _groundHeight -
+                            FayColors.kHorizonOverlap +
+                            (obj.y * screenSize.height),
                         width: charSize,
                         height: charSize,
                         child: Image.asset(
@@ -689,6 +700,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                         isInvincible: gameState.isInvincible,
                         isCrashed: _isCrashed,
                         runFrame: _runFrame,
+                        flipX: _isFacingLeft,
                         size: screenSize.height * 0.21,
                       ),
                     ),
