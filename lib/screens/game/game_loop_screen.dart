@@ -395,7 +395,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       AudioService().playPowerup();
       gameState.addScore(10);
       _spawnFloatingScore(10);
-      gameState.recordQuizResult('egg_catch', true);
+      gameState.recordQuizResult('fallback_egg_catch', true);
     } else {
       if (!gameState.isInvincible) {
         AudioService().playBonk();
@@ -586,9 +586,13 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                         String variant = variants[index % variants.length];
                         int frame = _chickenSurpriseTimers[index] > 0 ? 2 : 1;
 
-                        return Image.asset(
-                          'assets/images/${Assets.chickenSprite(variant, frame)}',
-                          height: 75, // Slightly smaller to fit tighter
+                        return Flexible(
+                          child: Image.asset(
+                            'assets/images/${Assets.chickenSprite(variant, frame)}',
+                            height: 75, // Slightly smaller to fit tighter
+                            fit: BoxFit
+                                .contain, // Ensure it scales down if needed
+                          ),
                         );
                       }),
                     ),
