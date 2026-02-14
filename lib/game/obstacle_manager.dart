@@ -2,29 +2,28 @@ import 'dart:math';
 import 'package:flutter/material.dart' show Size;
 
 enum ObstacleType {
-  log, // Level 1 (Bayou)
-  puddle, // Level 1 (Bayou)
-  rock, // Level 1 (Bayou)
-  janitorBucket, // Level 2 (Hallway)
-  books, // Level 2 & 3 (Hallway/Lab)
-  beaker, // Level 3 (Scientific)
-  flyingPizza, // Level 4 (Cafeteria)
-  food, // Level 4 (Cafeteria)
-  cone, // Level 5 (Car Pool - Traffic Cone)
-  backpack, // Level 6 (Playground)
-  trashCan, // New Campus Grounds
-  hydrant, // New Campus Grounds
-  bench, // New Campus Grounds
-  tire, // New Playground
-  flowerPot, // New Garden
-  gnome, // New Garden
-  basketBall, // New Gym
-  soccerBall, // New Gym
-  gymMat, // New Gym
-  burger, // New Cafeteria
-  lunchTray, // New Cafeteria
-  milkCarton, // New Cafeteria
-  wildFlowers, // New Meadow
+  log, // Levels 2 (Forest), 4 (Cabin), 8 (Meadow)
+  puddle, // Levels 2, 4, 8
+  rock, // Levels 2, 4, 7, 8
+  janitorBucket, // Level 9 (Gym)
+  books, // Level 2 & 3 (Pre-refine leftover, kept for variety)
+  beaker, // Level 3 (Scientific leftover)
+  flyingPizza, // Level 10 (Cafeteria)
+  food, // Level 10 (Cafeteria)
+  cone, // Levels 1, 5, 6, 9
+  backpack, // Levels 1, 3, 6 (School Houses)
+  trashCan, // Levels 1, 3, 5 (School Grounds)
+  hydrant, // Levels 1, 3, 5 (School Grounds)
+  tire, // Level 6 (Playground)
+  flowerPot, // Level 7 (Garden)
+  gnome, // Level 7 (Garden)
+  basketBall, // Level 9 (Gym)
+  soccerBall, // Level 9 (Gym)
+  gymMat, // Level 9 (Gym)
+  burger, // Rewards / Level 10
+  lunchTray, // Level 10 (Cafeteria)
+  milkCarton, // Level 10 (Cafeteria)
+  wildFlowers, // Levels 7, 8 (Garden/Meadow)
   goldenBook, // Quiz Gate (Special)
   apple,
   banana,
@@ -253,53 +252,73 @@ class ObstacleManager {
     } else {
       // Regular floor obstacle pools
       switch (level) {
-        case 1:
-        case 2:
-        case 3:
-        case 4:
-        case 5:
+        case 1: // Primary House
+          obstaclePool = [
+            ObstacleType.trashCan,
+            ObstacleType.hydrant,
+            ObstacleType.cone,
+            ObstacleType.backpack,
+          ];
+          break;
+        case 2: // Forest
           obstaclePool = [
             ObstacleType.log,
             ObstacleType.puddle,
             ObstacleType.rock,
+          ];
+          break;
+        case 3: // Fay House
+          obstaclePool = [
             ObstacleType.trashCan,
             ObstacleType.hydrant,
-            ObstacleType.bench,
+            ObstacleType.backpack,
+          ];
+          break;
+        case 4: // Cabin
+          obstaclePool = [
+            ObstacleType.log,
+            ObstacleType.puddle,
+            ObstacleType.rock,
+          ];
+          break;
+        case 5: // Higher Grade House
+          obstaclePool = [
+            ObstacleType.trashCan,
+            ObstacleType.hydrant,
             ObstacleType.cone,
           ];
           break;
-        case 6:
+        case 6: // Playground
           obstaclePool = [
             ObstacleType.tire,
             ObstacleType.cone,
-            ObstacleType.backpack
+            ObstacleType.backpack,
           ];
           break;
-        case 7:
+        case 7: // Garden
           obstaclePool = [
             ObstacleType.flowerPot,
             ObstacleType.gnome,
-            ObstacleType.puddle,
-            ObstacleType.rock
+            ObstacleType.wildFlowers,
+            ObstacleType.rock,
           ];
           break;
-        case 8:
+        case 8: // Meadow
           obstaclePool = [
             ObstacleType.wildFlowers,
+            ObstacleType.puddle,
             ObstacleType.log,
-            ObstacleType.rock
           ];
           break;
-        case 9:
+        case 9: // Gym
           obstaclePool = [
             ObstacleType.basketBall,
             ObstacleType.soccerBall,
             ObstacleType.gymMat,
             ObstacleType.janitorBucket,
-            ObstacleType.cone,
           ];
           break;
-        case 10:
+        case 10: // Cafeteria
           obstaclePool = [
             ObstacleType.lunchTray,
             ObstacleType.milkCarton,
@@ -372,10 +391,6 @@ class ObstacleManager {
         width = 0.207;
         height = 0.31;
         break;
-      case ObstacleType.bench:
-        width = 0.43;
-        height = 0.26;
-        break;
       case ObstacleType.tire:
         width = 0.26;
         height = 0.26;
@@ -434,6 +449,9 @@ class ObstacleManager {
     double startX = 1.1; // Offscreen Right
     double direction = -1.0;
     int variant = _random.nextBool() ? 1 : 2;
+    if (type == ObstacleType.milkCarton) {
+      variant = _random.nextInt(3) + 1; // 1, 2, or 3
+    }
 
     if (isBonusRound) {
       if (type == ObstacleType.egg) {

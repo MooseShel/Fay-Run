@@ -18,8 +18,6 @@ class AssetManager {
     try {
       // Split into batches to avoid blocking UI thread on web with many large decodes
       final ernieAssets = [
-        'assets/images/ernie_run.png',
-        'assets/images/ernie_run_2.png',
         'assets/images/${Assets.ernieRun}',
         'assets/images/${Assets.ernieRun2}',
         'assets/images/${Assets.ernieRun3}',
@@ -59,7 +57,7 @@ class AssetManager {
 
       // Background characters can be last and lazier
       final otherAssets = [
-        ...['boy', 'girl', 'janitor', 'butterfly'].expand((name) => [
+        ...['boy', 'girl', 'janitor', 'butterfly', 'bench'].expand((name) => [
               'assets/images/${Assets.bgCharacter(name, 1)}',
               'assets/images/${Assets.bgCharacter(name, 2)}',
             ]),

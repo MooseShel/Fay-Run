@@ -150,10 +150,6 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         AudioService().playBGM(level);
       }
 
-      if (!(state.status == GameStatus.bonusRound &&
-          state.currentBonusType == BonusRoundType.eggCatch)) {
-        await state.loadChallenge();
-      }
       await Future.wait([minDelayFuture, essentialPreload, bgPreload]);
     } catch (e) {
       debugPrint('⚠️ Error during loading: $e');
@@ -189,7 +185,9 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       _lastLevel = gameState.currentLevel;
 
       if (gameState.status == GameStatus.paused ||
-          gameState.status == GameStatus.quiz) {
+          gameState.status == GameStatus.quiz ||
+          gameState.status == GameStatus.gameOver ||
+          gameState.status == GameStatus.levelComplete) {
         _lastFrameTime = null;
         return;
       }
@@ -370,7 +368,6 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   }
 
   void _handleCollision(Obstacle obs, GameState gameState) {
-    if (obs.type == ObstacleType.bench) return;
     obs.hasEngaged = true;
 
     if (obs.type == ObstacleType.goldenBook) {
@@ -481,7 +478,13 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
   void _jump() {
     final gameState = context.read<GameState>();
-    if (gameState.status != GameStatus.playing) return;
+    if (gameState.status != GameStatus.playing &&
+        gameState.status != GameStatus.bonusRound) return;
+
+    // Disable jumping in Egg Catch bonus round
+    if (gameState.status == GameStatus.bonusRound &&
+        gameState.currentBonusType == BonusRoundType.eggCatch) return;
+
     if (_jumpCount < _maxJumps) {
       AudioService().playJump();
       setState(() {
@@ -524,8 +527,6 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   }
 
   double _getObstacleVerticalOffset(Obstacle obs, double screenHeight) {
-    if (obs.type == ObstacleType.bench) return screenHeight * 0.03;
-    if (obs.type == ObstacleType.log) return screenHeight * 0.03;
     return 0.0;
   }
 
@@ -555,8 +556,6 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     return Scaffold(
       body: OrientationBuilder(
         builder: (context, orientation) {
-          final isPortrait = orientation == Orientation.portrait;
-
           return Stack(
             children: [
               GestureDetector(
@@ -576,7 +575,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                     else
                       ParallaxBackground(
                         runSpeed: gameState.runSpeed,
-                        isPaused: gameState.status != GameStatus.playing,
+                        isPaused: gameState.status != GameStatus.playing &&
+                            gameState.status != GameStatus.bonusRound,
                         screenHeight: screenSize.height,
                         level: gameState.currentLevel,
                       ),
@@ -669,22 +669,21 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                           : screenSize.height * 0.19;
                       return Positioned(
                         left: obj.x * screenSize.width,
-                        bottom: _groundHeight -
-                            FayColors.kHorizonOverlap +
-                            (obj.y * screenSize.height),
+                        bottom: _groundHeight - FayColors.kHorizonOverlap,
                         width: charSize,
                         height: charSize,
-                        child: Image.asset('assets/images/$assetName',
-                            fit: BoxFit.contain),
+                        child: Image.asset(
+                          'assets/images/$assetName',
+                          fit: BoxFit.contain,
+                          alignment: Alignment.bottomCenter,
+                        ),
                       );
                     }),
                     AmbientEffects(level: gameState.currentLevel),
                     Positioned(
                       left: screenSize.width * 0.30 + _playerXOffset,
-                      bottom: _groundHeight -
-                          FayColors.kHorizonOverlap -
-                          15 +
-                          _playerY, // Lowered
+                      bottom:
+                          _groundHeight - FayColors.kHorizonOverlap + _playerY,
                       child: PlayerCharacter(
                         isJumping: _isJumping,
                         isInvincible: gameState.isInvincible,
@@ -835,11 +834,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                                     _loadAssets();
                                   }
                                 },
-                                child: Text(
-                                    gameState.isBonusRoundEarned
-                                        ? "START BONUS ROUND"
-                                        : "CONTINUE GAME",
-                                    style: const TextStyle(
+                                child: const Text("START NEXT LEVEL",
+                                    style: TextStyle(
                                         fontSize: 20, color: Colors.black)),
                               ),
                               const SizedBox(height: 20),
@@ -867,7 +863,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
               ),
 
               // Orientation Warning Overlay
-              if (isPortrait && kIsWeb)
+              if (orientation == Orientation.portrait && kIsWeb)
                 Positioned.fill(
                   child: Material(
                     color: FayColors.navy,
@@ -948,9 +944,15 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       case ObstacleType.food:
         assetName = 'obstacles/obstacle_food.png';
         break;
+      case ObstacleType.log:
+      case ObstacleType.puddle:
+      case ObstacleType.rock:
+      case ObstacleType.cone:
+      case ObstacleType.books:
+      case ObstacleType.backpack:
+      case ObstacleType.janitorBucket:
       case ObstacleType.hydrant:
       case ObstacleType.trashCan:
-      case ObstacleType.bench:
       case ObstacleType.tire:
       case ObstacleType.flowerPot:
       case ObstacleType.gnome:
@@ -962,13 +964,17 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       case ObstacleType.wildFlowers:
         // Proper multi-variant loading
         String base = obs.type.name;
-        // Convert camelCase to snake_case for filename if needed?
-        // No, current filenames are obstacle_hydrant_1.png etc.
-        // obs.type.name is 'hydrant'.
-        // We need 'obstacle_hydrant_1.png'
         String snakeName = base.replaceAllMapped(
             RegExp(r'([A-Z])'), (match) => '_${match.group(1)!.toLowerCase()}');
-        int v = (obs.variant == 0) ? 1 : (obs.variant > 2 ? 1 : obs.variant);
+
+        int v = (obs.variant <= 0) ? 1 : obs.variant;
+        // Clamp based on known asset counts
+        if (obs.type == ObstacleType.milkCarton) {
+          if (v > 3) v = 1;
+        } else {
+          if (v > 2) v = 1;
+        }
+
         assetName = 'obstacles/obstacle_${snakeName}_$v.png';
         break;
       default:
@@ -976,6 +982,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     }
 
     return Image.asset('assets/images/$assetName',
+        alignment: Alignment.bottomCenter,
         errorBuilder: (c, e, s) => const SizedBox());
   }
 }

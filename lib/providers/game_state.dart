@@ -262,6 +262,7 @@ class GameState extends ChangeNotifier {
     _resetLevelPhysics();
     _currentBonusType = BonusRoundType.none;
     _playedBonusInCurrentLevel = false;
+    _status = GameStatus.playing; // Ensure game starts in playing state
     notifyListeners();
   }
 
@@ -293,15 +294,20 @@ class GameState extends ChangeNotifier {
   }
 
   void pauseGame() {
-    if (_status == GameStatus.playing) {
+    if (_status == GameStatus.playing || _status == GameStatus.bonusRound) {
       _status = GameStatus.paused;
+      AudioService().pauseBGM();
       notifyListeners();
     }
   }
 
   void resumeGame() {
     if (_status == GameStatus.paused || _status == GameStatus.quiz) {
+      bool wasPaused = _status == GameStatus.paused;
       _status = GameStatus.playing;
+      if (wasPaused) {
+        AudioService().resumeBGM();
+      }
       notifyListeners();
     }
   }
@@ -313,7 +319,9 @@ class GameState extends ChangeNotifier {
   }
 
   void takeDamage() {
-    if (_isInvincible) return;
+    if (_isInvincible ||
+        _status == GameStatus.gameOver ||
+        _status == GameStatus.levelComplete) return;
 
     _lives--;
     if (_lives <= 0) {

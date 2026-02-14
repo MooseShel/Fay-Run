@@ -9,7 +9,7 @@ enum SceneryType {
   janitor,
   butterfly,
   bird,
-  chicken
+  bench
 }
 
 class SceneryObject {
@@ -111,53 +111,58 @@ class SceneryManager {
     List<SceneryType> pool = [];
 
     if (level == 1) {
-      // Level 1: Remove dogStanding, Add Bird
-      pool = [SceneryType.dogSitting, SceneryType.squirrel, SceneryType.bird];
+      // Primary House: Kids and pets
+      pool = [
+        SceneryType.boy,
+        SceneryType.girl,
+        SceneryType.dogSitting,
+        SceneryType.bird,
+        SceneryType.bench
+      ];
     } else if (level == 2) {
-      // Level 2: Remove dogSitting, Add Chicken
-      pool = [
-        SceneryType.dogStanding,
-        SceneryType.squirrel,
-        SceneryType.chicken
-      ];
+      // Forest: Animals
+      pool = [SceneryType.squirrel, SceneryType.bird];
     } else if (level == 3) {
-      // Level 3: Remove dog & squirrel. Add bird & butterfly
+      // Fay House: Kids and butterflies
       pool = [
         SceneryType.boy,
         SceneryType.girl,
+        SceneryType.butterfly,
         SceneryType.bird,
-        SceneryType.butterfly
+        SceneryType.bench
       ];
-    } else if (level == 4 || level == 5) {
-      // Levels 4 & 5: Repalce dogs with Janitor
-      pool = [SceneryType.janitor, SceneryType.squirrel];
+    } else if (level == 4) {
+      // Cabin: More animals
+      pool = [SceneryType.squirrel, SceneryType.butterfly, SceneryType.bird];
+    } else if (level == 5) {
+      // Higher Grade House: Janitor and older vibe?
+      pool = [
+        SceneryType.janitor,
+        SceneryType.dogStanding,
+        SceneryType.boy,
+        SceneryType.girl
+      ];
     } else if (level == 6) {
-      // Playground: Add bird & butterfly
+      // Playground: Kids and animals
       pool = [
         SceneryType.boy,
         SceneryType.girl,
         SceneryType.squirrel,
-        SceneryType.bird,
         SceneryType.butterfly
       ];
     } else if (level == 7) {
-      // Garden: Remove dogSitting, Add bird
-      pool = [
-        SceneryType.butterfly,
-        SceneryType.squirrel,
-        SceneryType.chicken,
-        SceneryType.bird
-      ];
+      // Garden: Butterflies and birds
+      pool = [SceneryType.butterfly, SceneryType.bird, SceneryType.squirrel];
     } else if (level == 8) {
-      // Meadow: Already has bird, keeping it
+      // Meadow: Butterflies and dogs
       pool = [
         SceneryType.butterfly,
-        SceneryType.squirrel,
         SceneryType.dogSitting,
-        SceneryType.bird
+        SceneryType.bird,
+        SceneryType.squirrel
       ];
     } else if (level == 9) {
-      // Gym
+      // Gym: Kids and janitor (mopping?)
       pool = [SceneryType.boy, SceneryType.girl, SceneryType.janitor];
     } else {
       // Cafeteria etc (None for now as per user request)
@@ -198,11 +203,11 @@ class SceneryManager {
         frames = 2;
         animSpeed = 2.0;
         break;
-      case SceneryType.chicken:
-        y = 0.0; // Ground
-        speedMult = 0.2; // Stationary
-        frames = 2;
-        animSpeed = 2.0;
+      case SceneryType.bench:
+        y = 0.0;
+        speedMult = 0.2;
+        frames = 1;
+        animSpeed = 100.0; // Static
         break;
       case SceneryType.bird:
         y = 0.25 +
