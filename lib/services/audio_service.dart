@@ -75,8 +75,6 @@ class AudioService {
     }
   }
 
-  // ... (Toggle Mute, BGM methods same, just ensure _voicePlayer is handled)
-
   void toggleMute() {
     _isMuted = !_isMuted;
     SettingsService().setMute(_isMuted);
@@ -94,8 +92,6 @@ class AudioService {
       }
     }
   }
-
-  // ... (BGM methods)
 
   String? _currentBgmFile;
   bool _isChangingBgm = false;
