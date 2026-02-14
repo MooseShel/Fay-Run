@@ -69,6 +69,14 @@ class AssetManager {
               'assets/images/${Assets.bgCharacter(name, 3)}',
               'assets/images/${Assets.bgCharacter(name, 4)}',
             ]),
+        'assets/images/${Assets.chickenCoopBg}',
+        ...['', 'c', 'b', 'w'].expand((v) => [
+              'assets/images/${Assets.chickenSprite(v, 1)}',
+              'assets/images/${Assets.chickenSprite(v, 2)}',
+            ]),
+        'assets/images/${Assets.bgCharacter("bird", 1)}',
+        'assets/images/${Assets.bgCharacter("bird", 2)}',
+        ...[1, 2].map((f) => 'assets/images/${Assets.eggSprite(f == 2)}'),
       ];
       if (!context.mounted) return;
       await _precacheBatch(otherAssets, context);

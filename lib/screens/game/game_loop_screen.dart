@@ -246,8 +246,10 @@ class _GameLoopScreenState extends State<GameLoopScreen>
           _bgAnimTimer = 0;
           _bgAnimFrameDog = (_bgAnimFrameDog % 4) + 1;
           _bgAnimFrameChicken = (_bgAnimFrameChicken % 2) + 1;
-          _bgAnimFrameBird = (_bgAnimFrameBird % 2) + 1;
         }
+
+        // Fast Bird Animation (Always flap quickly)
+        _bgAnimFrameBird = (now.millisecondsSinceEpoch ~/ 200) % 2 + 1;
 
         // Bird movement
         _bird1X += 0.4 * dt; // L-to-R

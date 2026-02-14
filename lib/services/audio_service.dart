@@ -62,6 +62,7 @@ class AudioService {
       'staff_english.aac',
       'staff_firstg.aac',
       'staff_prek2.aac',
+      'chicken_coop.aac',
     ];
 
     // Use the SFX pool to "warm up" the players with the most common sounds
