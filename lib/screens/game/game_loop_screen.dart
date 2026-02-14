@@ -175,10 +175,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
     try {
       final gameState = context.read<GameState>();
-      final screenSize = (gameState.status == GameStatus.bonusRound &&
-              gameState.currentBonusType == BonusRoundType.eggCatch)
-          ? const Size(1600, 900)
-          : MediaQuery.sizeOf(context);
+      final screenSize = MediaQuery.sizeOf(context);
 
       if (screenSize.width <= 0 || screenSize.height <= 0) return;
 
@@ -568,7 +565,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                       Positioned.fill(
                         child: Image.asset(
                           'assets/images/${Assets.chickenCoopBg}',
-                          fit: BoxFit.cover,
+                          fit: BoxFit.fill,
                         ),
                       )
                     else
@@ -929,7 +926,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         String snakeName = base.replaceAllMapped(
             RegExp(r'([A-Z])'), (match) => '_${match.group(1)!.toLowerCase()}');
         int v = (obs.variant == 0) ? 1 : (obs.variant > 2 ? 1 : obs.variant);
-        assetName = 'obstacles/obstacle_$snakeName' + '_' + '$v.png';
+        assetName = 'obstacles/obstacle_${snakeName}_$v.png';
         break;
       default:
         assetName = 'obstacles/obstacle_${obs.type.name}.png';
