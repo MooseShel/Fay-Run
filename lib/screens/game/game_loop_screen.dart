@@ -400,7 +400,6 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       AudioService().playPowerup();
       gameState.addScore(10);
       _spawnFloatingScore(10);
-      gameState.recordQuizResult('fallback_egg_catch', true);
     } else {
       if (!gameState.isInvincible) {
         AudioService().playBonk();
@@ -564,16 +563,38 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                 onTapCancel: _handleTapCancel,
                 child: Stack(
                   children: [
-                    ParallaxBackground(
-                      runSpeed: (gameState.status == GameStatus.bonusRound &&
-                              gameState.currentBonusType ==
-                                  BonusRoundType.eggCatch)
-                          ? 0.0
-                          : gameState.runSpeed,
-                      isPaused: gameState.status != GameStatus.playing,
-                      screenHeight: screenSize.height,
-                      level: gameState.currentLevel,
-                    ),
+                    if (gameState.status == GameStatus.bonusRound &&
+                        gameState.currentBonusType == BonusRoundType.eggCatch)
+                      Positioned.fill(
+                        child: Image.asset(
+                          'assets/images/${Assets.chickenCoopBg}',
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    else
+                      ParallaxBackground(
+                        runSpeed: gameState.runSpeed,
+                        isPaused: gameState.status != GameStatus.playing,
+                        screenHeight: screenSize.height,
+                        level: gameState.currentLevel,
+                      ),
+
+                    // Eggs rendered behind characters
+                    ..._obstacleManager.obstacles.map((obs) {
+                      double verticalOffset =
+                          _getObstacleVerticalOffset(obs, screenSize.height);
+                      return Positioned(
+                        left: obs.x * screenSize.width,
+                        bottom: _groundHeight -
+                            FayColors.kHorizonOverlap +
+                            (obs.y * screenSize.height) -
+                            verticalOffset,
+                        width: obs.width * screenSize.height,
+                        height: obs.height * screenSize.height,
+                        child: _buildObstacleWidget(obs),
+                      );
+                    }),
+
                     if (gameState.status == GameStatus.bonusRound &&
                         gameState.currentBonusType ==
                             BonusRoundType.eggCatch) ...[
@@ -656,20 +677,6 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                       );
                     }),
                     AmbientEffects(level: gameState.currentLevel),
-                    ..._obstacleManager.obstacles.map((obs) {
-                      double verticalOffset =
-                          _getObstacleVerticalOffset(obs, screenSize.height);
-                      return Positioned(
-                        left: obs.x * screenSize.width,
-                        bottom: _groundHeight -
-                            FayColors.kHorizonOverlap +
-                            (obs.y * screenSize.height) -
-                            verticalOffset,
-                        width: obs.width * screenSize.height,
-                        height: obs.height * screenSize.height,
-                        child: _buildObstacleWidget(obs),
-                      );
-                    }),
                     Positioned(
                       left: screenSize.width * 0.30 + _playerXOffset,
                       bottom: _groundHeight -
@@ -693,7 +700,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                                   color: Colors.amber,
                                   fontWeight: FontWeight.bold)),
                         )),
-                    if (gameState.activeStaffEvent != null)
+                    if (gameState.activeStaffEvent != null &&
+                        gameState.status != GameStatus.bonusRound)
                       AnimatedStaffChaos(event: gameState.activeStaffEvent!),
 
                     // RESTORED HUD
@@ -900,8 +908,30 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       case ObstacleType.food:
         assetName = 'obstacles/obstacle_food.png';
         break;
+      case ObstacleType.hydrant:
+      case ObstacleType.trashCan:
+      case ObstacleType.bench:
+      case ObstacleType.tire:
+      case ObstacleType.flowerPot:
+      case ObstacleType.gnome:
+      case ObstacleType.basketBall:
+      case ObstacleType.soccerBall:
+      case ObstacleType.gymMat:
+      case ObstacleType.lunchTray:
+      case ObstacleType.milkCarton:
+      case ObstacleType.wildFlowers:
+        // Proper multi-variant loading
+        String base = obs.type.name;
+        // Convert camelCase to snake_case for filename if needed?
+        // No, current filenames are obstacle_hydrant_1.png etc.
+        // obs.type.name is 'hydrant'.
+        // We need 'obstacle_hydrant_1.png'
+        String snakeName = base.replaceAllMapped(
+            RegExp(r'([A-Z])'), (match) => '_${match.group(1)!.toLowerCase()}');
+        int v = (obs.variant == 0) ? 1 : (obs.variant > 2 ? 1 : obs.variant);
+        assetName = 'obstacles/obstacle_$snakeName' + '_' + '$v.png';
+        break;
       default:
-        // Attempt generic name, but most have variants now
         assetName = 'obstacles/obstacle_${obs.type.name}.png';
     }
 
