@@ -573,12 +573,14 @@ class _GameLoopScreenState extends State<GameLoopScreen>
               // Steel Frame Chickens (Aligned to coop structure)
               // Steel Frame Chickens (Aligned to centered steel cover)
               Positioned(
-                top: screenSize.height * 0.12,
+                top: screenSize.height *
+                    0.23, // Lowered to sit on the corrugated roof
                 left: 0,
                 right: 0,
                 child: Center(
                   child: SizedBox(
-                    width: screenSize.width * 0.6, // Tighter container
+                    width: screenSize.width *
+                        0.8, // Wider spread for different screens
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: List.generate(5, (index) {
@@ -589,9 +591,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                         return Flexible(
                           child: Image.asset(
                             'assets/images/${Assets.chickenSprite(variant, frame)}',
-                            height: 75, // Slightly smaller to fit tighter
-                            fit: BoxFit
-                                .contain, // Ensure it scales down if needed
+                            height: 75, // Scaled size
+                            fit: BoxFit.contain,
                           ),
                         );
                       }),
@@ -738,7 +739,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                                       ? Icons.favorite
                                       : Icons.favorite_border,
                                   color: Colors.red,
-                                  size: 24,
+                                  size: 18, // Compact hearts
                                 )),
                       ),
                       // Pause Button

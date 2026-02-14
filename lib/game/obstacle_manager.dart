@@ -438,8 +438,8 @@ class ObstacleManager {
     if (isBonusRound) {
       if (type == ObstacleType.egg) {
         y = 0.82; // Lowered to matching chickens' bodies
-        // Tighter fixed chicken positions to match steel cover
-        const chickenXs = [0.28, 0.39, 0.5, 0.61, 0.72];
+        // Synchronized egg spawn points for 80% screen width spread
+        const chickenXs = [0.23, 0.36, 0.5, 0.64, 0.77];
         int chickenIdx = _random.nextInt(5);
         startX = chickenXs[chickenIdx];
         variant = chickenIdx; // Store which chicken spawned it (0-4)
