@@ -16,6 +16,7 @@ import '../../services/audio_service.dart';
 import '../../services/asset_manager.dart';
 import '../../services/crash_report_service.dart';
 import '../../core/assets.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class GameLoopScreen extends StatefulWidget {
   const GameLoopScreen({super.key});
@@ -551,328 +552,321 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     }
 
     return Scaffold(
-      body: GestureDetector(
-        onTapDown: _handleTapDown,
-        onTapUp: _handleTapUp,
-        onTapCancel: _handleTapCancel,
-        child: Stack(
-          children: [
-            ParallaxBackground(
-              runSpeed: (gameState.status == GameStatus.bonusRound &&
-                      gameState.currentBonusType == BonusRoundType.eggCatch)
-                  ? 0.0
-                  : gameState.runSpeed,
-              isPaused: gameState.status != GameStatus.playing,
-              screenHeight: screenSize.height,
-              level: gameState.currentLevel,
-            ),
-            if (gameState.status == GameStatus.bonusRound &&
-                gameState.currentBonusType == BonusRoundType.eggCatch) ...[
-              // THE STAGE: Locked 16:9 box that scales/crops perfectly with the background
-              Positioned.fill(
-                child: FittedBox(
-                  fit: BoxFit.cover,
-                  clipBehavior: Clip.hardEdge,
-                  child: SizedBox(
-                    width: 1600,
-                    height: 900,
-                    child: Stack(
-                      children: [
-                        // Background (Full Stage)
-                        Image.asset(
-                          'assets/images/${Assets.chickenCoopBg}',
-                          width: 1600,
-                          height: 900,
-                          fit: BoxFit.cover,
-                        ),
-                        // Chickens (Pinned to roof coordinates)
-                        Positioned(
-                          top: 210, // Locked to roof height
-                          left: 0,
-                          right: 0,
-                          child: Center(
-                            child: SizedBox(
-                              width: 1200, // Fixed spread in 1600px stage
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: List.generate(5, (index) {
-                                  final variants = ["", "c", "b", "w", ""];
-                                  String variant =
-                                      variants[index % variants.length];
-                                  int frame =
-                                      _chickenSurpriseTimers[index] > 0 ? 2 : 1;
-                                  return Flexible(
-                                    child: Image.asset(
-                                      'assets/images/${Assets.chickenSprite(variant, frame)}',
-                                      height: 120, // Scaled for stage
-                                      fit: BoxFit.contain,
-                                    ),
-                                  );
-                                }),
-                              ),
+      body: OrientationBuilder(
+        builder: (context, orientation) {
+          final isPortrait = orientation == Orientation.portrait;
+
+          return Stack(
+            children: [
+              GestureDetector(
+                onTapDown: _handleTapDown,
+                onTapUp: _handleTapUp,
+                onTapCancel: _handleTapCancel,
+                child: Stack(
+                  children: [
+                    ParallaxBackground(
+                      runSpeed: (gameState.status == GameStatus.bonusRound &&
+                              gameState.currentBonusType ==
+                                  BonusRoundType.eggCatch)
+                          ? 0.0
+                          : gameState.runSpeed,
+                      isPaused: gameState.status != GameStatus.playing,
+                      screenHeight: screenSize.height,
+                      level: gameState.currentLevel,
+                    ),
+                    if (gameState.status == GameStatus.bonusRound &&
+                        gameState.currentBonusType ==
+                            BonusRoundType.eggCatch) ...[
+                      // Stationary Background Chickens (Animated, Spread on ground)
+                      Positioned(
+                        bottom: _groundHeight - FayColors.kHorizonOverlap - 10,
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: SizedBox(
+                            width: screenSize.width * 0.9,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: List.generate(5, (index) {
+                                final variants = ["", "c", "b", "w", ""];
+                                String variant =
+                                    variants[index % variants.length];
+                                int frame =
+                                    _chickenSurpriseTimers[index] > 0 ? 2 : 1;
+                                return Image.asset(
+                                  'assets/images/${Assets.chickenSprite(variant, frame)}',
+                                  height: 80,
+                                  fit: BoxFit.contain,
+                                );
+                              }),
                             ),
                           ),
                         ),
-                        // Stationary Dog (Bottom Left)
-                        Positioned(
-                          left: 100,
-                          bottom: 120,
-                          child: Image.asset(
-                            'assets/images/${Assets.bgCharacter("dog", _bgAnimFrameDog)}',
-                            height: 130,
-                          ),
+                      ),
+                      // Stationary Background Dog (Animated, Left)
+                      Positioned(
+                        left: screenSize.width * 0.05,
+                        bottom: _groundHeight - FayColors.kHorizonOverlap - 15,
+                        child: Image.asset(
+                          'assets/images/${Assets.bgCharacter("dog", _bgAnimFrameDog)}',
+                          height: 80,
                         ),
-                        // Stationary Chicken (Bottom Right)
-                        Positioned(
-                          right: 150,
-                          bottom: 120,
-                          child: Image.asset(
-                            'assets/images/${Assets.chickenSprite("w", _bgAnimFrameChicken)}',
-                            height: 130,
-                          ),
+                      ),
+                      // Flying Bird 1 (L-to-R)
+                      Positioned(
+                        left: _bird1X * screenSize.width,
+                        top: screenSize.height * 0.25,
+                        child: Image.asset(
+                          'assets/images/${Assets.bgCharacter("bird", _bgAnimFrameBird)}',
+                          height: 40,
                         ),
-                        // Birds
-                        Positioned(
-                          left: _bird1X * 1600,
-                          top: 250,
+                      ),
+                      // Flying Bird 2 (R-to-L)
+                      Positioned(
+                        left: _bird2X * screenSize.width,
+                        top: screenSize.height * 0.40,
+                        child: Transform.flip(
+                          flipX: true,
                           child: Image.asset(
                             'assets/images/${Assets.bgCharacter("bird", _bgAnimFrameBird)}',
-                            height: 60,
+                            height: 40,
                           ),
                         ),
-                        Positioned(
-                          left: _bird2X * 1600,
-                          top: 380,
-                          child: Transform.flip(
-                            flipX: true,
-                            child: Image.asset(
-                              'assets/images/${Assets.bgCharacter("bird", _bgAnimFrameBird)}',
-                              height: 60,
+                      ),
+                    ],
+                    ..._sceneryManager.objects.map((obj) {
+                      String baseName = obj.type.name;
+                      int frame = obj.currentFrame;
+                      if (obj.type == SceneryType.dogStanding) frame += 2;
+                      String assetName = Assets.bgCharacter(baseName, frame);
+                      double charSize = (obj.type == SceneryType.boy ||
+                              obj.type == SceneryType.girl ||
+                              obj.type == SceneryType.janitor)
+                          ? screenSize.height * 0.34
+                          : screenSize.height * 0.19;
+                      return Positioned(
+                        left: obj.x * screenSize.width,
+                        bottom: _groundHeight -
+                            FayColors.kHorizonOverlap +
+                            (obj.y * screenSize.height),
+                        width: charSize,
+                        height: charSize,
+                        child: Image.asset('assets/images/$assetName',
+                            fit: BoxFit.contain),
+                      );
+                    }),
+                    AmbientEffects(level: gameState.currentLevel),
+                    ..._obstacleManager.obstacles.map((obs) {
+                      double verticalOffset =
+                          _getObstacleVerticalOffset(obs, screenSize.height);
+                      return Positioned(
+                        left: obs.x * screenSize.width,
+                        bottom: _groundHeight -
+                            FayColors.kHorizonOverlap +
+                            (obs.y * screenSize.height) -
+                            verticalOffset,
+                        width: obs.width * screenSize.height,
+                        height: obs.height * screenSize.height,
+                        child: _buildObstacleWidget(obs),
+                      );
+                    }),
+                    Positioned(
+                      left: screenSize.width * 0.30 + _playerXOffset,
+                      bottom: _groundHeight -
+                          FayColors.kHorizonOverlap -
+                          15 +
+                          _playerY, // Lowered
+                      child: PlayerCharacter(
+                        isJumping: _isJumping,
+                        isInvincible: gameState.isInvincible,
+                        isCrashed: _isCrashed,
+                        runFrame: _runFrame,
+                        size: screenSize.height * 0.21,
+                      ),
+                    ),
+                    ..._floatingScores.map((fs) => Positioned(
+                          left: fs.x,
+                          bottom: fs.y + (fs.animationTime * 100),
+                          child: Text('+${fs.amount}',
+                              style: const TextStyle(
+                                  fontSize: 40,
+                                  color: Colors.amber,
+                                  fontWeight: FontWeight.bold)),
+                        )),
+                    if (gameState.activeStaffEvent != null)
+                      AnimatedStaffChaos(event: gameState.activeStaffEvent!),
+
+                    // RESTORED HUD
+                    Positioned(
+                      top: MediaQuery.of(context).padding.top + 10,
+                      left: 20,
+                      right: 20,
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              // Score
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  'Score: ${gameState.score}',
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18),
+                                ),
+                              ),
+                              // Lives
+                              Row(
+                                children: List.generate(
+                                    5,
+                                    (i) => Icon(
+                                          i < gameState.lives
+                                              ? Icons.favorite
+                                              : Icons.favorite_border,
+                                          color: Colors.red,
+                                          size: 18, // Compact hearts
+                                        )),
+                              ),
+                              // Pause Button
+                              IconButton(
+                                icon: const Icon(Icons.pause_circle,
+                                    color: Colors.white, size: 36),
+                                onPressed: () => gameState.pauseGame(),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          // Progress Bar
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: LinearProgressIndicator(
+                              value: gameState.levelProgress,
+                              minHeight: 12,
+                              backgroundColor: Colors.white24,
+                              color: Colors.amber,
                             ),
                           ),
-                        ),
-                        // Obstacles (Eggs) - Rendered within Stage
-                        ..._obstacleManager.obstacles.map((obs) {
-                          double verticalOffset =
-                              _getObstacleVerticalOffset(obs, 900);
-                          return Positioned(
-                            left: obs.x * 1600,
-                            bottom: (900 * 0.15) -
-                                FayColors.kHorizonOverlap +
-                                (obs.y * 900) -
-                                verticalOffset,
-                            width: obs.width * 900,
-                            height: obs.height * 900,
-                            child: _buildObstacleWidget(obs),
-                          );
-                        }),
-                        // Ernie - Rendered within Stage
-                        Positioned(
-                          left: 1600 * 0.30 + _playerXOffset,
-                          bottom: (900 * 0.15) -
-                              FayColors.kHorizonOverlap -
-                              15 +
-                              _playerY,
-                          child: PlayerCharacter(
-                            isJumping: _isJumping,
-                            isInvincible: gameState.isInvincible,
-                            isCrashed: _isCrashed,
-                            runFrame: _runFrame,
-                            size: 900 * 0.21,
+                        ],
+                      ),
+                    ),
+                    if (gameState.status == GameStatus.paused)
+                      Container(
+                          color: Colors.black54,
+                          child: Center(
+                              child: ElevatedButton(
+                                  onPressed: () =>
+                                      context.read<GameState>().resumeGame(),
+                                  child: const Text("RESUME")))),
+                    if (gameState.status == GameStatus.levelComplete)
+                      Container(
+                        color: Colors.black87,
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text("LEVEL COMPLETE!",
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 40),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.amber,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 40, vertical: 15),
+                                ),
+                                onPressed: () {
+                                  _obstacleManager.clear();
+                                  _sceneryManager.clear();
+                                  setState(() => _isLoading = true);
+                                  gameState.startNextLevel();
+                                  _loadAssets();
+                                },
+                                child: const Text("CONTINUE GAME",
+                                    style: TextStyle(
+                                        fontSize: 20, color: Colors.black)),
+                              ),
+                              const SizedBox(height: 20),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                child: const Text("EXIT LEVEL",
+                                    style: TextStyle(
+                                        color: Colors.white70, fontSize: 18)),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-            ..._sceneryManager.objects.map((obj) {
-              String baseName = obj.type.name;
-              int frame = obj.currentFrame;
-              if (obj.type == SceneryType.dogStanding) frame += 2;
-              String assetName = Assets.bgCharacter(baseName, frame);
-              double charSize = (obj.type == SceneryType.boy ||
-                      obj.type == SceneryType.girl ||
-                      obj.type == SceneryType.janitor)
-                  ? screenSize.height * 0.34
-                  : screenSize.height * 0.19;
-              return Positioned(
-                left: obj.x * screenSize.width,
-                bottom: _groundHeight -
-                    FayColors.kHorizonOverlap +
-                    (obj.y * screenSize.height),
-                width: charSize,
-                height: charSize,
-                child: Image.asset('assets/images/$assetName',
-                    fit: BoxFit.contain),
-              );
-            }),
-            AmbientEffects(level: gameState.currentLevel),
-            if (!(gameState.status == GameStatus.bonusRound &&
-                gameState.currentBonusType == BonusRoundType.eggCatch)) ...[
-              ..._obstacleManager.obstacles.map((obs) {
-                double verticalOffset =
-                    _getObstacleVerticalOffset(obs, screenSize.height);
-                return Positioned(
-                  left: obs.x * screenSize.width,
-                  bottom: _groundHeight -
-                      FayColors.kHorizonOverlap +
-                      (obs.y * screenSize.height) -
-                      verticalOffset,
-                  width: obs.width * screenSize.height,
-                  height: obs.height * screenSize.height,
-                  child: _buildObstacleWidget(obs),
-                );
-              }),
-              Positioned(
-                left: screenSize.width * 0.30 + _playerXOffset,
-                bottom: _groundHeight -
-                    FayColors.kHorizonOverlap -
-                    15 +
-                    _playerY, // Lowered
-                child: PlayerCharacter(
-                  isJumping: _isJumping,
-                  isInvincible: gameState.isInvincible,
-                  isCrashed: _isCrashed,
-                  runFrame: _runFrame,
-                  size: screenSize.height * 0.21,
-                ),
-              ),
-            ],
-            ..._floatingScores.map((fs) => Positioned(
-                  left: fs.x,
-                  bottom: fs.y + (fs.animationTime * 100),
-                  child: Text('+${fs.amount}',
-                      style: const TextStyle(
-                          fontSize: 40,
-                          color: Colors.amber,
-                          fontWeight: FontWeight.bold)),
-                )),
-            if (gameState.activeStaffEvent != null)
-              AnimatedStaffChaos(event: gameState.activeStaffEvent!),
-
-            // RESTORED HUD
-            Positioned(
-              top: MediaQuery.of(context).padding.top + 10,
-              left: 20,
-              right: 20,
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Score
+                      ),
+                    if (gameState.status == GameStatus.gameOver)
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.black54,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          'Score: ${gameState.score}',
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18),
-                        ),
-                      ),
-                      // Lives
-                      Row(
-                        children: List.generate(
-                            5,
-                            (i) => Icon(
-                                  i < gameState.lives
-                                      ? Icons.favorite
-                                      : Icons.favorite_border,
-                                  color: Colors.red,
-                                  size: 18, // Compact hearts
-                                )),
-                      ),
-                      // Pause Button
-                      IconButton(
-                        icon: const Icon(Icons.pause_circle,
-                            color: Colors.white, size: 36),
-                        onPressed: () => gameState.pauseGame(),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  // Progress Bar
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: LinearProgressIndicator(
-                      value: gameState.levelProgress,
-                      minHeight: 12,
-                      backgroundColor: Colors.white24,
-                      color: Colors.amber,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (gameState.status == GameStatus.paused)
-              Container(
-                  color: Colors.black54,
-                  child: Center(
-                      child: ElevatedButton(
-                          onPressed: () =>
-                              context.read<GameState>().resumeGame(),
-                          child: const Text("RESUME")))),
-            if (gameState.status == GameStatus.levelComplete)
-              Container(
-                color: Colors.black87,
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text("LEVEL COMPLETE!",
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 40),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.amber,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 40, vertical: 15),
-                        ),
-                        onPressed: () {
-                          _obstacleManager.clear();
-                          _sceneryManager.clear();
-                          setState(() => _isLoading = true);
-                          gameState.startNextLevel();
-                          _loadAssets();
-                        },
-                        child: const Text("CONTINUE GAME",
-                            style:
-                                TextStyle(fontSize: 20, color: Colors.black)),
-                      ),
-                      const SizedBox(height: 20),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        child: const Text("EXIT LEVEL",
-                            style:
-                                TextStyle(color: Colors.white70, fontSize: 18)),
-                      ),
-                    ],
-                  ),
+                          color: Colors.black87,
+                          child: Center(
+                              child: ElevatedButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text("GAME OVER - RETURN")))),
+                  ],
                 ),
               ),
-            if (gameState.status == GameStatus.gameOver)
-              Container(
-                  color: Colors.black87,
-                  child: Center(
-                      child: ElevatedButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text("GAME OVER - RETURN")))),
-          ],
-        ),
+
+              // Orientation Warning Overlay
+              if (isPortrait && kIsWeb)
+                Positioned.fill(
+                  child: Material(
+                    color: FayColors.navy,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            'assets/images/ernie_run.png',
+                            width: 150,
+                            height: 150,
+                          ),
+                          const SizedBox(height: 32),
+                          const Text(
+                            'PLEASE ROTATE YOUR DEVICE',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'BubblegumSans',
+                              fontSize: 28,
+                              color: FayColors.gold,
+                              letterSpacing: 2.0,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'ERNIE RUNS BEST IN LANDSCAPE!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'BubblegumSans',
+                              fontSize: 18,
+                              color: Colors.white70,
+                            ),
+                          ),
+                          const SizedBox(height: 48),
+                          const Icon(
+                            Icons.screen_rotation,
+                            color: Colors.white54,
+                            size: 64,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }

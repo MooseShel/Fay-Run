@@ -1,0 +1,34 @@
+﻿    if (isBonusRound) {
+
+      if (type == ObstacleType.egg) {
+
+        // Synchronized egg spawn points for 1200px spread in 1600px stage
+
+        // Matches Row(spaceEvenly) centers: 25%, 37.5%, 50%, 62.5%, 75%
+
+        const chickenXs = [0.25, 0.375, 0.5, 0.625, 0.75];
+
+        y = 0.78; // Perfect height for chicken butts in 1600x900 stage
+
+        int chickenIdx = _random.nextInt(5);
+
+        startX = chickenXs[chickenIdx];
+
+        variant = chickenIdx; // Store which chicken spawned it (0-4)
+
+        // Even slower initial fall speed (will accelerate in update)
+
+        dy = 0.12 + (bonusTimeElapsed / 20.0) * 0.15;
+
+        direction = 0.0; // Stationary horizontally
+
+      } else {
+
+        final heights = [0.0, 0.25, 0.5];
+
+        y = heights[_random.nextInt(heights.length)];
+
+      }
+
+    } else if (type == ObstacleType.goldenBook) {
+

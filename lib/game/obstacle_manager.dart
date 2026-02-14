@@ -154,7 +154,7 @@ class ObstacleManager {
     if (_spawnTimer > spawnInterval) {
       // Check if space is clear offscreen (startX is roughly 1.1 to 1.5 usually)
       if (isBonusRound && level == 2) {
-        // Chicken Coop: Always spawn if timer allows, horizontal space check
+        // Chicken Coop: Always spawn if timer allows
         _spawnObstacle(level, isBonusRound,
             isReward: false, bonusTimeElapsed: bonusTimeElapsed);
         _spawnTimer = 0;
@@ -192,8 +192,8 @@ class ObstacleManager {
       if (obs.type == ObstacleType.egg) {
         if (!obs.isCracked) {
           // Eggs fall downwards with acceleration
-          // Even slower acceleration
-          obs.dy += 0.4 * dt; // Slowed down from 0.6
+          // Standard fall physics
+          obs.dy += 0.4 * dt;
           obs.y -= obs.dy * dt;
 
           // Check for ground hit
@@ -437,16 +437,13 @@ class ObstacleManager {
 
     if (isBonusRound) {
       if (type == ObstacleType.egg) {
-        // Synchronized egg spawn points for 1200px spread in 1600px stage
-        // Matches Row(spaceEvenly) centers: 25%, 37.5%, 50%, 62.5%, 75%
-        const chickenXs = [0.25, 0.375, 0.5, 0.625, 0.75];
-        y = 0.78; // Perfect height for chicken butts in 1600x900 stage
-        int chickenIdx = _random.nextInt(5);
-        startX = chickenXs[chickenIdx];
-        variant = chickenIdx; // Store which chicken spawned it (0-4)
-        // Even slower initial fall speed (will accelerate in update)
-        dy = 0.12 + (bonusTimeElapsed / 20.0) * 0.15;
-        direction = 0.0; // Stationary horizontally
+        // Eggs now fall from the top of the screen (sky)
+        y = 1.0;
+        // Random horizontal position across the full play area (0.1 to 0.9)
+        startX = 0.1 + _random.nextDouble() * 0.8;
+        variant = _random.nextInt(5); // Random chicken flavor
+        dy = 0.15 + (bonusTimeElapsed / 20.0) * 0.15;
+        direction = 0.0; // Straight down
       } else {
         final heights = [0.0, 0.25, 0.5];
         y = heights[_random.nextInt(heights.length)];

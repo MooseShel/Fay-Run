@@ -98,103 +98,107 @@ class _StudentSetupScreenState extends State<StudentSetupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('New Student Setup')),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            Icon(Icons.face, size: 100, color: FayColors.navy),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'What is your First Name?',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 20),
-            DropdownButtonFormField<String>(
-              initialValue: _selectedGrade,
-              decoration: const InputDecoration(
-                labelText: 'Grade Level',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.school),
-              ),
-              items: _grades.map((grade) {
-                return DropdownMenuItem(value: grade, child: Text(grade));
-              }).toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() => _selectedGrade = value);
-                }
-              },
-            ),
-            const SizedBox(height: 20),
-            if (_nickname.isNotEmpty)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: FayColors.gold.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: FayColors.gold, width: 2),
-                ),
-                child: Text(
-                  _nickname,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: FayColors.navy,
-                        fontWeight: FontWeight.bold,
-                      ),
-                  textAlign: TextAlign.center,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.face, size: 100, color: FayColors.navy),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  labelText: 'What is your First Name?',
+                  border: OutlineInputBorder(),
                 ),
               ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: _generateNickname,
-              icon: const Icon(Icons.auto_awesome),
-              label: const Text('Generate Bayou Nickname'),
-            ),
-            const Spacer(),
-            SizedBox(
-              width: double.infinity,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: (_nickname.isNotEmpty && !_isSaving)
-                          ? () => _saveStudent(addAnother: true)
-                          : null,
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: const BorderSide(color: FayColors.navy, width: 2),
-                      ),
-                      child: const Text('Save & Add Another'),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: (_nickname.isNotEmpty && !_isSaving)
-                          ? () => _saveStudent(addAnother: false)
-                          : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: FayColors.navy,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: _isSaving
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : const Text('Finish & Play'),
-                    ),
-                  ),
-                ],
+              const SizedBox(height: 20),
+              DropdownButtonFormField<String>(
+                value: _selectedGrade,
+                decoration: const InputDecoration(
+                  labelText: 'Grade Level',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.school),
+                ),
+                items: _grades.map((grade) {
+                  return DropdownMenuItem(value: grade, child: Text(grade));
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _selectedGrade = value);
+                  }
+                },
               ),
-            ),
-          ],
+              const SizedBox(height: 20),
+              if (_nickname.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: FayColors.gold.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: FayColors.gold, width: 2),
+                  ),
+                  child: Text(
+                    _nickname,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          color: FayColors.navy,
+                          fontWeight: FontWeight.bold,
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                onPressed: _generateNickname,
+                icon: const Icon(Icons.auto_awesome),
+                label: const Text('Generate Bayou Nickname'),
+              ),
+              const SizedBox(height: 40),
+              SizedBox(
+                width: double.infinity,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: (_nickname.isNotEmpty && !_isSaving)
+                            ? () => _saveStudent(addAnother: true)
+                            : null,
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          side:
+                              const BorderSide(color: FayColors.navy, width: 2),
+                        ),
+                        child: const Text('Save & Add Another'),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: (_nickname.isNotEmpty && !_isSaving)
+                            ? () => _saveStudent(addAnother: false)
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: FayColors.navy,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child: _isSaving
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text('Finish & Play'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
