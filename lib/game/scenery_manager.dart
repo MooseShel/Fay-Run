@@ -210,14 +210,14 @@ class SceneryManager {
         // Negative speed to move Right against the scroll
         speedMult = -0.8;
         frames = 2;
-        animSpeed = 2.0;
+        animSpeed = 0.2; // Flapping fast
         startX = -0.2; // Spawn left
         break;
       case SceneryType.butterfly:
         y = 0.4 + _random.nextDouble() * 0.3; // Sky
         speedMult = 0.5; // Very far background relative movement
         frames = 2;
-        animSpeed = 2.0;
+        animSpeed = 0.35; // Fluttering
         break;
     }
 
