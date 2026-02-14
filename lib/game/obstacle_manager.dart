@@ -437,9 +437,10 @@ class ObstacleManager {
 
     if (isBonusRound) {
       if (type == ObstacleType.egg) {
-        y = 0.82; // Lowered to matching chickens' bodies
-        // Synchronized egg spawn points for 80% screen width spread
-        const chickenXs = [0.23, 0.36, 0.5, 0.64, 0.77];
+        // Synchronized egg spawn points for 1200px spread in 1600px stage
+        // Matches Row(spaceEvenly) centers: 25%, 37.5%, 50%, 62.5%, 75%
+        const chickenXs = [0.25, 0.375, 0.5, 0.625, 0.75];
+        y = 0.78; // Perfect height for chicken butts in 1600x900 stage
         int chickenIdx = _random.nextInt(5);
         startX = chickenXs[chickenIdx];
         variant = chickenIdx; // Store which chicken spawned it (0-4)

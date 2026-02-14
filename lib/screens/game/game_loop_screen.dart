@@ -174,7 +174,11 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
     try {
       final gameState = context.read<GameState>();
-      final screenSize = MediaQuery.sizeOf(context);
+      final screenSize = (gameState.status == GameStatus.bonusRound &&
+              gameState.currentBonusType == BonusRoundType.eggCatch)
+          ? const Size(1600, 900)
+          : MediaQuery.sizeOf(context);
+
       if (screenSize.width <= 0 || screenSize.height <= 0) return;
 
       if (_lastLevel != null && _lastLevel != gameState.currentLevel) {
@@ -564,80 +568,122 @@ class _GameLoopScreenState extends State<GameLoopScreen>
             ),
             if (gameState.status == GameStatus.bonusRound &&
                 gameState.currentBonusType == BonusRoundType.eggCatch) ...[
+              // THE STAGE: Locked 16:9 box that scales/crops perfectly with the background
               Positioned.fill(
-                child: Image.asset(
-                  'assets/images/${Assets.chickenCoopBg}',
+                child: FittedBox(
                   fit: BoxFit.cover,
-                ),
-              ),
-              // Steel Frame Chickens (Aligned to coop structure)
-              // Steel Frame Chickens (Aligned to centered steel cover)
-              Positioned(
-                top: screenSize.height *
-                    0.23, // Lowered to sit on the corrugated roof
-                left: 0,
-                right: 0,
-                child: Center(
+                  clipBehavior: Clip.hardEdge,
                   child: SizedBox(
-                    width: screenSize.width *
-                        0.8, // Wider spread for different screens
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: List.generate(5, (index) {
-                        final variants = ["", "c", "b", "w", ""];
-                        String variant = variants[index % variants.length];
-                        int frame = _chickenSurpriseTimers[index] > 0 ? 2 : 1;
-
-                        return Flexible(
-                          child: Image.asset(
-                            'assets/images/${Assets.chickenSprite(variant, frame)}',
-                            height: 75, // Scaled size
-                            fit: BoxFit.contain,
+                    width: 1600,
+                    height: 900,
+                    child: Stack(
+                      children: [
+                        // Background (Full Stage)
+                        Image.asset(
+                          'assets/images/${Assets.chickenCoopBg}',
+                          width: 1600,
+                          height: 900,
+                          fit: BoxFit.cover,
+                        ),
+                        // Chickens (Pinned to roof coordinates)
+                        Positioned(
+                          top: 210, // Locked to roof height
+                          left: 0,
+                          right: 0,
+                          child: Center(
+                            child: SizedBox(
+                              width: 1200, // Fixed spread in 1600px stage
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: List.generate(5, (index) {
+                                  final variants = ["", "c", "b", "w", ""];
+                                  String variant =
+                                      variants[index % variants.length];
+                                  int frame =
+                                      _chickenSurpriseTimers[index] > 0 ? 2 : 1;
+                                  return Flexible(
+                                    child: Image.asset(
+                                      'assets/images/${Assets.chickenSprite(variant, frame)}',
+                                      height: 120, // Scaled for stage
+                                      fit: BoxFit.contain,
+                                    ),
+                                  );
+                                }),
+                              ),
+                            ),
                           ),
-                        );
-                      }),
+                        ),
+                        // Stationary Dog (Bottom Left)
+                        Positioned(
+                          left: 100,
+                          bottom: 120,
+                          child: Image.asset(
+                            'assets/images/${Assets.bgCharacter("dog", _bgAnimFrameDog)}',
+                            height: 130,
+                          ),
+                        ),
+                        // Stationary Chicken (Bottom Right)
+                        Positioned(
+                          right: 150,
+                          bottom: 120,
+                          child: Image.asset(
+                            'assets/images/${Assets.chickenSprite("w", _bgAnimFrameChicken)}',
+                            height: 130,
+                          ),
+                        ),
+                        // Birds
+                        Positioned(
+                          left: _bird1X * 1600,
+                          top: 250,
+                          child: Image.asset(
+                            'assets/images/${Assets.bgCharacter("bird", _bgAnimFrameBird)}',
+                            height: 60,
+                          ),
+                        ),
+                        Positioned(
+                          left: _bird2X * 1600,
+                          top: 380,
+                          child: Transform.flip(
+                            flipX: true,
+                            child: Image.asset(
+                              'assets/images/${Assets.bgCharacter("bird", _bgAnimFrameBird)}',
+                              height: 60,
+                            ),
+                          ),
+                        ),
+                        // Obstacles (Eggs) - Rendered within Stage
+                        ..._obstacleManager.obstacles.map((obs) {
+                          double verticalOffset =
+                              _getObstacleVerticalOffset(obs, 900);
+                          return Positioned(
+                            left: obs.x * 1600,
+                            bottom: (900 * 0.15) -
+                                FayColors.kHorizonOverlap +
+                                (obs.y * 900) -
+                                verticalOffset,
+                            width: obs.width * 900,
+                            height: obs.height * 900,
+                            child: _buildObstacleWidget(obs),
+                          );
+                        }),
+                        // Ernie - Rendered within Stage
+                        Positioned(
+                          left: 1600 * 0.30 + _playerXOffset,
+                          bottom: (900 * 0.15) -
+                              FayColors.kHorizonOverlap -
+                              15 +
+                              _playerY,
+                          child: PlayerCharacter(
+                            isJumping: _isJumping,
+                            isInvincible: gameState.isInvincible,
+                            isCrashed: _isCrashed,
+                            runFrame: _runFrame,
+                            size: 900 * 0.21,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ),
-              ),
-              // Stationary Background Dog (Animated, Left)
-              Positioned(
-                left: screenSize.width * 0.05,
-                bottom:
-                    _groundHeight - FayColors.kHorizonOverlap - 15, // Lowered
-                child: Image.asset(
-                  'assets/images/${Assets.bgCharacter("dog", _bgAnimFrameDog)}',
-                  height: 80, // Increased size
-                ),
-              ),
-              // Stationary Background Chicken (Animated, Right)
-              Positioned(
-                right: screenSize.width * 0.05,
-                bottom:
-                    _groundHeight - FayColors.kHorizonOverlap - 15, // Lowered
-                child: Image.asset(
-                  'assets/images/${Assets.chickenSprite("w", _bgAnimFrameChicken)}',
-                  height: 80, // Increased size
-                ),
-              ),
-              // Flying Bird 1 (L-to-R)
-              Positioned(
-                left: _bird1X * screenSize.width,
-                top: screenSize.height * 0.25,
-                child: Image.asset(
-                  'assets/images/${Assets.bgCharacter("bird", _bgAnimFrameBird)}',
-                  height: 40,
-                ),
-              ),
-              // Flying Bird 2 (R-to-L)
-              Positioned(
-                left: _bird2X * screenSize.width,
-                top: screenSize.height * 0.40,
-                child: Transform.flip(
-                  flipX: true,
-                  child: Image.asset(
-                    'assets/images/${Assets.bgCharacter("bird", _bgAnimFrameBird)}',
-                    height: 40,
                   ),
                 ),
               ),
@@ -664,34 +710,37 @@ class _GameLoopScreenState extends State<GameLoopScreen>
               );
             }),
             AmbientEffects(level: gameState.currentLevel),
-            ..._obstacleManager.obstacles.map((obs) {
-              double verticalOffset =
-                  _getObstacleVerticalOffset(obs, screenSize.height);
-              return Positioned(
-                left: obs.x * screenSize.width,
+            if (!(gameState.status == GameStatus.bonusRound &&
+                gameState.currentBonusType == BonusRoundType.eggCatch)) ...[
+              ..._obstacleManager.obstacles.map((obs) {
+                double verticalOffset =
+                    _getObstacleVerticalOffset(obs, screenSize.height);
+                return Positioned(
+                  left: obs.x * screenSize.width,
+                  bottom: _groundHeight -
+                      FayColors.kHorizonOverlap +
+                      (obs.y * screenSize.height) -
+                      verticalOffset,
+                  width: obs.width * screenSize.height,
+                  height: obs.height * screenSize.height,
+                  child: _buildObstacleWidget(obs),
+                );
+              }),
+              Positioned(
+                left: screenSize.width * 0.30 + _playerXOffset,
                 bottom: _groundHeight -
-                    FayColors.kHorizonOverlap +
-                    (obs.y * screenSize.height) -
-                    verticalOffset,
-                width: obs.width * screenSize.height,
-                height: obs.height * screenSize.height,
-                child: _buildObstacleWidget(obs),
-              );
-            }),
-            Positioned(
-              left: screenSize.width * 0.30 + _playerXOffset,
-              bottom: _groundHeight -
-                  FayColors.kHorizonOverlap -
-                  15 +
-                  _playerY, // Lowered
-              child: PlayerCharacter(
-                isJumping: _isJumping,
-                isInvincible: gameState.isInvincible,
-                isCrashed: _isCrashed,
-                runFrame: _runFrame,
-                size: screenSize.height * 0.21,
+                    FayColors.kHorizonOverlap -
+                    15 +
+                    _playerY, // Lowered
+                child: PlayerCharacter(
+                  isJumping: _isJumping,
+                  isInvincible: gameState.isInvincible,
+                  isCrashed: _isCrashed,
+                  runFrame: _runFrame,
+                  size: screenSize.height * 0.21,
+                ),
               ),
-            ),
+            ],
             ..._floatingScores.map((fs) => Positioned(
                   left: fs.x,
                   bottom: fs.y + (fs.animationTime * 100),
