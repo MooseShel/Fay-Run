@@ -28,12 +28,10 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       final state = context.read<GameState>();
       state.loadChallenge();
 
-      // Background preload for current and next levels
-      for (int i = 0; i < 3; i++) {
-        final levelToPreload = state.maxLevel + i;
-        if (levelToPreload <= 10) {
-          AssetManager().precacheLevelAssets(context, levelToPreload);
-        }
+      // Background preload for ALL levels (1-10)
+      for (int i = 1; i <= 10; i++) {
+        AssetManager().precacheLevelAssets(context, i);
+        AssetManager().precacheLevelMusic(i);
       }
     });
   }

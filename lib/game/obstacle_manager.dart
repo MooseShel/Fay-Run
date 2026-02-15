@@ -8,7 +8,6 @@ enum ObstacleType {
   janitorBucket, // Level 9 (Gym)
   books, // Level 2 & 3 (Pre-refine leftover, kept for variety)
   beaker, // Level 3 (Scientific leftover)
-  flyingPizza, // Level 10 (Cafeteria)
   food, // Level 10 (Cafeteria)
   cone, // Levels 1, 5, 6, 9
   backpack, // Levels 1, 3, 6 (School Houses)
@@ -28,6 +27,7 @@ enum ObstacleType {
   apple,
   banana,
   egg,
+  heart,
 }
 
 class Obstacle {
@@ -100,7 +100,12 @@ class ObstacleManager {
 
   void update(double dt, double runSpeed, int level, bool isBonusRound,
       Function(Obstacle) onHit,
-      {required Size screenSize, double bonusTimeElapsed = 0}) {
+      {required Size screenSize,
+      double bonusTimeElapsed = 0,
+      double levelProgress = 0,
+      double heartSpawnProgress = 1.0,
+      bool hasHeartSpawned = true,
+      Function()? onHeartSpawned}) {
     // 1. Regular Obstacle Spawn Logic
     _spawnTimer += dt;
 
@@ -162,23 +167,29 @@ class ObstacleManager {
         _spawnTimer = 0;
       }
     }
-
     // 2. Independent Reward Spawn Logic (Academic plenty)
     if (!isBonusRound) {
       _rewardTimer += dt;
       if (_rewardTimer > _rewardInterval) {
-        // Reward priority: Try harder to spawn rewards
-        // We use a smaller clearance for rewards to ensure they appear
         if (_isPositionClear(1.1, 0.25)) {
           _spawnObstacle(level, false, isReward: true);
           _rewardTimer = 0;
-          // Education First: Balanced rewards (Further reduced by 20% per user request)
           _rewardInterval = 2.5 + _random.nextDouble() * 3.125;
         }
       }
     }
 
-    // 3. Move & Cleanup
+    // 3. Heart Spawn Logic (Once per level at random time)
+    if (!isBonusRound &&
+        !hasHeartSpawned &&
+        levelProgress >= heartSpawnProgress) {
+      if (_isPositionClear(1.1, 0.4)) {
+        _spawnObstacle(level, false, isHeart: true);
+        onHeartSpawned?.call();
+      }
+    }
+
+    // 4. Move & Cleanup
     // PHYSICS NORMALIZATION:
     // runSpeed (e.g. 4.0) represents logical "widths per second" relative to ScreenHeight.
     // Convert this to a relative X shift (fraction of ScreenWidth).
@@ -225,10 +236,14 @@ class ObstacleManager {
   final List<Obstacle> _obstaclePool = [];
 
   void _spawnObstacle(int level, bool isBonusRound,
-      {bool isReward = false, double bonusTimeElapsed = 0}) {
+      {bool isReward = false,
+      bool isHeart = false,
+      double bonusTimeElapsed = 0}) {
     List<ObstacleType> obstaclePool = [];
 
-    if (isBonusRound) {
+    if (isHeart) {
+      obstaclePool = [ObstacleType.heart];
+    } else if (isBonusRound) {
       switch (level) {
         case 2:
           obstaclePool = [ObstacleType.egg];
@@ -322,7 +337,7 @@ class ObstacleManager {
           obstaclePool = [
             ObstacleType.lunchTray,
             ObstacleType.milkCarton,
-            ObstacleType.flyingPizza,
+            ObstacleType.food,
           ];
           break;
         default:
@@ -349,6 +364,8 @@ class ObstacleManager {
       type = obstaclePool[_random.nextInt(obstaclePool.length)];
     }
 
+    if (isHeart) type = ObstacleType.heart;
+
     double width = 0.1;
     double height = 0.1;
 
@@ -374,7 +391,6 @@ class ObstacleManager {
         width = 0.207;
         height = 0.17;
         break;
-      case ObstacleType.flyingPizza:
       case ObstacleType.food:
         width = 0.207;
         height = 0.207;
@@ -442,6 +458,10 @@ class ObstacleManager {
         width = 0.12;
         height = 0.12;
         break;
+      case ObstacleType.heart:
+        width = 0.3; // Easily recognized size
+        height = 0.3;
+        break;
     }
 
     double y = 0.0;
@@ -468,6 +488,8 @@ class ObstacleManager {
       }
     } else if (type == ObstacleType.goldenBook) {
       y = 0.25; // Only Golden Book floats now
+    } else if (type == ObstacleType.heart) {
+      y = 0.45; // High enough to require a jump
     }
 
     if (level >= 4 && type != ObstacleType.goldenBook && !isBonusRound) {

@@ -63,6 +63,7 @@ class AudioService {
       'staff_firstg.aac',
       'staff_prek2.aac',
       'chicken_coop.aac',
+      'wrong.aac',
     ];
 
     // Use the SFX pool to "warm up" the players with the most common sounds
@@ -97,42 +98,49 @@ class AudioService {
   String? _currentBgmFile;
   bool _isChangingBgm = false;
 
+  Future<void> preloadBGM(int level) async {
+    final bgmFile = _getBGMFileForLevel(level);
+    if (_currentBgmFile == bgmFile) return;
+
+    try {
+      debugPrint('🎵 AudioService: Preloading BGM for Level $level ($bgmFile)');
+      await _bgmPlayer.setSource(AssetSource('audio/$bgmFile'));
+    } catch (e) {
+      debugPrint('AudioService: Error preloading BGM ($bgmFile): $e');
+    }
+  }
+
+  String _getBGMFileForLevel(int level) {
+    switch (level) {
+      case 1:
+        return 'music_bayou_1.aac';
+      case 2:
+        return 'music_bayou_2.aac';
+      case 3:
+        return 'music_bayou_3.aac';
+      case 4:
+        return 'music_bayou_4.aac';
+      case 5:
+        return 'music_bayou_5.aac';
+      case 6:
+        return 'music_bayou_6.aac';
+      case 7:
+        return 'music_garden.aac';
+      case 8:
+        return 'music_medow.aac';
+      case 9:
+        return 'music_playground.aac';
+      case 10:
+        return 'music_cafeteria.aac';
+      default:
+        return 'music_bayou_1.aac';
+    }
+  }
+
   Future<void> playBGM(int level) async {
     if (_isMuted || _isChangingBgm) return;
 
-    String bgmFile = 'music_bayou_1.aac';
-    switch (level) {
-      case 1:
-        bgmFile = 'music_bayou_1.aac';
-        break;
-      case 2:
-        bgmFile = 'music_bayou_2.aac';
-        break;
-      case 3:
-        bgmFile = 'music_bayou_3.aac';
-        break;
-      case 4:
-        bgmFile = 'music_bayou_4.aac';
-        break;
-      case 5:
-        bgmFile = 'music_bayou_5.aac';
-        break;
-      case 6:
-        bgmFile = 'music_bayou_6.aac';
-        break;
-      case 7:
-        bgmFile = 'music_garden.aac';
-        break;
-      case 8:
-        bgmFile = 'music_medow.aac';
-        break;
-      case 9:
-        bgmFile = 'music_playground.aac';
-        break;
-      case 10:
-        bgmFile = 'music_cafeteria.aac';
-        break;
-    }
+    final bgmFile = _getBGMFileForLevel(level);
 
     // Don't restart if already playing the same file
     if (_currentBgmFile == bgmFile && _bgmPlayer.state == PlayerState.playing) {
@@ -238,6 +246,7 @@ class AudioService {
   void playBonk() => playSFX('bonk.aac');
   void playCoin() => playSFX('ding.aac');
   void playPowerup() => playSFX('powerup.aac');
+  void playWrong() => playSFX('wrong.aac');
 
   void playStaffSound(StaffEventType staffType) {
     // Map staff type to sound file

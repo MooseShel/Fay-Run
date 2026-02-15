@@ -47,6 +47,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
   // Animation State
   bool _isCrashed = false;
+  bool _isTransitioning = false;
   int _runFrame = 0;
   double _runAnimationTimer = 0;
 
@@ -143,6 +144,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       final minDelayFuture = Future.delayed(const Duration(milliseconds: 4000));
       final essentialPreload = AssetManager().precacheEssentialAssets(context);
       final bgPreload = AssetManager().precacheLevelAssets(context, level);
+      final musicPreload = AssetManager().precacheLevelMusic(level);
 
       if (state.status == GameStatus.bonusRound &&
           state.currentBonusType == BonusRoundType.eggCatch) {
@@ -151,7 +153,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         AudioService().playBGM(level);
       }
 
-      await Future.wait([minDelayFuture, essentialPreload, bgPreload]);
+      await Future.wait(
+          [minDelayFuture, essentialPreload, bgPreload, musicPreload]);
     } catch (e) {
       debugPrint('⚠️ Error during loading: $e');
     } finally {
@@ -325,6 +328,10 @@ class _GameLoopScreenState extends State<GameLoopScreen>
           (obs) => _handleCollision(obs, gameState),
           screenSize: screenSize,
           bonusTimeElapsed: _bonusRoundTimer,
+          levelProgress: gameState.levelProgress,
+          hasHeartSpawned: gameState.hasHeartSpawnedThisLevel,
+          heartSpawnProgress: gameState.heartSpawnProgress,
+          onHeartSpawned: () => gameState.markHeartAsSpawned(),
         );
         _sceneryManager.update(
           dt,
@@ -408,6 +415,11 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       AudioService().playPowerup();
       gameState.addScore(10);
       _spawnFloatingScore(10);
+    } else if (obs.type == ObstacleType.heart) {
+      obs.isCollected = true;
+      AudioService().playPowerup();
+      gameState.addLife();
+      // Optional: Visual feedback +1 health
     } else {
       if (!gameState.isInvincible) {
         AudioService().playBonk();
@@ -453,7 +465,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
             obs.isCollected = true;
             _spawnFloatingScore(reward);
           } else {
-            AudioService().playBonk();
+            AudioService().playWrong();
           }
           gameState.recordQuizResult(challenge.id, isCorrect);
           gameState.resumeGame();
@@ -536,6 +548,9 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   }
 
   double _getObstacleVerticalOffset(Obstacle obs, double screenHeight) {
+    if (obs.type == ObstacleType.log) {
+      return screenHeight * 0.02; // Sink slightly to ground better
+    }
     return 0.0;
   }
 
@@ -611,10 +626,10 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                             BonusRoundType.eggCatch) ...[
                       // Stationary Background Row (Animated, Spread on ground)
                       Positioned(
-                        bottom: _groundHeight - FayColors.kHorizonOverlap - 10,
+                        bottom: _groundHeight - FayColors.kHorizonOverlap,
                         left: 0,
                         right: 0,
-                        child: Center(
+                        child: Container(
                           child: SizedBox(
                             width: screenSize.width * 0.95,
                             child: Row(
@@ -627,8 +642,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                                   fit: BoxFit.contain,
                                 ),
                                 // Chickens
-                                ...List.generate(5, (index) {
-                                  final variants = ["", "c", "b", "w", ""];
+                                ...List.generate(4, (index) {
+                                  final variants = ["w", "c", "b", "w"];
                                   String variant =
                                       variants[index % variants.length];
                                   int frame =
@@ -666,7 +681,46 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                         ),
                       ),
                     ],
-                    ..._sceneryManager.objects.map((obj) {
+                    AmbientEffects(level: gameState.currentLevel),
+                    // Background Scenery (Bench) - Behind Ernie
+                    ..._sceneryManager.objects
+                        .where((obj) => obj.type == SceneryType.bench)
+                        .map((obj) {
+                      String assetName = Assets.bgCharacter(obj.type.name, 1);
+                      double charSize = screenSize.height * 0.19;
+                      return Positioned(
+                        left: obj.x * screenSize.width,
+                        bottom: _groundHeight -
+                            FayColors.kHorizonOverlap +
+                            (obj.y * screenSize.height),
+                        width: charSize,
+                        height: charSize,
+                        child: Image.asset(
+                          'assets/images/$assetName',
+                          fit: BoxFit.contain,
+                          alignment: Alignment.bottomCenter,
+                        ),
+                      );
+                    }),
+
+                    Positioned(
+                      left: screenSize.width * 0.30 + _playerXOffset,
+                      bottom:
+                          _groundHeight - FayColors.kHorizonOverlap + _playerY,
+                      child: PlayerCharacter(
+                        isJumping: _isJumping,
+                        isInvincible: gameState.isInvincible,
+                        isCrashed: _isCrashed,
+                        runFrame: _runFrame,
+                        flipX: _isFacingLeft,
+                        size: screenSize.height * 0.21,
+                      ),
+                    ),
+
+                    // Foreground Scenery (Humans/Animals) - In front of Ernie
+                    ..._sceneryManager.objects
+                        .where((obj) => obj.type != SceneryType.bench)
+                        .map((obj) {
                       String baseName = obj.type.name;
                       int frame = obj.currentFrame;
                       if (obj.type == SceneryType.dogStanding) frame += 2;
@@ -690,20 +744,6 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                         ),
                       );
                     }),
-                    AmbientEffects(level: gameState.currentLevel),
-                    Positioned(
-                      left: screenSize.width * 0.30 + _playerXOffset,
-                      bottom:
-                          _groundHeight - FayColors.kHorizonOverlap + _playerY,
-                      child: PlayerCharacter(
-                        isJumping: _isJumping,
-                        isInvincible: gameState.isInvincible,
-                        isCrashed: _isCrashed,
-                        runFrame: _runFrame,
-                        flipX: _isFacingLeft,
-                        size: screenSize.height * 0.21,
-                      ),
-                    ),
                     ..._floatingScores.map((fs) => Positioned(
                           left: fs.x,
                           bottom: fs.y + (fs.animationTime * 100),
@@ -835,19 +875,31 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 40, vertical: 15),
                                 ),
-                                onPressed: () {
+                                onPressed: () async {
+                                  if (_isTransitioning) return;
+                                  setState(() => _isTransitioning = true);
+
+                                  final gs = context.read<GameState>();
                                   _obstacleManager.clear();
                                   _sceneryManager.clear();
-                                  if (gameState.isBonusRoundEarned) {
-                                    gameState.startBonusRound();
+                                  setState(() => _isLoading = true);
+
+                                  if (gs.isBonusRoundEarned) {
+                                    gs.startBonusRound();
+                                    _loadAssets();
                                   } else {
-                                    setState(() => _isLoading = true);
-                                    gameState.startNextLevel();
+                                    await gs.startNextLevel();
                                     _loadAssets();
                                   }
+                                  if (mounted) {
+                                    setState(() => _isTransitioning = false);
+                                  }
                                 },
-                                child: const Text("START NEXT LEVEL",
-                                    style: TextStyle(
+                                child: Text(
+                                    gameState.isBonusRoundEarned
+                                        ? "START BONUS ROUND"
+                                        : "START NEXT LEVEL",
+                                    style: const TextStyle(
                                         fontSize: 20, color: Colors.black)),
                               ),
                               const SizedBox(height: 20),
@@ -939,23 +991,17 @@ class _GameLoopScreenState extends State<GameLoopScreen>
     if (obs.type == ObstacleType.goldenBook) {
       return Image.asset('assets/images/${Assets.itemGoldenBook}');
     }
+    if (obs.type == ObstacleType.heart) {
+      return Image.asset('assets/images/${Assets.itemHeart}');
+    }
 
     // Handle generic obstacles with possible variants
     String assetName;
     switch (obs.type) {
       case ObstacleType.burger:
-        assetName =
-            'obstacles/obstacle_burger_${obs.variant == 0 ? 1 : obs.variant}.png';
-        break;
       case ObstacleType.apple:
-        assetName = 'obstacles/obstacle_apple.png';
-        break;
       case ObstacleType.banana:
-        assetName = 'obstacles/obstacle_banana.png';
-        break;
       case ObstacleType.food:
-        assetName = 'obstacles/obstacle_food.png';
-        break;
       case ObstacleType.log:
       case ObstacleType.puddle:
       case ObstacleType.rock:
@@ -980,9 +1026,15 @@ class _GameLoopScreenState extends State<GameLoopScreen>
             RegExp(r'([A-Z])'), (match) => '_${match.group(1)!.toLowerCase()}');
 
         int v = (obs.variant <= 0) ? 1 : obs.variant;
+
         // Clamp based on known asset counts
         if (obs.type == ObstacleType.milkCarton) {
           if (v > 3) v = 1;
+        } else if (obs.type == ObstacleType.food ||
+            obs.type == ObstacleType.banana ||
+            obs.type == ObstacleType.apple ||
+            obs.type == ObstacleType.burger) {
+          v = (v % 2 == 0) ? 2 : 1; // We know we have _1 and _2
         } else {
           if (v > 2) v = 1;
         }

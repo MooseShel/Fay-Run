@@ -58,6 +58,8 @@ class GameState extends ChangeNotifier {
   int get comboCount => _comboCount;
   bool _playedBonusInCurrentLevel = false;
   Timer? _invincibilityTimer;
+  bool _hasHeartSpawnedThisLevel = false;
+  double _heartSpawnProgress = 0.0;
 
   // Exam Mode
   bool _isExamMode = false;
@@ -103,9 +105,14 @@ class GameState extends ChangeNotifier {
   Challenge? _currentChallenge;
   Challenge? get currentChallenge => _currentChallenge;
 
+  bool get hasHeartSpawnedThisLevel => _hasHeartSpawnedThisLevel;
+  double get heartSpawnProgress => _heartSpawnProgress;
+
   bool get isBonusRoundEarned {
     // Enabled for level 2 as requested, others keep disabled for now
-    if (_currentLevel == 2 && !_playedBonusInCurrentLevel) return true;
+    if (_currentLevel == 2 &&
+        !_playedBonusInCurrentLevel &&
+        _status == GameStatus.levelComplete) return true;
     return false;
   }
 
@@ -145,17 +152,21 @@ class GameState extends ChangeNotifier {
   // --- Multi-Student Actions ---
 
   Future<void> loadStudents() async {
+    debugPrint('GameState: loadStudents() started');
     _isLoading = true;
     notifyListeners();
     try {
       final service = SupabaseService();
-      // Also fetch/repair parent profile in background
-      service.getProfile();
+      debugPrint('GameState: Fetching profile (background)...');
+      service.getProfile(); // Don't block student loading on profile repair
+      debugPrint('GameState: Fetching students...');
       _students = await service.getStudents();
+      debugPrint('GameState: Loaded ${_students.length} students');
     } catch (e) {
-      debugPrint('Error loading students: $e');
+      debugPrint('GameState: Error loading students: $e');
     } finally {
       _isLoading = false;
+      debugPrint('GameState: loadStudents() finished, isLoading = false');
       notifyListeners();
     }
   }
@@ -261,7 +272,11 @@ class GameState extends ChangeNotifier {
     _answeredQuestions.clear(); // Clear history
     _resetLevelPhysics();
     _currentBonusType = BonusRoundType.none;
+    _isInvincible = false;
     _playedBonusInCurrentLevel = false;
+    _hasHeartSpawnedThisLevel = false;
+    _heartSpawnProgress =
+        0.4 + (math.Random().nextDouble() * 0.5); // Random between 40% and 90%
     _status = GameStatus.playing; // Ensure game starts in playing state
     notifyListeners();
   }
@@ -314,6 +329,12 @@ class GameState extends ChangeNotifier {
 
   void forfeitGame() {
     _score = 0; // Reset score (Forfeit)
+    _levelProgress = 0.0;
+    _comboCount = 0;
+    _isInvincible = false;
+    _invincibilityTimer?.cancel();
+    _playedBonusInCurrentLevel = false;
+    _currentBonusType = BonusRoundType.none;
     _status = GameStatus.menu;
     notifyListeners();
   }
@@ -328,6 +349,18 @@ class GameState extends ChangeNotifier {
       _status = GameStatus.gameOver;
       checkHighScore();
     }
+    notifyListeners();
+  }
+
+  void addLife() {
+    if (_lives < 5) {
+      _lives++;
+      notifyListeners();
+    }
+  }
+
+  void markHeartAsSpawned() {
+    _hasHeartSpawnedThisLevel = true;
     notifyListeners();
   }
 
@@ -482,10 +515,14 @@ class GameState extends ChangeNotifier {
 
       // Reload challenge for the new level (new questions)
       await loadChallenge();
-
+      _comboCount = 0;
       _status = GameStatus.playing; // Directly set to playing
+      _isInvincible = false;
+      _invincibilityTimer?.cancel();
       _goldenBooksCollectedCurrentLevel = 0; // Reset for next level
       _playedBonusInCurrentLevel = false; // Reset for next level
+      _hasHeartSpawnedThisLevel = false;
+      _heartSpawnProgress = 0.4 + (math.Random().nextDouble() * 0.5);
       notifyListeners();
     } else {
       _status = GameStatus.gameOver;
@@ -537,6 +574,7 @@ class GameState extends ChangeNotifier {
     if (_status == GameStatus.bonusRound) {
       _isInvincible = false;
       _currentBonusType = BonusRoundType.none;
+      _playedBonusInCurrentLevel = true; // Ensure it's set even on end
       _status = GameStatus
           .levelComplete; // Go back to level complete screen to proceed
       notifyListeners();

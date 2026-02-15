@@ -39,6 +39,15 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
       ..repeat();
   }
 
+  @override
+  void didUpdateWidget(covariant ParallaxBackground oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.level != widget.level) {
+      _scrollOffset = 0;
+      _lastUpdate = null;
+    }
+  }
+
   void _updateScroll() {
     if (widget.isPaused) {
       _lastUpdate = null;
@@ -54,8 +63,8 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
     final double screenWidth = MediaQuery.sizeOf(context).width;
 
     setState(() {
-      // Synchronized with ObstacleManager: 0.12 * screenWidth * runSpeed per second
-      _scrollOffset += widget.runSpeed * (0.12 * screenWidth) * dt;
+      // Synchronized with ObstacleManager: 0.15 * screenWidth * runSpeed per second
+      _scrollOffset += widget.runSpeed * (0.15 * screenWidth) * dt;
     });
   }
 

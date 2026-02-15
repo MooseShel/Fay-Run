@@ -39,6 +39,7 @@ class Assets {
   }
 
   static const String itemGoldenBook = 'obstacles/item_golden_book.png';
+  static const String itemHeart = 'heart.png';
 
   // Audio - Background Music
   static const String musicBayou1 = 'audio/music_bayou_1.aac';
@@ -55,12 +56,12 @@ class Assets {
   // Images - Obstacles
   static const String obsLog = 'obstacles/obstacle_log_1.png';
   static const String obsRock = 'obstacles/obstacle_rock_1.png';
-  static const String obsApple = 'obstacles/obstacle_apple.png';
-  static const String obsBanana = 'obstacles/obstacle_banana.png';
+  static const String obsApple = 'obstacles/obstacle_apple_1.png';
+  static const String obsBanana = 'obstacles/obstacle_banana_1.png';
   static const String obsBurger1 = 'obstacles/obstacle_burger_1.png';
   static const String obsBurger2 = 'obstacles/obstacle_burger_2.png';
   static const String obsBucket = 'obstacles/obstacle_janitor_bucket_1.png';
-  static const String obsFood = 'obstacles/obstacle_food.png';
+  static const String obsFood = 'obstacles/obstacle_food_1.png';
   static const String obsCone = 'obstacles/obstacle_cone_1.png';
   static const String obsBackpack = 'obstacles/obstacle_backpack_1.png';
 
@@ -93,6 +94,7 @@ class Assets {
   static const String sfxBonk = 'audio/bonk.aac';
   static const String sfxCoin = 'audio/ding.aac';
   static const String sfxPowerup = 'audio/powerup.aac';
+  static const String sfxWrong = 'audio/wrong.aac';
 
   // Audio - Staff Voices
   static const String voiceHead = 'audio/staff_head.aac';

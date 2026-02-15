@@ -182,26 +182,26 @@ class SceneryManager {
         y = 0.0; // Reverted to ground level
         speedMult = 0.2; // Stationary relative to background
         frames = 2;
-        animSpeed = 2.0;
+        animSpeed = 0.6;
         break;
       case SceneryType.dogSitting:
       case SceneryType.dogStanding:
         y = 0.0;
         speedMult = 0.2;
         frames = 2;
-        animSpeed = 2.0;
+        animSpeed = 0.6;
         break;
       case SceneryType.squirrel:
         y = 0.0;
         speedMult = 0.2;
         frames = 4;
-        animSpeed = 2.0;
+        animSpeed = 0.6;
         break;
       case SceneryType.janitor:
         y = 0.0;
         speedMult = 0.2;
         frames = 2;
-        animSpeed = 2.0;
+        animSpeed = 0.6;
         break;
       case SceneryType.bench:
         y = 0.0;

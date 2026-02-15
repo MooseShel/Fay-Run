@@ -104,7 +104,8 @@ class _StudentSelectScreenState extends State<StudentSelectScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final students = context.watch<GameState>().students;
+    final gameState = context.watch<GameState>();
+    final students = gameState.students;
 
     return Scaffold(
       backgroundColor: FayColors.navy,
@@ -144,30 +145,35 @@ class _StudentSelectScreenState extends State<StudentSelectScreen> {
             ),
             const SizedBox(height: 30),
             Expanded(
-              child: context.watch<GameState>().isLoading
-                  ? Center(
-                      child: const CircularProgressIndicator(
-                        color: FayColors.gold,
-                      ),
-                    )
-                  : GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
-                        childAspectRatio: 0.8,
-                      ),
-                      itemCount: students.length + 1, // +1 for "Add New"
-                      itemBuilder: (context, index) {
-                        if (index == students.length) {
-                          // Add New Button
-                          return _buildAddStudentCard();
-                        }
-                        final student = students[index];
-                        return _buildStudentCard(student);
-                      },
-                    ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 900),
+                  child: gameState.isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: FayColors.gold,
+                          ),
+                        )
+                      : GridView.builder(
+                          gridDelegate:
+                              const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 220,
+                            crossAxisSpacing: 24,
+                            mainAxisSpacing: 24,
+                            childAspectRatio: 0.85,
+                          ),
+                          itemCount: students.length + 1, // +1 for "Add New"
+                          itemBuilder: (context, index) {
+                            if (index == students.length) {
+                              // Add New Button
+                              return _buildAddStudentCard();
+                            }
+                            final student = students[index];
+                            return _buildStudentCard(student);
+                          },
+                        ),
+                ),
+              ),
             ),
           ],
         ),
