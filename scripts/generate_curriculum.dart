@@ -3,7 +3,7 @@ import 'dart:math';
 
 // Configuration
 const String outputFile = 'scripts/populate_full_curriculum.sql';
-const int questionsPerLevel = 10;
+const int questionsPerLevel = 25;
 
 // Grades mapping
 const Map<String, int> grades = {
@@ -25,7 +25,7 @@ String generateHeader() {
   return """-- =============================================================
 -- AUTOMATICALY GENERATED CURRICULUM (generate_curriculum.dart)
 -- =============================================================
--- 10 Questions per Level, All Grades (-2 to 5)
+-- 25 Questions per Level, All Grades (-2 to 5)
 -- =============================================================
 
 BEGIN;
@@ -168,7 +168,20 @@ List<List<String>> scienceQuestions = [
   ["Humans breathe...?", "Air", "Water", "Dirt"],
   ["The Earth is...?", "Round", "Flat", "Square"],
   ["What makes day bright?", "Sun", "Moon", "Stars"],
-  ["Trees grow from?", "Seeds", "Rocks", "Sand"]
+  ["Trees grow from?", "Seeds", "Rocks", "Sand"],
+  ["What causes thunder?", "Lightning", "Rain", "Wind"],
+  ["Which animal is a mammal?", "Dolphin", "Shark", "Snake"],
+  ["A spider has how many legs?", "8", "6", "4"],
+  ["What gas do plants release?", "Oxygen", "Carbon Dioxide", "Hydrogen"],
+  ["Which is a solid?", "Rock", "Juice", "Clouds"],
+  ["The moon reflects light from?", "The Sun", "Stars", "Earth"],
+  ["Where do penguins live?", "Antarctica", "Arctic", "Forest"],
+  ["What is the baby frog called?", "Tadpole", "Puppy", "Kitten"],
+  ["How many planets are there?", "8", "9", "7"],
+  ["What part of the plant is underground?", "Roots", "Leaves", "Stem"],
+  ["Which animal can fly?", "Parrot", "Rabbit", "Turtle"],
+  ["What is frozen water called?", "Ice", "Steam", "Mist"],
+  ["What is the red planet?", "Mars", "Venus", "Jupiter"]
 ];
 
 List<List<String>> socialQuestions = [
@@ -183,7 +196,25 @@ List<List<String>> socialQuestions = [
   ["Doctors help when...?", "Sick", "Happy", "Sad"],
   ["We buy food at...?", "Store", "Bank", "Library"],
   ["A library has?", "Books", "Tools", "Pets"],
-  ["Veterinarians fix?", "Animals", "Cars", "Computers"]
+  ["Veterinarians fix?", "Animals", "Cars", "Computers"],
+  [
+    "Who was the 1st President?",
+    "George Washington",
+    "Abraham Lincoln",
+    "Ernie"
+  ],
+  ["Our national bird is?", "Bald Eagle", "Penguin", "Parrot"],
+  ["Where does the President live?", "White House", "Tree House", "School"],
+  ["Which holiday is in December?", "Christmas", "Halloween", "Easter"],
+  ["July 4th celebrates?", "Independence Day", "Winter", "Fall"],
+  ["Who had a dream?", "MLK Jr.", "Washington", "Lincoln"],
+  ["The statue of freedom is?", "Statue of Liberty", "Big Ben", "Tower"],
+  ["A map key is the?", "Legend", "Scale", "Compass"],
+  ["How many continents?", "7", "5", "8"],
+  ["Largest ocean?", "Pacific", "Atlantic", "Indian"],
+  ["Where is the Bayou?", "Gulf Coast", "California", "Maine"],
+  ["Rules at school help us?", "Stay safe", "Stay sad", "Waste time"],
+  ["People who buy goods are?", "Consumers", "Producers", "Teachers"]
 ];
 
 Question generateStaticQuestion(String topic, int i) {

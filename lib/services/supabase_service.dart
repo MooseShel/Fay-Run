@@ -150,15 +150,26 @@ class SupabaseService {
         );
       } else {
         // --- NORMAL MODE LOGIC ---
-        // Fetch questions for the given grade and difficulty level
+        // Fetch questions for the given grade and difficulty level range [level-1, level+1]
+        final int targetLvl = difficultyLevel ?? 1;
+        final List<int> levels = [
+          if (targetLvl > 1) targetLvl - 1,
+          targetLvl,
+          if (targetLvl < 10) targetLvl + 1,
+        ];
+
         final query = _client!
             .from('challenges')
             .select('*, questions(*)')
             .eq('grade_level', gradeLevel)
-            .eq('is_exam', false);
+            .eq('is_exam', false)
+            .filter('difficulty_level', 'in', levels);
 
-        // Apply difficulty filter if provided
-        final result = await query.eq('difficulty_level', difficultyLevel ?? 1);
+        if (topic != null && topic.isNotEmpty) {
+          query.eq('topic', topic);
+        }
+
+        final result = await query;
         final List<dynamic> challengesList = result as List;
 
         if (challengesList.isEmpty) {
