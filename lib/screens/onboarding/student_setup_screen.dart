@@ -115,7 +115,7 @@ class _StudentSetupScreenState extends State<StudentSetupScreen> {
               ),
               const SizedBox(height: 20),
               DropdownButtonFormField<String>(
-                value: _selectedGrade,
+                initialValue: _selectedGrade,
                 decoration: const InputDecoration(
                   labelText: 'Grade Level',
                   border: OutlineInputBorder(),
