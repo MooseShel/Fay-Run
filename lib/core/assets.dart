@@ -30,10 +30,12 @@ class Assets {
   static const String celebrationMusic = 'audio/hallway_heroes.aac';
 
   static String chickenSprite(String variant, int frame) {
-    if (variant.isEmpty) return 'bonus_rounds/chicken_coop/chicken_$frame.png';
+    // Safe clamp for animation frames (we only have 1 and 2)
+    final f = frame.clamp(1, 2);
+    if (variant.isEmpty) return 'bonus_rounds/chicken_coop/chicken_$f.png';
     // Handle the double underscore issue for variant 'c' if that's what's on disk
     String prefix = variant == "c" ? "chicken__" : "chicken_";
-    return 'bonus_rounds/chicken_coop/$prefix${variant}_$frame.png';
+    return 'bonus_rounds/chicken_coop/$prefix${variant}_$f.png';
   }
 
   static String eggSprite(bool isCracked) {

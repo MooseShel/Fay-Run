@@ -239,8 +239,12 @@ class AudioService {
     } catch (e) {
       // Silently catch audio errors (e.g. NotAllowedError on web)
       // These are non-critical and shouldn't crash or report as uncaught
-      debugPrint(
-          'AudioService: Non-critical SFX playback error ($sfxName): $e');
+      final errorStr = e.toString();
+      if (!errorStr.contains('AbortError') &&
+          !errorStr.contains('interrupted')) {
+        debugPrint(
+            'AudioService: Non-critical SFX playback error ($sfxName): $e');
+      }
     }
   }
 

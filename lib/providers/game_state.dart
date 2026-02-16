@@ -102,6 +102,7 @@ class GameState extends ChangeNotifier {
   }
 
   int get score => _totalScore + _currentLevelScore;
+  int get highScore => _initialHighScore > score ? _initialHighScore : score;
   bool get newHighScoreCelebrated => _newHighScoreCelebrated;
   int get lives => _lives;
   int get currentLevel => _currentLevel;
@@ -488,6 +489,10 @@ class GameState extends ChangeNotifier {
     // Update local high score if beaten (for immediate UI feedback)
     if (finalScore > _initialHighScore) {
       _initialHighScore = finalScore;
+      // Update local student map immediately so UI reflects change
+      if (_currentStudent != null) {
+        _currentStudent!['high_score'] = _initialHighScore;
+      }
     }
 
     if (finalScore > 0 && studentId != null) {
@@ -550,6 +555,11 @@ class GameState extends ChangeNotifier {
         _maxLevel = _studentRealMaxLevel;
       }
 
+      // Update local student map immediately so UI reflects change
+      if (_currentStudent != null) {
+        _currentStudent!['max_level'] = _studentRealMaxLevel;
+      }
+
       // If we finished level 10, trigger celebration status
       if (_currentLevel >= 10) {
         _status = GameStatus.celebration;
@@ -594,6 +604,7 @@ class GameState extends ChangeNotifier {
       _resetLevelPhysics();
       _currentLevelScore = 0; // Reset for next level
       _levelProgress = 0.0; // Reset for next level
+      _lives = 5; // Reset lives for next level
 
       // Reload challenge for the new level (new questions)
       await loadChallenge();

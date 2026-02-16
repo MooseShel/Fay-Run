@@ -278,7 +278,6 @@ class AssetManager {
           'bonus_rounds/chicken_coop/chicken_coop.webp',
           'bonus_rounds/chicken_coop/chicken_1.png',
           'bonus_rounds/chicken_coop/chicken_2.png',
-          'bonus_rounds/chicken_coop/chicken_2.png',
           'bonus_rounds/chicken_coop/egg_1.png',
           'bonus_rounds/chicken_coop/egg_2.png',
         ];

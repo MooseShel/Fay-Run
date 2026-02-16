@@ -475,7 +475,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         challenge: challenge,
         question: question,
         onAnswered: (isCorrect) {
-          Navigator.pop(context);
+          if (mounted) Navigator.pop(context);
           if (isCorrect) {
             AudioService().playPowerup();
             gameState.addScore(reward);
@@ -843,21 +843,51 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Score
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: Colors.black54,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              'Score: ${gameState.score}',
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18),
-                            ),
+                          // Score & High Score Group
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  'Score: ${gameState.score}',
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: FayColors.gold.withValues(alpha: 0.8),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border:
+                                      Border.all(color: Colors.white, width: 2),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.emoji_events,
+                                        color: Colors.white, size: 16),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Best: ${gameState.highScore}',
+                                      style: const TextStyle(
+                                          color: FayColors.navy,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                           // Lives
                           Row(
@@ -909,7 +939,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                               TextButton(
                                 onPressed: () {
                                   context.read<GameState>().forfeitGame();
-                                  Navigator.pop(context);
+                                  if (mounted) Navigator.pop(context);
                                 },
                                 child: const Text("EXIT LEVEL",
                                     style: TextStyle(
@@ -990,7 +1020,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                               const SizedBox(height: 20),
                               TextButton(
                                 onPressed: () {
-                                  Navigator.pop(context);
+                                  if (mounted) Navigator.pop(context);
                                 },
                                 child: const Text("EXIT LEVEL",
                                     style: TextStyle(
@@ -1005,7 +1035,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                           color: Colors.black87,
                           child: Center(
                               child: ElevatedButton(
-                                  onPressed: () => Navigator.pop(context),
+                                  onPressed: () =>
+                                      mounted ? Navigator.pop(context) : null,
                                   child: const Text("GAME OVER - RETURN")))),
                   ],
                 ),
