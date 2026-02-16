@@ -24,8 +24,10 @@ class Assets {
 
   static const String chickenCoopBg =
       'bonus_rounds/chicken_coop/chicken_coop.webp';
-  static const String chickenCoopMusic =
-      'images/bonus_rounds/chicken_coop/chicken_coop.aac';
+  static const String chickenCoopMusic = 'audio/chicken_coop.aac';
+
+  static const String celebrationBg = 'bgs/celebration_Screen.webp';
+  static const String celebrationMusic = 'audio/hallway_heroes.aac';
 
   static String chickenSprite(String variant, int frame) {
     if (variant.isEmpty) return 'bonus_rounds/chicken_coop/chicken_$frame.png';

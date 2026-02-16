@@ -8,8 +8,7 @@ enum SceneryType {
   squirrel,
   janitor,
   butterfly,
-  bird,
-  bench
+  bird
 }
 
 class SceneryObject {
@@ -116,8 +115,7 @@ class SceneryManager {
         SceneryType.boy,
         SceneryType.girl,
         SceneryType.dogSitting,
-        SceneryType.bird,
-        SceneryType.bench
+        SceneryType.bird
       ];
     } else if (level == 2) {
       // Forest: Animals
@@ -128,8 +126,7 @@ class SceneryManager {
         SceneryType.boy,
         SceneryType.girl,
         SceneryType.butterfly,
-        SceneryType.bird,
-        SceneryType.bench
+        SceneryType.bird
       ];
     } else if (level == 4) {
       // Cabin: More animals
@@ -203,12 +200,7 @@ class SceneryManager {
         frames = 2;
         animSpeed = 0.6;
         break;
-      case SceneryType.bench:
-        y = 0.0;
-        speedMult = 0.2;
-        frames = 1;
-        animSpeed = 100.0; // Static
-        break;
+
       case SceneryType.bird:
         y = 0.25 +
             _random.nextDouble() * 0.1; // Lower than butterfly (0.25-0.35)

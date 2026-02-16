@@ -102,9 +102,22 @@ class AudioService {
 
     try {
       debugPrint('🎵 AudioService: Preloading BGM for Level $level ($bgmFile)');
-      await _bgmPlayer.setSource(AssetSource('audio/$bgmFile'));
+      await _bgmPlayer
+          .setSource(AssetSource('audio/$bgmFile'))
+          .timeout(const Duration(seconds: 2));
     } catch (e) {
       debugPrint('AudioService: Error preloading BGM ($bgmFile): $e');
+    }
+  }
+
+  Future<void> preloadCustomBGM(String assetPath) async {
+    try {
+      debugPrint('🎵 AudioService: Preloading Custom BGM ($assetPath)');
+      await _bgmPlayer
+          .setSource(AssetSource(assetPath))
+          .timeout(const Duration(seconds: 2));
+    } catch (e) {
+      debugPrint('AudioService: Error preloading Custom BGM ($assetPath): $e');
     }
   }
 

@@ -53,6 +53,7 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
       _lastUpdate = null;
       return;
     }
+    if (!mounted) return;
 
     final now = DateTime.now();
     final double dt = _lastUpdate == null
@@ -70,6 +71,7 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
 
   @override
   void dispose() {
+    _controller.removeListener(_updateScroll);
     _controller.dispose();
     super.dispose();
   }

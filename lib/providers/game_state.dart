@@ -13,7 +13,8 @@ enum GameStatus {
   levelComplete,
   gameOver,
   bonusRound,
-  quiz
+  quiz,
+  celebration
 }
 
 enum BonusRoundType {
@@ -40,7 +41,13 @@ class GameState extends ChangeNotifier {
   String _generatedNickname = '';
 
   // Game Session Data
-  int _score = 0;
+  int _totalScore = 0; // Confirmed score from completed levels
+  int _currentLevelScore = 0; // Temporary score in current level
+  int _initialHighScore = 0; // High score at session start
+  bool _newHighScoreCelebrated = false; // Track celebration
+  int _studentRealMaxLevel = 1; // Actual progression without debug overrides
+
+  // int _score = 0; // DEPRECATED
   int _lives = 5; // Increased from 3 to 5 hearts
   int _currentLevel = 1;
   double _runSpeed = 4.0; // Increased base speed
@@ -94,7 +101,8 @@ class GameState extends ChangeNotifier {
     return int.tryParse(gradeStr.replaceAll(RegExp(r'[^0-9]'), '')) ?? 1;
   }
 
-  int get score => _score;
+  int get score => _totalScore + _currentLevelScore;
+  bool get newHighScoreCelebrated => _newHighScoreCelebrated;
   int get lives => _lives;
   int get currentLevel => _currentLevel;
   double get runSpeed => _runSpeed;
@@ -175,8 +183,16 @@ class GameState extends ChangeNotifier {
     _currentStudent = student;
     int studentLevel = (student['max_level'] as int?) ?? 1;
     if (studentLevel < 1) studentLevel = 1;
-    _maxLevel = kDebugMode ? 10 : studentLevel;
-    _score = 0; // Reset session score
+    _studentRealMaxLevel = studentLevel;
+    // In debug mode, unlock at least to 10, but allow 11 (game complete) if achieved
+    _maxLevel = kDebugMode ? math.max(10, studentLevel) : studentLevel;
+
+    // Load high score
+    _initialHighScore = (student['high_score'] as int?) ?? 0;
+    _totalScore = 0;
+    _currentLevelScore = 0;
+    _currentLevelScore = 0;
+
     notifyListeners();
   }
 
@@ -263,7 +279,32 @@ class GameState extends ChangeNotifier {
   }
 
   void startGame({int level = 1}) {
-    _score = 0;
+    debugPrint(
+        'GameState: startGame level=$level, realMax=$_studentRealMaxLevel, debugMax=$_maxLevel, initHigh=$_initialHighScore');
+
+    // Only reset total score if starting from level 1
+    if (level == 1) {
+      debugPrint('GameState: Resetting score (Level 1)');
+      _totalScore = 0;
+      _newHighScoreCelebrated = false;
+    } else if ((level >= _studentRealMaxLevel && _studentRealMaxLevel > 1) ||
+        (level == 10 && _studentRealMaxLevel >= 11)) {
+      debugPrint(
+          'GameState: Inheriting score $_initialHighScore (Resuming/Frontier/VictoryLap)');
+      // Resuming at the latest frontier OR replaying Level 10 after beating game.
+      // This allows "Victory Lap" score accumulation.
+      _totalScore = _initialHighScore;
+      _newHighScoreCelebrated = false;
+    } else {
+      debugPrint('GameState: Resetting score (Replay/Old Level)');
+      // Replaying a past level: Start fresh (or technically 0 for this run)
+      // to avoid stacking scores infinitely by replaying easy levels.
+      _totalScore = 0;
+      _newHighScoreCelebrated = false;
+    }
+
+    _currentLevelScore = 0;
+    _currentLevelScore = 0;
     _lives = 5; // Increased from 3 based on user feedback
     _currentLevel = level;
     _goldenBooksCollectedCurrentLevel = 0; // Reset counter
@@ -328,7 +369,9 @@ class GameState extends ChangeNotifier {
   }
 
   void forfeitGame() {
-    _score = 0; // Reset score (Forfeit)
+    _totalScore = 0;
+    _currentLevelScore = 0;
+    _currentLevelScore = 0;
     _levelProgress = 0.0;
     _comboCount = 0;
     _isInvincible = false;
@@ -371,7 +414,17 @@ class GameState extends ChangeNotifier {
       return;
     }
     // Simplified scoring for children: No multipliers, just add points
-    _score += points;
+    // Add to current level score ONLY
+    _currentLevelScore += points;
+
+    // Check for real-time high score celebration
+    if (!_newHighScoreCelebrated &&
+        (_totalScore + _currentLevelScore) > _initialHighScore &&
+        _initialHighScore > 0) {
+      _newHighScoreCelebrated = true;
+      // We can trigger a one-time event or just let the UI bind to this
+    }
+
     notifyListeners();
   }
 
@@ -429,13 +482,18 @@ class GameState extends ChangeNotifier {
 
   Future<void> checkHighScore() async {
     final studentId = _currentStudent?['id'];
-    if (_score > 0 && studentId != null) {
+    // ONLY count fully secured points (from completed levels)
+    final finalScore = _totalScore;
+
+    // Update local high score if beaten (for immediate UI feedback)
+    if (finalScore > _initialHighScore) {
+      _initialHighScore = finalScore;
+    }
+
+    if (finalScore > 0 && studentId != null) {
       try {
         final service = SupabaseService();
-        await service.updateStudentScore(studentId, _score);
-
-        // Also unlock next level if needed (simple logic: score > 0 unlocks next?)
-        // Or explicitly called in completeLevel
+        await service.updateStudentScore(studentId, finalScore);
       } catch (e) {
         debugPrint('Error saving high score: $e');
       }
@@ -480,22 +538,39 @@ class GameState extends ChangeNotifier {
   Future<void> unlockNextLevel() async {
     if (_currentStudent == null) return;
 
-    // Unlock level + 1
-    final nextLevel = _maxLevel + 1;
-    if (nextLevel <= 10) {
-      // Cap at 10 levels
-      _maxLevel = nextLevel;
-      notifyListeners(); // Immediate UI update
+    // Determine next level based on current level completion
+    final nextLevel = _currentLevel + 1;
+
+    // Only update if we are pushing the frontier
+    if (nextLevel > _studentRealMaxLevel && nextLevel <= 11) {
+      _studentRealMaxLevel = nextLevel;
+
+      // Update public max level if we surpassed it (or to sync in non-debug)
+      if (_studentRealMaxLevel > _maxLevel) {
+        _maxLevel = _studentRealMaxLevel;
+      }
+
+      // If we finished level 10, trigger celebration status
+      if (_currentLevel >= 10) {
+        _status = GameStatus.celebration;
+      }
+
+      notifyListeners();
 
       try {
         final service = SupabaseService();
         final studentId = _currentStudent?['id'];
         if (studentId != null) {
-          await service.unlockLevel(studentId, _maxLevel);
+          await service.unlockLevel(studentId, _studentRealMaxLevel);
         }
       } catch (e) {
         debugPrint('Error unlocking level: $e');
       }
+    } else if (_currentLevel >= 10) {
+      // Even if we didn't unlock a new level (already at max),
+      // completing level 10 should trigger celebration
+      _status = GameStatus.celebration;
+      notifyListeners();
     }
   }
 
@@ -503,14 +578,21 @@ class GameState extends ChangeNotifier {
   final Set<String> _answeredQuestions = {};
 
   Future<void> startNextLevel() async {
+    // Check if we are completing the final level (10)
+    if (_currentLevel >= 10) {
+      await unlockNextLevel();
+      return;
+    }
+
     if (_currentLevel < 10) {
       // Unlock next level logic
-      if (_currentLevel >= _maxLevel) {
-        unlockNextLevel();
+      if (_currentLevel >= _studentRealMaxLevel) {
+        await unlockNextLevel();
       }
 
       _currentLevel++;
       _resetLevelPhysics();
+      _currentLevelScore = 0; // Reset for next level
       _levelProgress = 0.0; // Reset for next level
 
       // Reload challenge for the new level (new questions)
@@ -524,14 +606,17 @@ class GameState extends ChangeNotifier {
       _hasHeartSpawnedThisLevel = false;
       _heartSpawnProgress = 0.4 + (math.Random().nextDouble() * 0.5);
       notifyListeners();
-    } else {
-      _status = GameStatus.gameOver;
-      notifyListeners();
-      checkHighScore();
     }
   }
 
   void completeLevel() {
+    // Commit level score to total score
+    _totalScore += _currentLevelScore;
+    _currentLevelScore = 0;
+
+    // Check high score on level completion as a checkpoint
+    checkHighScore();
+
     _status = GameStatus.levelComplete;
     notifyListeners();
   }
@@ -561,7 +646,7 @@ class GameState extends ChangeNotifier {
     _isInvincible = true;
     _currentBonusType = type;
     _currentLevel = level;
-    _score = 0;
+    _currentLevelScore = 0; // Reset for test
     _lives = 5;
     notifyListeners();
 

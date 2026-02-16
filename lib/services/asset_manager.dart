@@ -72,7 +72,7 @@ class AssetManager {
 
       // Background characters can be last and lazier
       final otherAssets = [
-        ...['boy', 'girl', 'janitor', 'butterfly', 'bench'].expand((name) => [
+        ...['boy', 'girl', 'janitor', 'butterfly'].expand((name) => [
               'assets/images/${Assets.bgCharacter(name, 1)}',
               'assets/images/${Assets.bgCharacter(name, 2)}',
             ]),
@@ -243,7 +243,6 @@ class AssetManager {
       case 6:
         addCharacter('boy');
         addCharacter('girl');
-        addCharacter('bench');
         if (level == 1) addCharacter('dog');
         if (level == 5) addCharacter('janitor');
         characters.add('bg_characters/bird_1.png');
@@ -279,8 +278,7 @@ class AssetManager {
           'bonus_rounds/chicken_coop/chicken_coop.webp',
           'bonus_rounds/chicken_coop/chicken_1.png',
           'bonus_rounds/chicken_coop/chicken_2.png',
-          'bonus_rounds/chicken_coop/chicken_3.png',
-          'bonus_rounds/chicken_coop/chicken_4.png',
+          'bonus_rounds/chicken_coop/chicken_2.png',
           'bonus_rounds/chicken_coop/egg_1.png',
           'bonus_rounds/chicken_coop/egg_2.png',
         ];
@@ -292,6 +290,26 @@ class AssetManager {
   /// Buffers BGM for the specified level.
   Future<void> precacheLevelMusic(int level) async {
     await AudioService().preloadBGM(level);
+  }
+
+  /// Preload assets for the celebration screen
+  Future<void> preloadCelebrationAssets(BuildContext context) async {
+    debugPrint('🎉 Preloading Celebration Assets...');
+    if (!context.mounted) return;
+
+    try {
+      await Future.wait([
+        precacheImage(
+            AssetImage('assets/images/${Assets.celebrationBg}'), context),
+        AudioService().preloadCustomBGM(Assets.celebrationMusic),
+      ]).timeout(const Duration(seconds: 3), onTimeout: () {
+        debugPrint('⚠️ Celebration assets preload timed out');
+        return [];
+      });
+      debugPrint('✅ Celebration Assets Preloaded');
+    } catch (e) {
+      debugPrint('⚠️ Error preloading celebration assets: $e');
+    }
   }
 
   /// Trigger audio preloading via AudioService.

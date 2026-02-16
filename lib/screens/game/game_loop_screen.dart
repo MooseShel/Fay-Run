@@ -10,6 +10,7 @@ import '../../widgets/player_character.dart';
 import '../../widgets/game/ambient_effects.dart';
 import '../../widgets/game/quiz_overlay.dart';
 import '../../widgets/game/animated_staff_chaos.dart';
+import '../../widgets/game/celebration_overlay.dart';
 import '../../game/obstacle_manager.dart';
 import '../../game/scenery_manager.dart';
 import '../../services/audio_service.dart';
@@ -26,7 +27,7 @@ class GameLoopScreen extends StatefulWidget {
 }
 
 class _GameLoopScreenState extends State<GameLoopScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _gameLoopController;
   final ObstacleManager _obstacleManager = ObstacleManager();
   final SceneryManager _sceneryManager = SceneryManager();
@@ -77,6 +78,11 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   double _bird2X = 1.2;
   double _bonusRoundTimer = 0;
 
+  // High Score Celebration
+  late AnimationController _celebrationController;
+  late Animation<double> _celebrationScale;
+  bool _wasCelebrated = false;
+
   void _spawnFloatingScore(int amount) {
     if (!mounted) return;
     setState(() {
@@ -102,6 +108,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   }
 
   bool _isLoading = true;
+  bool _stopBgmOnDispose = true;
 
   @override
   void initState() {
@@ -110,6 +117,13 @@ class _GameLoopScreenState extends State<GameLoopScreen>
         vsync: this, duration: const Duration(milliseconds: 16))
       ..addListener(_gameLoop)
       ..repeat();
+
+    _celebrationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
+    _celebrationScale = CurvedAnimation(
+        parent: _celebrationController, curve: Curves.elasticOut);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadAssets();
@@ -168,13 +182,18 @@ class _GameLoopScreenState extends State<GameLoopScreen>
 
   @override
   void dispose() {
+    _gameLoopController.removeListener(_gameLoop);
     _gameLoopController.dispose();
-    AudioService().stopBGM();
+    _celebrationController.dispose();
+    if (_stopBgmOnDispose) {
+      AudioService().stopBGM();
+    }
     super.dispose();
   }
 
   void _gameLoop() {
     if (_isLoading) return;
+    if (!mounted) return;
 
     try {
       final gameState = context.read<GameState>();
@@ -191,7 +210,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       if (gameState.status == GameStatus.paused ||
           gameState.status == GameStatus.quiz ||
           gameState.status == GameStatus.gameOver ||
-          gameState.status == GameStatus.levelComplete) {
+          gameState.status == GameStatus.levelComplete ||
+          gameState.status == GameStatus.celebration) {
         _lastFrameTime = null;
         return;
       }
@@ -577,6 +597,18 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       );
     }
 
+    // New Celebration Overlay (In-Game)
+    if (gameState.status == GameStatus.celebration) {
+      return const CelebrationOverlay();
+    }
+
+    // Trigger celebration if needed
+    if (gameState.newHighScoreCelebrated && !_wasCelebrated) {
+      _wasCelebrated = true;
+      _celebrationController.forward();
+      AudioService().playPowerup(); // Or a custom sound
+    }
+
     return Scaffold(
       body: OrientationBuilder(
         builder: (context, orientation) {
@@ -683,25 +715,6 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                     ],
                     AmbientEffects(level: gameState.currentLevel),
                     // Background Scenery (Bench) - Behind Ernie
-                    ..._sceneryManager.objects
-                        .where((obj) => obj.type == SceneryType.bench)
-                        .map((obj) {
-                      String assetName = Assets.bgCharacter(obj.type.name, 1);
-                      double charSize = screenSize.height * 0.19;
-                      return Positioned(
-                        left: obj.x * screenSize.width,
-                        bottom: _groundHeight -
-                            FayColors.kHorizonOverlap +
-                            (obj.y * screenSize.height),
-                        width: charSize,
-                        height: charSize,
-                        child: Image.asset(
-                          'assets/images/$assetName',
-                          fit: BoxFit.contain,
-                          alignment: Alignment.bottomCenter,
-                        ),
-                      );
-                    }),
 
                     Positioned(
                       left: screenSize.width * 0.30 + _playerXOffset,
@@ -717,10 +730,8 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                       ),
                     ),
 
-                    // Foreground Scenery (Humans/Animals) - In front of Ernie
-                    ..._sceneryManager.objects
-                        .where((obj) => obj.type != SceneryType.bench)
-                        .map((obj) {
+                    // Foreground Scenery (Humans/Animals) - All scenery is now foreground/midground
+                    ..._sceneryManager.objects.map((obj) {
                       String baseName = obj.type.name;
                       int frame = obj.currentFrame;
                       if (obj.type == SceneryType.dogStanding) frame += 2;
@@ -753,66 +764,118 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                                   color: Colors.amber,
                                   fontWeight: FontWeight.bold)),
                         )),
+                    // Progress Bar (Moved to Background Layer behind Staff Popup)
+                    Positioned(
+                      top: MediaQuery.of(context).padding.top + 70,
+                      left: 20,
+                      right: 20,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: LinearProgressIndicator(
+                          value: gameState.levelProgress,
+                          minHeight: 12,
+                          backgroundColor: Colors.white24,
+                          color: Colors.amber,
+                        ),
+                      ),
+                    ),
+
                     if (gameState.activeStaffEvent != null &&
                         gameState.status != GameStatus.bonusRound)
                       AnimatedStaffChaos(event: gameState.activeStaffEvent!),
 
-                    // RESTORED HUD
+                    // High Score Celebration Overlay
+                    Align(
+                      alignment: Alignment.topCenter,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 100),
+                        child: ScaleTransition(
+                          scale: _celebrationScale,
+                          child: FadeTransition(
+                            opacity: Tween<double>(begin: 1.0, end: 0.0)
+                                .animate(CurvedAnimation(
+                                    parent: _celebrationController,
+                                    curve: const Interval(0.7, 1.0))),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text(
+                                  "🏆 NEW TOP SCORE! 🏆",
+                                  style: TextStyle(
+                                    fontFamily: 'BubblegumSans',
+                                    fontSize: 40,
+                                    color: Colors.amber,
+                                    fontWeight: FontWeight.bold,
+                                    shadows: [
+                                      Shadow(
+                                          blurRadius: 10,
+                                          color: Colors.black,
+                                          offset: Offset(2, 2))
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  "${gameState.score}",
+                                  style: const TextStyle(
+                                    fontFamily: 'BubblegumSans',
+                                    fontSize: 32,
+                                    color: Colors.white,
+                                    shadows: [
+                                      Shadow(
+                                          blurRadius: 8,
+                                          color: Colors.black,
+                                          offset: Offset(1, 1))
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // TOP HUD (Score, Lives, Pause) - Foreground
                     Positioned(
                       top: MediaQuery.of(context).padding.top + 10,
                       left: 20,
                       right: 20,
-                      child: Column(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              // Score
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: Colors.black54,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  'Score: ${gameState.score}',
-                                  style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18),
-                                ),
-                              ),
-                              // Lives
-                              Row(
-                                children: List.generate(
-                                    5,
-                                    (i) => Icon(
-                                          i < gameState.lives
-                                              ? Icons.favorite
-                                              : Icons.favorite_border,
-                                          color: Colors.red,
-                                          size: 18, // Compact hearts
-                                        )),
-                              ),
-                              // Pause Button
-                              IconButton(
-                                icon: const Icon(Icons.pause_circle,
-                                    color: Colors.white, size: 36),
-                                onPressed: () => gameState.pauseGame(),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          // Progress Bar
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: LinearProgressIndicator(
-                              value: gameState.levelProgress,
-                              minHeight: 12,
-                              backgroundColor: Colors.white24,
-                              color: Colors.amber,
+                          // Score
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.black54,
+                              borderRadius: BorderRadius.circular(20),
                             ),
+                            child: Text(
+                              'Score: ${gameState.score}',
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18),
+                            ),
+                          ),
+                          // Lives
+                          Row(
+                            children: List.generate(
+                                5,
+                                (i) => Icon(
+                                      i < gameState.lives
+                                          ? Icons.favorite
+                                          : Icons.favorite_border,
+                                      color: Colors.red,
+                                      size: 18, // Compact hearts
+                                    )),
+                          ),
+                          // Pause Button
+                          IconButton(
+                            icon: const Icon(Icons.pause_circle,
+                                color: Colors.white, size: 36),
+                            onPressed: () => gameState.pauseGame(),
                           ),
                         ],
                       ),
@@ -888,6 +951,28 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                                     gs.startBonusRound();
                                     _loadAssets();
                                   } else {
+                                    // Level 10 Completion -> Celebration
+                                    // Level 10 Completion -> Celebration
+                                    // Level 10 Completion -> Celebration
+                                    if (gs.currentLevel >= 10) {
+                                      // 1. Show Loading
+                                      setState(() => _isLoading = true);
+
+                                      // 2. Preload Assets
+                                      if (mounted) {
+                                        await AssetManager()
+                                            .preloadCelebrationAssets(context);
+                                      }
+
+                                      // 3. Trigger Celebration Status (Updates UI to Overlay)
+                                      await gs.unlockNextLevel();
+
+                                      // No Navigation needed!
+                                      // The build method will simply render CelebrationOverlay now.
+                                      setState(() => _isLoading = false);
+                                      return;
+                                    }
+
                                     await gs.startNextLevel();
                                     _loadAssets();
                                   }
