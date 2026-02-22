@@ -24,7 +24,7 @@ jobs:
         run: sh scripts/prepare_web_build.sh
 
       - name: Build Web
-        run: flutter build web --release --web-renderer canvaskit --base-href "/Fay-Run/"
+        run: flutter build web --release --base-href "/Fay-Run/"
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
