@@ -40,28 +40,20 @@ class _StudentSelectScreenState extends State<StudentSelectScreen> {
   }
 
   void _viewClassLeaderboards() {
-    final students = context.read<GameState>().students;
-    if (students.isEmpty) return;
+    // Show all available grades for the global leaderboard, instead of
+    // only the grades of the currently enrolled profile.
+    final List<String> grades = [
+      'Pre-K (3yo)',
+      'Pre-K (4yo)',
+      'Kindergarten',
+      '1st',
+      '2nd',
+      '3rd',
+      '4th',
+      '5th'
+    ];
 
-    // Extract unique grades
-    final grades = students
-        .map((s) => s['grade'] as String?)
-        .where((g) => g != null)
-        .toSet()
-        .toList();
-
-    if (grades.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No grades found for students.')),
-      );
-      return;
-    }
-
-    if (grades.length == 1) {
-      _openLeaderboard(grades.first!);
-    } else {
-      _showGradeSelectionDialog(grades.cast<String>());
-    }
+    _showGradeSelectionDialog(grades);
   }
 
   void _showGradeSelectionDialog(List<String> grades) {
@@ -89,13 +81,17 @@ class _StudentSelectScreenState extends State<StudentSelectScreen> {
     );
   }
 
-  void _openLeaderboard(String grade) {
-    context.read<GameState>().loadLeaderboard(grade: grade);
+  Future<void> _openLeaderboard(String grade) async {
+    await context.read<GameState>().loadLeaderboard(grade: grade);
+
+    if (!mounted) return;
+
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => LeaderboardScreen(
-          leaderboard: context.watch<GameState>().leaderboard,
+          // Using .watch inside builder works, but read is safer here since we awaited it
+          leaderboard: context.read<GameState>().leaderboard,
           grade: grade,
         ),
       ),

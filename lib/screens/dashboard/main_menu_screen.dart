@@ -243,11 +243,14 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                 icon: const Icon(Icons.leaderboard,
                                     color: FayColors.gold),
                                 tooltip: 'Leaderboard',
-                                onPressed: () {
+                                onPressed: () async {
                                   final grade = student?['grade'];
-                                  context
+                                  await context
                                       .read<GameState>()
                                       .loadLeaderboard(grade: grade);
+
+                                  if (!context.mounted) return;
+
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
