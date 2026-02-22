@@ -6,13 +6,15 @@ class ParallaxBackground extends StatefulWidget {
   final double runSpeed;
   final bool isPaused;
   final int level;
-  final double screenHeight; // Add screen height parameter
+  final double screenHeight;
+  final double scrollOffset; // Now driven by parent game loop
 
   const ParallaxBackground({
     super.key,
     required this.runSpeed,
     required this.isPaused,
     required this.screenHeight,
+    required this.scrollOffset,
     this.level = 1,
   });
 
@@ -20,69 +22,17 @@ class ParallaxBackground extends StatefulWidget {
   State<ParallaxBackground> createState() => _ParallaxBackgroundState();
 }
 
-class _ParallaxBackgroundState extends State<ParallaxBackground>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  double _scrollOffset = 0;
-  DateTime? _lastUpdate;
+class _ParallaxBackgroundState extends State<ParallaxBackground> {
   double? _aspectRatio;
   String? _lastAssetPath;
 
   @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 16),
-    )
-      ..addListener(_updateScroll)
-      ..repeat();
-  }
-
-  @override
-  void didUpdateWidget(covariant ParallaxBackground oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.level != widget.level) {
-      _scrollOffset = 0;
-      _lastUpdate = null;
-    }
-  }
-
-  void _updateScroll() {
-    if (widget.isPaused) {
-      _lastUpdate = null;
-      return;
-    }
-    if (!mounted) return;
-
-    final now = DateTime.now();
-    final double dt = _lastUpdate == null
-        ? 0.016
-        : now.difference(_lastUpdate!).inMicroseconds / 1000000.0;
-    _lastUpdate = now;
-
-    final double screenWidth = MediaQuery.sizeOf(context).width;
-
-    setState(() {
-      // Synchronized with ObstacleManager: 0.15 * screenWidth * runSpeed per second
-      _scrollOffset += widget.runSpeed * (0.15 * screenWidth) * dt;
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.removeListener(_updateScroll);
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    // Use the new naming convention: bg_fay_1.png through bg_fay_10.png
     final String assetPath = 'assets/images/${Assets.background(widget.level)}';
 
     if (_lastAssetPath != assetPath) {
       _lastAssetPath = assetPath;
+      _aspectRatio = null; // Reset on level change
       _resolveAspectRatio(assetPath);
     }
 
@@ -130,7 +80,7 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
         // Calculate tile width based on screen height and image aspect ratio
         final double tileWidth = screenHeight * _aspectRatio!;
 
-        final double totalScroll = _scrollOffset * speedMultiplier;
+        final double totalScroll = widget.scrollOffset * speedMultiplier;
 
         // Infinite Carousel Logic:
         final double exactIndex = totalScroll / tileWidth;
@@ -186,17 +136,12 @@ class _ParallaxBackgroundState extends State<ParallaxBackground>
       bottom: 0,
       height: groundHeight, // Dynamic ground height (15% of screen)
       child: RepaintBoundary(
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            return CustomPaint(
-              painter: _GroundPainter(
-                level: widget.level,
-                scrollOffset: _scrollOffset,
-              ),
-              size: Size.infinite,
-            );
-          },
+        child: CustomPaint(
+          painter: _GroundPainter(
+            level: widget.level,
+            scrollOffset: widget.scrollOffset,
+          ),
+          size: Size.infinite,
         ),
       ),
     );

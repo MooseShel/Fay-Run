@@ -44,6 +44,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   // Progression & Chaos
   int? _lastLevel;
   double _chaosTimer = 0;
+  double _chaosThreshold = 15.0;
   final Random _random = Random();
 
   // Animation State
@@ -77,6 +78,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   double _bird1X = -0.2;
   double _bird2X = 1.2;
   double _bonusRoundTimer = 0;
+  double _bgScrollOffset = 0; // Background scroll position driven by game loop
 
   // High Score Celebration
   late AnimationController _celebrationController;
@@ -223,8 +225,13 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       }
       _lastFrameTime = now;
 
+      // Cap dt to prevent death spiral on web — if a frame was slow,
+      // don't let physics jump forward by a huge amount (max 100ms)
+      if (dt > 0.1) dt = 0.1;
+
       if (gameState.status == GameStatus.playing) {
-        gameState.updateProgress(dt);
+        // Use silent version to avoid redundant notifyListeners() rebuild
+        gameState.updateProgressSilent(dt);
       }
 
       _runAnimationTimer += dt;
@@ -234,9 +241,9 @@ class _GameLoopScreenState extends State<GameLoopScreen>
       }
 
       _chaosTimer += dt;
-      final double chaosThreshold = 15.0 + _random.nextInt(5);
-      if (_chaosTimer > chaosThreshold) {
+      if (_chaosTimer > _chaosThreshold) {
         _chaosTimer = 0;
+        _chaosThreshold = 15.0 + _random.nextInt(5); // Set NEXT threshold once
         // ONLY trigger chaos in normal play
         if (gameState.status == GameStatus.playing &&
             gameState.activeStaffEvent == null) {
@@ -339,6 +346,12 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                 gameState.currentBonusType == BonusRoundType.eggCatch)
             ? 0.0
             : gameState.runSpeed;
+
+        // Update background scroll offset (replaces ParallaxBackground's own ticker)
+        if (gameState.status == GameStatus.playing ||
+            gameState.status == GameStatus.bonusRound) {
+          _bgScrollOffset += currentRunSpeed * (0.15 * _cachedScreenWidth) * dt;
+        }
 
         _obstacleManager.update(
           dt,
@@ -635,6 +648,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
                             gameState.status != GameStatus.bonusRound,
                         screenHeight: screenSize.height,
                         level: gameState.currentLevel,
+                        scrollOffset: _bgScrollOffset,
                       ),
 
                     // Eggs rendered behind characters

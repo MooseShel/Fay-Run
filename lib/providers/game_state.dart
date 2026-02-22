@@ -121,7 +121,9 @@ class GameState extends ChangeNotifier {
     // Enabled for level 2 as requested, others keep disabled for now
     if (_currentLevel == 2 &&
         !_playedBonusInCurrentLevel &&
-        _status == GameStatus.levelComplete) return true;
+        _status == GameStatus.levelComplete) {
+      return true;
+    }
     return false;
   }
 
@@ -334,6 +336,21 @@ class GameState extends ChangeNotifier {
     }
   }
 
+  /// Silent version for use inside the game loop's setState() —
+  /// avoids a redundant notifyListeners() rebuild on every frame.
+  /// Returns true if the level was completed.
+  bool updateProgressSilent(double dt) {
+    if (_status == GameStatus.playing) {
+      _levelProgress += dt / kLevelDurationSeconds;
+      if (_levelProgress >= 1.0) {
+        _levelProgress = 1.0;
+        completeLevel(); // This calls notifyListeners only on level complete
+        return true;
+      }
+    }
+    return false;
+  }
+
   void _resetLevelPhysics() {
     // Increase speed with level scaling: Base 4.0 + 0.1 per level
     // Increased by 10% per user request
@@ -386,7 +403,9 @@ class GameState extends ChangeNotifier {
   void takeDamage() {
     if (_isInvincible ||
         _status == GameStatus.gameOver ||
-        _status == GameStatus.levelComplete) return;
+        _status == GameStatus.levelComplete) {
+      return;
+    }
 
     _lives--;
     if (_lives <= 0) {

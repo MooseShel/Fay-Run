@@ -43,6 +43,7 @@ class Obstacle {
   bool isCollected;
   bool hasEngaged;
   bool isCracked;
+  double crackedTime; // Time since egg cracked (replaces Future.delayed)
 
   Obstacle({
     required this.id,
@@ -57,6 +58,7 @@ class Obstacle {
     this.isCollected = false,
     this.hasEngaged = false,
     this.isCracked = false,
+    this.crackedTime = 0,
   });
 
   void reset({
@@ -82,10 +84,12 @@ class Obstacle {
     isCollected = false;
     hasEngaged = false;
     isCracked = false;
+    crackedTime = 0;
   }
 }
 
 class ObstacleManager {
+  static const int maxObstacles = 25; // Prevent unbounded growth on web
   final List<Obstacle> obstacles = [];
   final Random _random = Random();
   double _spawnTimer = 0;
@@ -154,8 +158,8 @@ class ObstacleManager {
       }
     }
 
-    // Check if an obstacle SHOULD spawn
-    if (_spawnTimer > spawnInterval) {
+    // Check if an obstacle SHOULD spawn (with cap to prevent unbounded growth)
+    if (_spawnTimer > spawnInterval && obstacles.length < maxObstacles) {
       // Check if space is clear offscreen (startX is roughly 1.1 to 1.5 usually)
       if (isBonusRound && level == 2) {
         // Chicken Coop: Always spawn if timer allows
@@ -212,11 +216,13 @@ class ObstacleManager {
             obs.dy = 0;
             obs.isCracked = true;
             obs.hasEngaged = true; // Prevent collision now
-
-            // Start removal timer (1 second)
-            Future.delayed(const Duration(seconds: 1), () {
-              obs.isCollected = true;
-            });
+            obs.crackedTime = 0; // Start removal countdown
+          }
+        } else {
+          // Egg is cracked on ground — count up and remove after 1s
+          obs.crackedTime += dt;
+          if (obs.crackedTime >= 1.0) {
+            obs.isCollected = true;
           }
         }
       } else {
