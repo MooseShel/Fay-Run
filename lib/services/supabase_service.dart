@@ -349,8 +349,9 @@ class SupabaseService {
   Future<List<Map<String, dynamic>>> getLeaderboard({String? grade}) async {
     if (_client == null) return [];
     try {
+      // Query the secure view that bypasses RLS to get global top scores
       var query = _client!
-          .from('students')
+          .from('global_leaderboard')
           .select('first_name, nickname, grade, high_score');
 
       if (grade != null) {
