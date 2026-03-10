@@ -110,7 +110,7 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   }
 
   bool _isLoading = true;
-  bool _stopBgmOnDispose = true;
+  final bool _stopBgmOnDispose = true;
 
   @override
   void initState() {
@@ -533,11 +533,15 @@ class _GameLoopScreenState extends State<GameLoopScreen>
   void _jump() {
     final gameState = context.read<GameState>();
     if (gameState.status != GameStatus.playing &&
-        gameState.status != GameStatus.bonusRound) return;
+        gameState.status != GameStatus.bonusRound) {
+      return;
+    }
 
     // Disable jumping in Egg Catch bonus round
     if (gameState.status == GameStatus.bonusRound &&
-        gameState.currentBonusType == BonusRoundType.eggCatch) return;
+        gameState.currentBonusType == BonusRoundType.eggCatch) {
+      return;
+    }
 
     if (_jumpCount < _maxJumps) {
       AudioService().playJump();
