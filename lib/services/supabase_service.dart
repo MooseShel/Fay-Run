@@ -349,18 +349,11 @@ class SupabaseService {
   Future<List<Map<String, dynamic>>> getLeaderboard({String? grade}) async {
     if (_client == null) return [];
     try {
-      // Query the secure view that bypasses RLS to get global top scores
-      var query = _client!
-          .from('global_leaderboard')
-          .select('first_name, nickname, grade, high_score');
-
-      if (grade != null) {
-        query = query.eq('grade', grade);
-      }
-
-      final response =
-          await query.order('high_score', ascending: false).limit(10);
-      return List<Map<String, dynamic>>.from(response);
+      // Call SECURITY DEFINER RPC function that bypasses students-table RLS
+      final response = await _client!.rpc('get_leaderboard', params: {
+        'grade_filter': grade,
+      });
+      return List<Map<String, dynamic>>.from(response as List);
     } catch (e) {
       debugPrint('Supabase: getLeaderboard error: $e');
       return [];
