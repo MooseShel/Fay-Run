@@ -349,11 +349,20 @@ class SupabaseService {
   Future<List<Map<String, dynamic>>> getLeaderboard({String? grade}) async {
     if (_client == null) return [];
     try {
-      // Call SECURITY DEFINER RPC function that bypasses students-table RLS
-      final response = await _client!.rpc('get_leaderboard', params: {
-        'grade_filter': grade,
-      });
-      return List<Map<String, dynamic>>.from(response as List);
+      // Query the global_leaderboard view.
+      // RLS policy "Authenticated can read leaderboard rows" allows all
+      // authenticated users to read student rows with high_score > 0.
+      var query = _client!
+          .from('global_leaderboard')
+          .select('first_name, nickname, grade, high_score');
+
+      if (grade != null) {
+        query = query.eq('grade', grade);
+      }
+
+      final response =
+          await query.order('high_score', ascending: false).limit(10);
+      return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       debugPrint('Supabase: getLeaderboard error: $e');
       return [];

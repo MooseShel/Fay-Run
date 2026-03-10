@@ -1,23 +1,20 @@
--- Fix: Replace the global_leaderboard view with a SECURITY DEFINER function.
--- Regular views inherit the underlying table's RLS, so the old view only
--- returned the authenticated parent's own children.  A SECURITY DEFINER
--- function runs with the *owner's* privileges and bypasses RLS, exposing
--- the full leaderboard to any authenticated caller.
+-- Fix leaderboard visibility: allow all authenticated users to read
+-- student rows with a high_score, so the global_leaderboard view works.
+--
+-- PostgreSQL RLS policies are OR-based: a row is visible if ANY policy
+-- matches.  The existing "Users can view own students" policy lets
+-- parents see their own kids.  This new policy additionally lets every
+-- authenticated user see any student row that has a score > 0, which
+-- is exactly what the leaderboard needs.
 
--- 1. Create the RPC function
-CREATE OR REPLACE FUNCTION get_leaderboard(grade_filter TEXT DEFAULT NULL)
-RETURNS TABLE (first_name TEXT, nickname TEXT, grade TEXT, high_score INT)
-LANGUAGE sql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT s.first_name, s.nickname, s.grade, s.high_score
-  FROM students s
-  WHERE s.high_score > 0
-    AND (grade_filter IS NULL OR s.grade = grade_filter)
-  ORDER BY s.high_score DESC
-  LIMIT 10;
-$$;
+-- Step 1 ----------------------------------------------------------------
+-- Add a public-read policy for leaderboard rows
+CREATE POLICY "Authenticated can read leaderboard rows"
+  ON students
+  FOR SELECT
+  TO authenticated
+  USING (high_score > 0);
 
--- 2. Grant execute to authenticated users
-GRANT EXECUTE ON FUNCTION get_leaderboard(TEXT) TO authenticated;
+-- Step 2 ----------------------------------------------------------------
+-- Reload PostgREST schema cache so the API picks up changes immediately
+NOTIFY pgrst, 'reload schema';
