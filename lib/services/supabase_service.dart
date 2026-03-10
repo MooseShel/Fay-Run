@@ -282,9 +282,13 @@ class SupabaseService {
   Future<List<Map<String, dynamic>>> getStudents() async {
     if (_client == null) return [];
     try {
+      final userId = _client!.auth.currentUser?.id;
+      if (userId == null) return [];
+
       final response = await _client!
           .from('students')
           .select('*')
+          .eq('parent_id', userId)
           .order('created_at', ascending: true);
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
