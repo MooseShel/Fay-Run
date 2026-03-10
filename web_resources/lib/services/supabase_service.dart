@@ -150,15 +150,26 @@ class SupabaseService {
         );
       } else {
         // --- NORMAL MODE LOGIC ---
-        // Fetch questions for the given grade and difficulty level
+        // Fetch questions for the given grade and difficulty level range [level-1, level+1]
+        final int targetLvl = difficultyLevel ?? 1;
+        final List<int> levels = [
+          if (targetLvl > 1) targetLvl - 1,
+          targetLvl,
+          if (targetLvl < 10) targetLvl + 1,
+        ];
+
         final query = _client!
             .from('challenges')
             .select('*, questions(*)')
             .eq('grade_level', gradeLevel)
-            .eq('is_exam', false);
+            .eq('is_exam', false)
+            .filter('difficulty_level', 'in', levels);
 
-        // Apply difficulty filter if provided
-        final result = await query.eq('difficulty_level', difficultyLevel ?? 1);
+        if (topic != null && topic.isNotEmpty) {
+          query.eq('topic', topic);
+        }
+
+        final result = await query;
         final List<dynamic> challengesList = result as List;
 
         if (challengesList.isEmpty) {
@@ -247,13 +258,14 @@ class SupabaseService {
         insertData['challenge_id'] = challengeId;
       }
 
-      await _client!.from('student_progress').insert(insertData);
+      // Use upsert to handle duplicate keys (when student retakes a challenge)
+      await _client!.from('student_progress').upsert(insertData);
     } catch (e) {
       debugPrint('Supabase: submitQuizResult error: $e');
       // If we failed due to FK constraint even with non-aggregate, try one last time without ID
       if (e.toString().contains('23503')) {
         try {
-          await _client!.from('student_progress').insert({
+          await _client!.from('student_progress').upsert({
             'student_id': studentId,
             'score': score,
             'completed_at': DateTime.now().toIso8601String(),
@@ -270,9 +282,13 @@ class SupabaseService {
   Future<List<Map<String, dynamic>>> getStudents() async {
     if (_client == null) return [];
     try {
+      final userId = _client!.auth.currentUser?.id;
+      if (userId == null) return [];
+
       final response = await _client!
           .from('students')
           .select('*')
+          .eq('parent_id', userId)
           .order('created_at', ascending: true);
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
@@ -337,8 +353,11 @@ class SupabaseService {
   Future<List<Map<String, dynamic>>> getLeaderboard({String? grade}) async {
     if (_client == null) return [];
     try {
+      // Query the global_leaderboard view.
+      // RLS policy "Authenticated can read leaderboard rows" allows all
+      // authenticated users to read student rows with high_score > 0.
       var query = _client!
-          .from('students')
+          .from('global_leaderboard')
           .select('first_name, nickname, grade, high_score');
 
       if (grade != null) {
