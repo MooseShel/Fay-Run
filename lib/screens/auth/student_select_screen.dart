@@ -40,18 +40,27 @@ class _StudentSelectScreenState extends State<StudentSelectScreen> {
   }
 
   void _viewClassLeaderboards() {
-    // Show all available grades for the global leaderboard, instead of
-    // only the grades of the currently enrolled profile.
-    final List<String> grades = [
-      'Pre-K (3yo)',
-      'Pre-K (4yo)',
-      'Kindergarten',
-      '1st',
-      '2nd',
-      '3rd',
-      '4th',
-      '5th'
-    ];
+    // Show only the grades where this parent has enrolled children.
+    final students = context.read<GameState>().students;
+    final grades = students
+        .map((s) => s['grade'] as String?)
+        .whereType<String>()
+        .toSet()
+        .toList();
+
+    if (grades.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Add a student first to view leaderboards')),
+      );
+      return;
+    }
+
+    // If only one grade, skip the picker and go straight to it.
+    if (grades.length == 1) {
+      _openLeaderboard(grades.first);
+      return;
+    }
 
     _showGradeSelectionDialog(grades);
   }
